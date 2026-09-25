@@ -1,31 +1,33 @@
 @model ValousWorld.Web.Models.Entities.Category
 @{ ViewData["Title"] = "Edit Category"; }
 
-<h1>EDIT CATEGORY</h1>
-<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<div class="container admin-page">
+    <h1>EDIT CATEGORY</h1>
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-<form method="post" action="/Admin/Categories/Edit/@Model.CategoryId" class="admin-form">
-    @Html.AntiForgeryToken()
-    <input type="hidden" asp-for="CategoryId" />
+    <form method="post" action="/Admin/Categories/Edit/@Model.CategoryId" class="admin-form">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="CategoryId" />
 
-    <label>Name *</label>
-    <input asp-for="Name" required />
+        <label>Name *</label>
+        <input asp-for="Name" required />
 
-    <label>Slug</label>
-    <input asp-for="Slug" />
+        <label>Slug</label>
+        <input asp-for="Slug" />
 
-    <label>Image URL</label>
-    <input asp-for="ImageUrl" />
+        <label>Image URL</label>
+        <input asp-for="ImageUrl" />
 
-    <label>Display Order</label>
-    <input asp-for="DisplayOrder" type="number" min="0" />
+        <label>Display Order</label>
+        <input asp-for="DisplayOrder" type="number" min="0" />
 
-    <div class="check-row">
-        <label><input asp-for="IsActive" type="checkbox" /> Active</label>
-    </div>
+        <div class="check-row">
+            <label><input asp-for="IsActive" type="checkbox" /> Active</label>
+        </div>
 
-    <div class="form-actions">
-        <button type="submit" class="btn-primary">UPDATE CATEGORY</button>
-        <a href="/Admin/Categories" class="btn-outline">CANCEL</a>
-    </div>
-</form>
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">UPDATE CATEGORY</button>
+            <a href="/Admin/Categories" class="btn-outline">CANCEL</a>
+        </div>
+    </form>
+</div>

@@ -1,48 +1,44 @@
 @model ValousWorld.Web.Models.Entities.Product
 @{ ViewData["Title"] = "Edit Product"; }
 
-<h1>EDIT PRODUCT</h1>
-<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<div class="container admin-page">
+    <h1>EDIT PRODUCT</h1>
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-<form method="post" action="/Admin/Products/Edit/@Model.ProductId" class="admin-form">
-    @Html.AntiForgeryToken()
-    <input type="hidden" asp-for="ProductId" />
+    <form method="post" action="/Admin/Products/Edit/@Model.ProductId" class="admin-form">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="ProductId" />
 
-    <label>Name *</label>
-    <input asp-for="Name" required />
+        <label>Name *</label><input asp-for="Name" required />
+        <label>Slug</label><input asp-for="Slug" />
+        <label>Category *</label><select asp-for="CategoryId" asp-items="ViewBag.Categories" required></select>
+        <label>Short Description</label><input asp-for="ShortDescription" />
+        <label>Full Description</label><textarea asp-for="Description" rows="4"></textarea>
 
-    <label>Slug</label>
-    <input asp-for="Slug" />
+        <div class="form-row">
+            <div><label>MRP ₹ *</label><input asp-for="MRP" type="number" step="0.01" required /></div>
+            <div><label>Sale Price ₹ *</label><input asp-for="SalePrice" type="number" step="0.01" required /></div>
+        </div>
 
-    <label>Category *</label>
-    <select asp-for="CategoryId" asp-items="ViewBag.Categories" required></select>
+        <label>Sizes</label><input asp-for="Sizes" />
+        <label>Colors</label><input asp-for="Colors" />
+        <label>Primary Image URL *</label><input asp-for="PrimaryImageUrl" required />
+        <label>Secondary Image URL</label><input asp-for="SecondaryImageUrl" />
 
-    <label>Short Description</label>
-    <input asp-for="ShortDescription" />
+        <div class="form-row">
+            <div><label>Stock</label><input asp-for="Stock" type="number" /></div>
+            <div><label>Display Order</label><input asp-for="DisplayOrder" type="number" /></div>
+        </div>
 
-    <label>Full Description</label>
-    <textarea asp-for="Description" rows="4"></textarea>
+        <div class="check-row">
+            <label><input asp-for="IsActive" type="checkbox" /> Active</label>
+            <label><input asp-for="IsFeatured" type="checkbox" /> Featured</label>
+            <label><input asp-for="IsNewArrival" type="checkbox" /> New Arrival</label>
+        </div>
 
-    <div class="form-row">
-        <div><label>MRP ₹ *</label><input asp-for="MRP" type="number" step="0.01" required /></div>
-        <div><label>Sale Price ₹ *</label><input asp-for="SalePrice" type="number" step="0.01" required /></div>
-    </div>
-
-    <label>Sizes</label><input asp-for="Sizes" />
-    <label>Colors</label><input asp-for="Colors" />
-    <label>Primary Image URL *</label><input asp-for="PrimaryImageUrl" required />
-    <label>Secondary Image URL</label><input asp-for="SecondaryImageUrl" />
-    <label>Stock</label><input asp-for="Stock" type="number" />
-    <label>Display Order</label><input asp-for="DisplayOrder" type="number" />
-
-    <div class="check-row">
-        <label><input asp-for="IsActive" type="checkbox" /> Active</label>
-        <label><input asp-for="IsFeatured" type="checkbox" /> Featured</label>
-        <label><input asp-for="IsNewArrival" type="checkbox" /> New Arrival</label>
-    </div>
-
-    <div class="form-actions">
-        <button type="submit" class="btn-primary">UPDATE</button>
-        <a href="/Admin/Products" class="btn-outline">Cancel</a>
-    </div>
-</form>
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">UPDATE PRODUCT</button>
+            <a href="/Admin/Products" class="btn-outline">CANCEL</a>
+        </div>
+    </form>
+</div>
