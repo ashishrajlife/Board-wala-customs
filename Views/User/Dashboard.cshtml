@@ -1,0 +1,10 @@
+@{ ViewData["Title"] = "My Dashboard"; }
+
+<h1>Welcome, @User.Identity?.Name</h1>
+<p>This is your personal VALOUSWORLD dashboard.</p>
+
+<div class="dashboard-grid">
+    <div class="dash-card"><h3>My Orders</h3><p>No orders yet.</p></div>
+    <div class="dash-card"><h3>Wishlist</h3><p>Empty.</p></div>
+    <div class="dash-card"><h3>Profile</h3><p>Update your details.</p></div>
+</div>
