@@ -1,0 +1,93 @@
+@model ValousWorld.Web.Models.Entities.Product
+@{
+    ViewData["Title"] = Model.Name;
+    ViewData["Breadcrumb"] = Html.Raw($"<a href='/'>Home</a> / <a href='/category/{Model.Category?.Slug}'>{Model.Category?.Name}</a> / <span>{Model.Name}</span>");
+    var related = ViewBag.Related as List<ValousWorld.Web.Models.Entities.Product> ?? new();
+}
+
+<section class="product-detail">
+    <div class="container pdp-grid">
+        <div class="pdp-images">
+            <img src="@Model.PrimaryImageUrl" alt="@Model.Name" class="pdp-main" />
+            @if (!string.IsNullOrEmpty(Model.SecondaryImageUrl))
+            {
+                <img src="@Model.SecondaryImageUrl" alt="@Model.Name" class="pdp-thumb" />
+            }
+        </div>
+
+        <div class="pdp-info">
+            <p class="pdp-cat">@Model.Category?.Name</p>
+            <h1>@Model.Name</h1>
+
+            <div class="price-row big">
+                <span class="sale">Rs.@Model.SalePrice.ToString("0.00")</span>
+                <span class="mrp">Rs.@Model.MRP.ToString("0")</span>
+                @if (Model.SavePercent > 0)
+                {
+                    <span class="save-pill">SAVE @Model.SavePercent%</span>
+                }
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.ShortDescription))
+            {
+                <p class="pdp-short">@Model.ShortDescription</p>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.Sizes))
+            {
+                <div class="pdp-block">
+                    <label>SIZE</label>
+                    <div class="size-options">
+                        @foreach (var s in Model.Sizes.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                        {
+                            <button class="size-chip">@s.Trim()</button>
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.Description))
+            {
+                <div class="pdp-block">
+                    <label>DESCRIPTION</label>
+                    <p>@Model.Description</p>
+                </div>
+            }
+
+            <button class="btn-primary big-btn">ADD TO CART</button>
+
+            <div class="pdp-meta">
+                <p>✔ Free shipping above ₹999</p>
+                <p>✔ Easy 7-day returns</p>
+                <p>✔ Cash on delivery available</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+@if (related.Any())
+{
+    <section class="products-section">
+        <div class="container">
+            <h2 style="margin:40px 0 20px; font-size:20px; letter-spacing:1px;">YOU MAY ALSO LIKE</h2>
+            <div class="products-grid">
+                @foreach (var p in related)
+                {
+                    <a href="/product/@p.Slug" class="product-card">
+                        <div class="product-image">
+                            @if (p.SavePercent > 0) { <span class="save-badge">SAVE @p.SavePercent%</span> }
+                            <img src="@p.PrimaryImageUrl" alt="@p.Name" loading="lazy" />
+                        </div>
+                        <div class="product-info">
+                            <h3>@p.Name</h3>
+                            <div class="price-row">
+                                <span class="mrp">Rs.@p.MRP.ToString("0")</span>
+                                <span class="sale">Rs.@p.SalePrice.ToString("0.00")</span>
+                            </div>
+                        </div>
+                    </a>
+                }
+            </div>
+        </div>
+    </section>
+}

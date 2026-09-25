@@ -1,0 +1,28 @@
+@model ValousWorld.Web.Models.Entities.Category
+@{ ViewData["Title"] = "Edit Category"; }
+
+<h1>EDIT CATEGORY</h1>
+
+<form method="post" action="/Admin/Categories/Edit/@Model.CategoryId" class="admin-form">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="CategoryId" />
+
+    <label>Name *</label>
+    <input asp-for="Name" required />
+
+    <label>Slug</label>
+    <input asp-for="Slug" />
+
+    <label>Image URL</label>
+    <input asp-for="ImageUrl" />
+
+    <label>Display Order</label>
+    <input asp-for="DisplayOrder" type="number" />
+
+    <label><input asp-for="IsActive" type="checkbox" /> Active</label>
+
+    <div class="form-actions">
+        <button type="submit" class="btn-primary">UPDATE</button>
+        <a href="/Admin/Categories" class="btn-outline">Cancel</a>
+    </div>
+</form>

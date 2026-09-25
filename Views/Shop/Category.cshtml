@@ -1,0 +1,51 @@
+@model List<ValousWorld.Web.Models.Entities.Product>
+@{
+    var cat = ViewBag.Category as ValousWorld.Web.Models.Entities.Category;
+    ViewData["Title"] = cat?.Name ?? "Category";
+    ViewData["Breadcrumb"] = Html.Raw($"<a href='/'>Home</a> / <span>{cat?.Name}</span>");
+}
+
+<section class="hero-banner" style="min-height:260px; @(string.IsNullOrEmpty(cat?.ImageUrl) ? "" : $"background-image:url('{cat.ImageUrl}');")">
+    <div class="hero-overlay">
+        <h1 style="font-size:clamp(36px,6vw,72px);">@cat?.Name.ToUpper()</h1>
+    </div>
+</section>
+
+<div class="filter-bar">
+    <div class="container filter-inner">
+        <div class="filter-left">FILTER AND SORT</div>
+        <div class="filter-right">
+            <span class="product-count">@Model.Count PRODUCTS</span>
+        </div>
+    </div>
+</div>
+
+<section class="products-section">
+    <div class="container">
+        @if (!Model.Any())
+        {
+            <p style="text-align:center; padding:60px 0; color:#888;">No products in this category yet.</p>
+        }
+        else
+        {
+            <div class="products-grid">
+                @foreach (var p in Model)
+                {
+                    <a href="/product/@p.Slug" class="product-card">
+                        <div class="product-image">
+                            @if (p.SavePercent > 0) { <span class="save-badge">SAVE @p.SavePercent%</span> }
+                            <img src="@p.PrimaryImageUrl" alt="@p.Name" loading="lazy" />
+                        </div>
+                        <div class="product-info">
+                            <h3>@p.Name</h3>
+                            <div class="price-row">
+                                <span class="mrp">Rs.@p.MRP.ToString("0")</span>
+                                <span class="sale">Rs.@p.SalePrice.ToString("0.00")</span>
+                            </div>
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+    </div>
+</section>

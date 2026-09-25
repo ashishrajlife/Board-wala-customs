@@ -1,0 +1,37 @@
+@model List<ValousWorld.Web.Models.Entities.Category>
+@{ ViewData["Title"] = "Categories"; }
+
+<div class="admin-header">
+    <h1>CATEGORIES</h1>
+    <a href="/Admin/Categories/Create" class="btn-primary">+ NEW CATEGORY</a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert-success">@TempData["Success"]</div>
+}
+
+<table class="admin-table">
+    <thead>
+        <tr><th>Image</th><th>Name</th><th>Slug</th><th>Order</th><th>Active</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+    @foreach (var c in Model)
+    {
+        <tr>
+            <td>@if (!string.IsNullOrEmpty(c.ImageUrl)) { <img src="@c.ImageUrl" width="50" height="50" style="object-fit:cover;" /> }</td>
+            <td>@c.Name</td>
+            <td>@c.Slug</td>
+            <td>@c.DisplayOrder</td>
+            <td>@(c.IsActive ? "Yes" : "No")</td>
+            <td>
+                <a href="/Admin/Categories/Edit/@c.CategoryId">Edit</a>
+                <form method="post" action="/Admin/Categories/Delete/@c.CategoryId" style="display:inline" onsubmit="return confirm('Delete?')">
+                    @Html.AntiForgeryToken()
+                    <button class="link-danger">Delete</button>
+                </form>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

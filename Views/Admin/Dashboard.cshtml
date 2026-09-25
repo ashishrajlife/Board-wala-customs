@@ -1,0 +1,28 @@
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    ViewData["Breadcrumb"] = Html.Raw("<span>Admin / Dashboard</span>");
+}
+
+<h1>ADMIN DASHBOARD</h1>
+<p style="color:#666; margin-bottom:30px;">Welcome, <strong>@User.Identity?.Name</strong></p>
+
+<div class="dashboard-grid">
+    <div class="dash-card">
+        <h3>Products</h3>
+        <p style="font-size:32px; color:#000; font-weight:800;">@ViewBag.ProductCount</p>
+        <a href="/Admin/Products" class="btn-outline">Manage →</a>
+    </div>
+    <div class="dash-card">
+        <h3>Categories</h3>
+        <p style="font-size:32px; color:#000; font-weight:800;">@ViewBag.CategoryCount</p>
+        <a href="/Admin/Categories" class="btn-outline">Manage →</a>
+    </div>
+    <div class="dash-card">
+        <h3>Users</h3>
+        <p style="font-size:32px; color:#000; font-weight:800;">@ViewBag.UserCount</p>
+    </div>
+    <div class="dash-card">
+        <h3>New Arrivals</h3>
+        <p style="font-size:32px; color:#000; font-weight:800;">@ViewBag.NewArrivals</p>
+    </div>
+</div>

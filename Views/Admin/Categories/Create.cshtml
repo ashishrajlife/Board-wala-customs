@@ -1,0 +1,27 @@
+@model ValousWorld.Web.Models.Entities.Category
+@{ ViewData["Title"] = "New Category"; }
+
+<h1>NEW CATEGORY</h1>
+
+<form method="post" action="/Admin/Categories/Create" class="admin-form">
+    @Html.AntiForgeryToken()
+
+    <label>Name *</label>
+    <input asp-for="Name" required />
+
+    <label>Slug (optional)</label>
+    <input asp-for="Slug" />
+
+    <label>Image URL</label>
+    <input asp-for="ImageUrl" />
+
+    <label>Display Order</label>
+    <input asp-for="DisplayOrder" type="number" />
+
+    <label><input asp-for="IsActive" type="checkbox" /> Active</label>
+
+    <div class="form-actions">
+        <button type="submit" class="btn-primary">CREATE</button>
+        <a href="/Admin/Categories" class="btn-outline">Cancel</a>
+    </div>
+</form>
