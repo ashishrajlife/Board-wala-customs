@@ -15,16 +15,20 @@ public class AdminCategoriesController : Controller
 
     [Route("")]
     public async Task<IActionResult> Index()
-        => View(await _db.Categories.OrderBy(c => c.DisplayOrder).ToListAsync());
+        => View("~/Views/Admin/Categories/Index.cshtml",
+            await _db.Categories.OrderBy(c => c.DisplayOrder).ToListAsync());
 
     [Route("Create")]
-    public IActionResult Create() => View(new Category());
+    public IActionResult Create()
+        => View("~/Views/Admin/Categories/Create.cshtml", new Category());
 
     [HttpPost, Route("Create")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(Category model)
     {
-        if (!ModelState.IsValid) return View(model);
+        if (!ModelState.IsValid)
+            return View("~/Views/Admin/Categories/Create.cshtml", model);
+
         model.Slug = string.IsNullOrWhiteSpace(model.Slug) ? Slugify(model.Name) : Slugify(model.Slug);
         _db.Categories.Add(model);
         await _db.SaveChangesAsync();
@@ -37,7 +41,7 @@ public class AdminCategoriesController : Controller
     {
         var c = await _db.Categories.FindAsync(id);
         if (c == null) return NotFound();
-        return View(c);
+        return View("~/Views/Admin/Categories/Edit.cshtml", c);
     }
 
     [HttpPost, Route("Edit/{id:int}")]
@@ -45,7 +49,8 @@ public class AdminCategoriesController : Controller
     public async Task<IActionResult> Edit(int id, Category model)
     {
         if (id != model.CategoryId) return BadRequest();
-        if (!ModelState.IsValid) return View(model);
+        if (!ModelState.IsValid)
+            return View("~/Views/Admin/Categories/Edit.cshtml", model);
 
         var existing = await _db.Categories.FindAsync(id);
         if (existing == null) return NotFound();

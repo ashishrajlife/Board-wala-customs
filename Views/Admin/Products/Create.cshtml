@@ -8,19 +8,19 @@
     @Html.AntiForgeryToken()
 
     <label>Name *</label>
-    <input asp-for="Name" required />
+    <input asp-for="Name" required placeholder="Product name" />
 
-    <label>Slug (optional — auto from name)</label>
-    <input asp-for="Slug" />
+    <label>Slug (auto-generated if empty)</label>
+    <input asp-for="Slug" placeholder="product-slug" />
 
     <label>Category *</label>
     <select asp-for="CategoryId" asp-items="ViewBag.Categories" required></select>
 
     <label>Short Description</label>
-    <input asp-for="ShortDescription" />
+    <input asp-for="ShortDescription" placeholder="One-line summary" />
 
     <label>Full Description</label>
-    <textarea asp-for="Description" rows="4"></textarea>
+    <textarea asp-for="Description" rows="4" placeholder="Detailed description"></textarea>
 
     <div class="form-row">
         <div>
@@ -40,16 +40,21 @@
     <input asp-for="Colors" placeholder="Black,Brown" />
 
     <label>Primary Image URL *</label>
-    <input asp-for="PrimaryImageUrl" required />
+    <input asp-for="PrimaryImageUrl" required placeholder="https://..." />
 
     <label>Secondary Image URL</label>
-    <input asp-for="SecondaryImageUrl" />
+    <input asp-for="SecondaryImageUrl" placeholder="https://..." />
 
-    <label>Stock</label>
-    <input asp-for="Stock" type="number" />
-
-    <label>Display Order</label>
-    <input asp-for="DisplayOrder" type="number" />
+    <div class="form-row">
+        <div>
+            <label>Stock</label>
+            <input asp-for="Stock" type="number" min="0" />
+        </div>
+        <div>
+            <label>Display Order</label>
+            <input asp-for="DisplayOrder" type="number" min="0" />
+        </div>
+    </div>
 
     <div class="check-row">
         <label><input asp-for="IsActive" type="checkbox" /> Active</label>
@@ -58,7 +63,7 @@
     </div>
 
     <div class="form-actions">
-        <button type="submit" class="btn-primary">CREATE</button>
-        <a href="/Admin/Products" class="btn-outline">Cancel</a>
+        <button type="submit" class="btn-primary">CREATE PRODUCT</button>
+        <a href="/Admin/Products" class="btn-outline">CANCEL</a>
     </div>
 </form>

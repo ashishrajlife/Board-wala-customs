@@ -2,26 +2,29 @@
 @{ ViewData["Title"] = "New Category"; }
 
 <h1>NEW CATEGORY</h1>
+<div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
 <form method="post" action="/Admin/Categories/Create" class="admin-form">
     @Html.AntiForgeryToken()
 
     <label>Name *</label>
-    <input asp-for="Name" required />
+    <input asp-for="Name" required placeholder="e.g. Caps" />
 
-    <label>Slug (optional)</label>
-    <input asp-for="Slug" />
+    <label>Slug (auto if empty)</label>
+    <input asp-for="Slug" placeholder="caps" />
 
     <label>Image URL</label>
-    <input asp-for="ImageUrl" />
+    <input asp-for="ImageUrl" placeholder="https://..." />
 
     <label>Display Order</label>
-    <input asp-for="DisplayOrder" type="number" />
+    <input asp-for="DisplayOrder" type="number" min="0" />
 
-    <label><input asp-for="IsActive" type="checkbox" /> Active</label>
+    <div class="check-row">
+        <label><input asp-for="IsActive" type="checkbox" /> Active</label>
+    </div>
 
     <div class="form-actions">
-        <button type="submit" class="btn-primary">CREATE</button>
-        <a href="/Admin/Categories" class="btn-outline">Cancel</a>
+        <button type="submit" class="btn-primary">CREATE CATEGORY</button>
+        <a href="/Admin/Categories" class="btn-outline">CANCEL</a>
     </div>
 </form>

@@ -17,6 +17,6 @@ public class AdminController : Controller
         ViewBag.ProductCount = await _db.Products.CountAsync();
         ViewBag.CategoryCount = await _db.Categories.CountAsync();
         ViewBag.NewArrivals = await _db.Products.CountAsync(p => p.IsNewArrival);
-        return View();
+          return View("~/Views/Admin/Dashboard.cshtml");
     }
 }

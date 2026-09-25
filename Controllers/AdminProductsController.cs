@@ -21,14 +21,15 @@ public class AdminProductsController : Controller
             .Include(p => p.Category)
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
-        return View(products);
+        return View("~/Views/Admin/Products/Index.cshtml", products);
     }
 
     [Route("Create")]
     public async Task<IActionResult> Create()
     {
         await LoadCategoriesAsync();
-        return View(new Product { IsActive = true, IsNewArrival = true, Stock = 100 });
+        return View("~/Views/Admin/Products/Create.cshtml",
+            new Product { IsActive = true, IsNewArrival = true, Stock = 100 });
     }
 
     [HttpPost, Route("Create")]
@@ -37,8 +38,8 @@ public class AdminProductsController : Controller
     {
         if (!ModelState.IsValid)
         {
-            await LoadCategoriesAsync();
-            return View(model);
+            await LoadCategoriesAsync(model.CategoryId);
+            return View("~/Views/Admin/Products/Create.cshtml", model);
         }
 
         model.Slug = string.IsNullOrWhiteSpace(model.Slug) ? Slugify(model.Name) : Slugify(model.Slug);
@@ -57,7 +58,7 @@ public class AdminProductsController : Controller
         var product = await _db.Products.FindAsync(id);
         if (product == null) return NotFound();
         await LoadCategoriesAsync(product.CategoryId);
-        return View(product);
+        return View("~/Views/Admin/Products/Edit.cshtml", product);
     }
 
     [HttpPost, Route("Edit/{id:int}")]
@@ -68,7 +69,7 @@ public class AdminProductsController : Controller
         if (!ModelState.IsValid)
         {
             await LoadCategoriesAsync(model.CategoryId);
-            return View(model);
+            return View("~/Views/Admin/Products/Edit.cshtml", model);
         }
 
         var existing = await _db.Products.FindAsync(id);

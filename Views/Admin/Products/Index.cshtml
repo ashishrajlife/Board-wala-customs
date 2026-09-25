@@ -1,42 +1,44 @@
 @model List<ValousWorld.Web.Models.Entities.Product>
 @{ ViewData["Title"] = "Products"; }
 
-<div class="admin-header">
-    <h1>PRODUCTS</h1>
-    <a href="/Admin/Products/Create" class="btn-primary">+ NEW PRODUCT</a>
-</div>
+<div class="container">
+    <div class="admin-header">
+        <h1>PRODUCTS</h1>
+        <a href="/Admin/Products/Create" class="btn-primary">+ NEW PRODUCT</a>
+    </div>
 
-@if (TempData["Success"] != null)
-{
-    <div class="alert-success">@TempData["Success"]</div>
-}
-
-<table class="admin-table">
-    <thead>
-        <tr>
-            <th>Image</th><th>Name</th><th>Category</th><th>MRP</th><th>Sale</th><th>Save%</th><th>Stock</th><th>Active</th><th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-    @foreach (var p in Model)
+    @if (TempData["Success"] != null)
     {
-        <tr>
-            <td><img src="@p.PrimaryImageUrl" alt="" width="50" height="60" style="object-fit:cover;" /></td>
-            <td>@p.Name</td>
-            <td>@p.Category?.Name</td>
-            <td>₹@p.MRP</td>
-            <td>₹@p.SalePrice</td>
-            <td>@p.SavePercent%</td>
-            <td>@p.Stock</td>
-            <td>@(p.IsActive ? "Yes" : "No")</td>
-            <td>
-                <a href="/Admin/Products/Edit/@p.ProductId">Edit</a>
-                <form method="post" action="/Admin/Products/Delete/@p.ProductId" style="display:inline" onsubmit="return confirm('Delete?')">
-                    @Html.AntiForgeryToken()
-                    <button class="link-danger">Delete</button>
-                </form>
-            </td>
-        </tr>
+        <div class="alert-success">@TempData["Success"]</div>
     }
-    </tbody>
-</table>
+
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr><th>Image</th><th>Name</th><th>Category</th><th>MRP</th><th>Sale</th><th>Save%</th><th>Stock</th><th>Active</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+            @foreach (var p in Model)
+            {
+                <tr>
+                    <td><img src="@p.PrimaryImageUrl" alt="" width="50" height="60" style="object-fit:cover;" /></td>
+                    <td>@p.Name</td>
+                    <td>@p.Category?.Name</td>
+                    <td>₹@p.MRP</td>
+                    <td>₹@p.SalePrice</td>
+                    <td>@p.SavePercent%</td>
+                    <td>@p.Stock</td>
+                    <td>@(p.IsActive ? "Yes" : "No")</td>
+                    <td>
+                        <a href="/Admin/Products/Edit/@p.ProductId">Edit</a>
+                        <form method="post" action="/Admin/Products/Delete/@p.ProductId" style="display:inline" onsubmit="return confirm('Delete?')">
+                            @Html.AntiForgeryToken()
+                            <button class="link-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

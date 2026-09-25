@@ -827,3 +827,44 @@ body.nav-open .nav-overlay { display: block; }
 .dash-card p { color: var(--gray-600); font-size: 13px; }
 
 h1 { margin: 40px 0 12px; font-size: 28px; font-weight: 800; letter-spacing: 1px; }
+
+/* ================= ADMIN RESPONSIVE ================= */
+@media (max-width: 900px) {
+    .admin-table { font-size: 12px; }
+    .admin-table th, .admin-table td { padding: 10px 6px; }
+    .admin-header { flex-direction: column; align-items: flex-start; gap: 16px; margin: 24px 0 16px; }
+    .admin-header h1 { font-size: 22px; margin: 0; }
+}
+
+@media (max-width: 700px) {
+    /* Table becomes scrollable horizontally */
+    .admin-table-wrap {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .admin-table { min-width: 720px; }
+    .admin-table img { width: 40px; height: 48px; }
+}
+
+@media (max-width: 500px) {
+    .admin-form { padding: 0 4px; margin-bottom: 40px; }
+    .form-row { grid-template-columns: 1fr; gap: 0; }
+    .check-row { flex-direction: column; gap: 12px; }
+    .form-actions { flex-direction: column; }
+    .form-actions .btn-primary,
+    .form-actions .btn-outline { width: 100%; text-align: center; padding: 14px; }
+    .btn-primary { padding: 12px 18px; font-size: 11px; }
+}
+
+/* ================= PDP RESPONSIVE ================= */
+@media (max-width: 900px) {
+    .product-detail { padding: 30px 0; }
+    .pdp-info h1 { font-size: 22px; }
+    .price-row.big { font-size: 17px; }
+}
+@media (max-width: 500px) {
+    .pdp-info h1 { font-size: 19px; }
+    .size-chip { padding: 8px 14px; font-size: 12px; }
+    .big-btn { padding: 16px; font-size: 12px; }
+}

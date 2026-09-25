@@ -2,6 +2,7 @@
 @{ ViewData["Title"] = "Edit Category"; }
 
 <h1>EDIT CATEGORY</h1>
+<div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
 <form method="post" action="/Admin/Categories/Edit/@Model.CategoryId" class="admin-form">
     @Html.AntiForgeryToken()
@@ -17,12 +18,14 @@
     <input asp-for="ImageUrl" />
 
     <label>Display Order</label>
-    <input asp-for="DisplayOrder" type="number" />
+    <input asp-for="DisplayOrder" type="number" min="0" />
 
-    <label><input asp-for="IsActive" type="checkbox" /> Active</label>
+    <div class="check-row">
+        <label><input asp-for="IsActive" type="checkbox" /> Active</label>
+    </div>
 
     <div class="form-actions">
-        <button type="submit" class="btn-primary">UPDATE</button>
-        <a href="/Admin/Categories" class="btn-outline">Cancel</a>
+        <button type="submit" class="btn-primary">UPDATE CATEGORY</button>
+        <a href="/Admin/Categories" class="btn-outline">CANCEL</a>
     </div>
 </form>
