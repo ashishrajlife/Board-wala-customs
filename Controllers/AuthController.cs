@@ -120,6 +120,6 @@ public class AuthController : Controller
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         Response.Cookies.Delete("access_token");
         Response.Cookies.Delete("refresh_token");
-        return RedirectToAction("Index", "Home");
+        return RedirectToAction("Login", "Auth");
     }
 }

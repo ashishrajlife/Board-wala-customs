@@ -74,7 +74,7 @@ img { max-width: 100%; display: block; }
 /* ================= HEADER ================= */
 .site-header {
     background: var(--white);
-    border-bottom: 1px solid var(--gray-200);
+    border-bottom: 1px solid black;
     position: sticky;
     top: 0;
     z-index: 100;
@@ -592,7 +592,7 @@ main { display: block; min-height: 40vh; }
     margin: var(--space-xl) auto;
     background: var(--white);
     padding: var(--space-lg) var(--space-md);
-    border: 1px solid var(--gray-200);
+    border: 1px solid black;
 }
 .auth-card h2 {
     margin-bottom: 26px;
@@ -655,7 +655,7 @@ h1 {
 }
 
 /* ================= DASHBOARDS ================= */
-.dashboard-page { padding: var(--space-lg) 0 var(--space-xl); }
+.dashboard-page { padding: 20px; }
 .dashboard-welcome { color: var(--gray-600); margin-bottom: var(--space-md); font-size: 14px; }
 .dashboard-grid {
     display: grid;
@@ -666,8 +666,9 @@ h1 {
 .dash-card {
     background: var(--white);
     padding: var(--space-md);
-    border: 1px solid var(--gray-200);
+    border: 1px solid black;
     transition: border 0.2s;
+    cursor: pointer;
 }
 .dash-card:hover { border-color: var(--black); }
 .dash-card h3 {
@@ -841,7 +842,7 @@ h1 {
 
     h1 { font-size: 22px; }
 
-    .dashboard-page { padding: var(--space-md) 0 var(--space-lg); }
+    .dashboard-page { padding: 20px; }
     .dashboard-grid {
         grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
         gap: var(--space-sm);
