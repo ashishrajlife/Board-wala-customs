@@ -30,9 +30,21 @@
         <span asp-validation-for="Email" class="text-danger"></span>
 
         <label>Password</label>
-        <input asp-for="Password"
-               type="password"
-               class="@(ViewData.ModelState.IsValid ? "" : "login-error")" />
+
+        <div class="password-wrapper">
+            <input asp-for="Password"
+                   type="password"
+                   id="passwordInput"
+                   class="@(ViewData.ModelState.IsValid ? "" : "login-error")" />
+
+            <button type="button"
+                    class="password-toggle"
+                    id="passwordToggle"
+                    aria-label="Show password">
+                    Show
+            </button>
+        </div>
+
         <span asp-validation-for="Password" class="text-danger"></span>
 
         <label class="checkbox">
@@ -47,6 +59,7 @@
         <a href="/Auth/Register">Register</a>
     </p>
 </div>
+
 <style>
 .auth-card {
     position: relative;
@@ -71,7 +84,38 @@
     border-color: #dc3545 !important;
     outline: none;
 }
+
+/* Password eye button */
+.password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-wrapper input {
+    width: 100%;
+    padding-right: 45px;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    font-size: 11px;
+    line-height: 1;
+    z-index: 2;
+}
+
+.password-toggle:focus {
+    outline: none;
+}
 </style>
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
 
@@ -89,6 +133,24 @@
                     errorMessage.remove();
                 }
             });
+        });
+
+        // Password show/hide toggle
+        const passwordInput = document.getElementById("passwordInput");
+        const passwordToggle = document.getElementById("passwordToggle");
+
+        passwordToggle.addEventListener("click", function () {
+
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                passwordToggle.textContent = "Hide";
+                passwordToggle.setAttribute("aria-label", "Hide password");
+            } else {
+                passwordInput.type = "password";
+                passwordToggle.textContent = "Show";
+                passwordToggle.setAttribute("aria-label", "Show password");
+            }
+
         });
 
     });
