@@ -8,127 +8,262 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        /* ============================================================
+           NAV HOVER DROPDOWN
+           ============================================================ */
+
+        .nav-item {
+            position: relative;
+        }
+
+        .nav-item > a {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .nav-dropdown {
+            position: absolute;
+            top: calc(100% + 15px);
+            left: 50%;
+            transform: translateX(-50%) translateY(-5px);
+
+            min-width: 150px;
+            padding: 18px 24px;
+
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.10);
+
+            text-align: center;
+
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            z-index: 1000;
+        }
+
+        .nav-dropdown::before {
+            content: "";
+            position: absolute;
+            top: -6px;
+            left: 50%;
+            width: 10px;
+            height: 10px;
+
+            background: #fff;
+            border-left: 1px solid #e5e5e5;
+            border-top: 1px solid #e5e5e5;
+
+            transform: translateX(-50%) rotate(45deg);
+        }
+
+        .nav-item:hover .nav-dropdown {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .nav-dropdown span {
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+    </style>
 </head>
+
 <body>
+
     <div class="nav-overlay" onclick="document.body.classList.remove('nav-open')"></div>
+
     <!-- ============ ANNOUNCEMENT BAR ============ -->
     <div class="announcement-bar">
-      <div class="marquee">
-    <span>EXTRA 10% OFF | Use code VALOUS10 | Min. cart ₹500 🔥</span>
-    <span>AS SEEN ON SOCIAL MEDIA</span>
-    <span>NEW DROP JUST LANDED — SHOP NOW! 🔥</span>
-    <span>EXTRA 10% OFF | Use code VALOUS10 | Min. cart ₹500 🔥</span>
-    <span>AS SEEN ON SOCIAL MEDIA</span>
-    <span>NEW DROP JUST LANDED — SHOP NOW! 🔥</span>
-</div>
+        <div class="marquee">
+            <span>EXTRA 10% OFF | Use code VALOUS10 | Min. cart ₹500 🔥</span>
+            <span>AS SEEN ON SOCIAL MEDIA</span>
+            <span>NEW DROP JUST LANDED — SHOP NOW! 🔥</span>
+            <span>EXTRA 10% OFF | Use code VALOUS10 | Min. cart ₹500 🔥</span>
+            <span>AS SEEN ON SOCIAL MEDIA</span>
+            <span>NEW DROP JUST LANDED — SHOP NOW! 🔥</span>
+        </div>
     </div>
 
-   <header class="site-header">
-    <div class="header-inner">
+    <header class="site-header">
+        <div class="header-inner">
 
-        <!-- MOBILE HAMBURGER -->
-        <button class="menu-toggle" aria-label="Menu" onclick="document.body.classList.toggle('nav-open')">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-                <line x1="3" y1="6" x2="21" y2="6"/>
-                <line x1="3" y1="12" x2="21" y2="12"/>
-                <line x1="3" y1="18" x2="21" y2="18"/>
-            </svg>
-        </button>
+            <!-- MOBILE HAMBURGER -->
+            <button class="menu-toggle" aria-label="Menu" onclick="document.body.classList.toggle('nav-open')">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                    <line x1="3" y1="6" x2="21" y2="6"/>
+                    <line x1="3" y1="12" x2="21" y2="12"/>
+                    <line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
+            </button>
 
-        <!-- LEFT NAV -->
-      <nav class="nav-left">
-    <a href="#">Women's
-        <svg class="caret" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-    </a>
-    <a href="#">Men's
-        <svg class="caret" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-    </a>
-    <a href="#">Kid's
-        <svg class="caret" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-    </a>
-      <a href="#">Accessories
-        <svg class="caret" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-    </a>
-</nav>
+            <!-- LEFT NAV -->
+            <nav class="nav-left">
 
-        <!-- CENTER LOGO -->
-        <a href="/" class="brand-logo">
-            <span class="logo-line-1">VALOUS</span>
-            <span class="logo-line-2">WORLD</span>
-        </a>
-
-        <!-- RIGHT SIDE -->
-        <div class="nav-right">
-
-            <!-- SEARCH -->
-            <div class="search-box">
-                <input type="text" placeholder="Search..." />
-                <button aria-label="Search">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="7"/>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                    </svg>
-                </button>
-            </div>
-
-            <!-- USER -->
-            @if (User.Identity?.IsAuthenticated == true)
-            {
-                @if (User.IsInRole("Admin"))
-                {
-                    <a href="/Admin/Dashboard" class="icon-link" title="Admin Dashboard">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="8" r="4"/>
-                            <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>
+                <div class="nav-item">
+                    <a href="#">
+                        Women's
+                        <svg class="caret" width="10" height="10" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"/>
                         </svg>
                     </a>
+
+                    <div class="nav-dropdown">
+                        <span>In Progress</span>
+                    </div>
+                </div>
+
+                <div class="nav-item">
+                    <a href="#">
+                        Men's
+                        <svg class="caret" width="10" height="10" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </a>
+
+                    <div class="nav-dropdown">
+                        <span>In Progress</span>
+                    </div>
+                </div>
+
+                <div class="nav-item">
+                    <a href="#">
+                        Kid's
+                        <svg class="caret" width="10" height="10" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </a>
+
+                    <div class="nav-dropdown">
+                        <span>In Progress</span>
+                    </div>
+                </div>
+
+                <div class="nav-item">
+                    <a href="#">
+                        Accessories
+                        <svg class="caret" width="10" height="10" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </a>
+
+                    <div class="nav-dropdown">
+                        <span>In Progress</span>
+                    </div>
+                </div>
+
+            </nav>
+
+            <!-- CENTER LOGO -->
+            <a href="/" class="brand-logo">
+                <span class="logo-line-1">VALOUS</span>
+                <span class="logo-line-2">WORLD</span>
+            </a>
+
+            <!-- RIGHT SIDE -->
+            <div class="nav-right">
+
+                <!-- SEARCH -->
+                <div class="search-box">
+                    <input type="text" placeholder="Search..." />
+
+                    <button aria-label="Search">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="7"/>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- USER -->
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a href="/Admin/Dashboard" class="icon-link" title="Admin Dashboard">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                                 stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+                                 stroke-linejoin="round">
+                                <circle cx="12" cy="8" r="4"/>
+                                <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>
+                            </svg>
+                        </a>
+                    }
+                    else
+                    {
+                        <a href="/User/Dashboard" class="icon-link" title="My Account">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                                 stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+                                 stroke-linejoin="round">
+                                <circle cx="12" cy="8" r="4"/>
+                                <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>
+                            </svg>
+                        </a>
+                    }
+
+                    <form method="post" action="/Auth/Logout" style="display:inline">
+                        @Html.AntiForgeryToken()
+
+                        <button class="icon-link" title="Logout">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                                 stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+                                 stroke-linejoin="round">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                <polyline points="16 17 21 12 16 7"/>
+                                <line x1="21" y1="12" x2="9" y2="12"/>
+                            </svg>
+                        </button>
+                    </form>
                 }
                 else
                 {
-                    <a href="/User/Dashboard" class="icon-link" title="My Account">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <a href="/Auth/Login" class="icon-link" title="Login">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+                             stroke-linejoin="round">
                             <circle cx="12" cy="8" r="4"/>
                             <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>
                         </svg>
                     </a>
                 }
-                <form method="post" action="/Auth/Logout" style="display:inline">
-                    @Html.AntiForgeryToken()
-                    <button class="icon-link" title="Logout">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                            <polyline points="16 17 21 12 16 7"/>
-                            <line x1="21" y1="12" x2="9" y2="12"/>
+
+                <!-- CART (only for logged-in non-admin users) -->
+                @if (User.Identity?.IsAuthenticated == true && !User.IsInRole("Admin"))
+                {
+                    <a href="/cart" class="icon-link cart-link" title="Cart">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                            <line x1="3" y1="6" x2="21" y2="6"/>
+                            <path d="M16 10a4 4 0 0 1-8 0"/>
                         </svg>
-                    </button>
-                </form>
-            }
-            else
-            {
-                <a href="/Auth/Login" class="icon-link" title="Login">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="8" r="4"/>
-                        <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>
-                    </svg>
-                </a>
-            }
 
-            <!-- CART (only for logged-in non-admin users) -->
-            @if (User.Identity?.IsAuthenticated == true && !User.IsInRole("Admin"))
-            {
-                <a href="/cart" class="icon-link cart-link" title="Cart">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-                        <line x1="3" y1="6" x2="21" y2="6"/>
-                        <path d="M16 10a4 4 0 0 1-8 0"/>
-                    </svg>
-                    <span class="cart-count">0</span>
-                </a>
-            }
+                        <span class="cart-count">0</span>
+                    </a>
+                }
 
+            </div>
         </div>
-    </div>
-</header>
+    </header>
 
     <!-- ============ BREADCRUMB ============ -->
     @if (ViewData["Breadcrumb"] != null)
@@ -145,68 +280,96 @@
     <!-- ============ ACCORDION INFO ============ -->
     <section class="accordion-section">
         <div class="container">
+
             <details>
                 <summary>NEW ARRIVALS <span>+</span></summary>
                 <p>Fresh drops every week. Oversized tees, hoodies, caps, and everyday streetwear built for comfort.</p>
             </details>
+
             <details>
                 <summary>FAQ'S <span>+</span></summary>
                 <p>Free shipping above ₹999. Easy 7-day returns. Cash on delivery available across India.</p>
             </details>
+
             <details>
                 <summary>NEW ARRIVALS PRICE LIST <span>+</span></summary>
                 <p>Caps from ₹899 · Tees from ₹1,199 · Hoodies from ₹1,999 · Jackets from ₹2,999.</p>
             </details>
+
         </div>
     </section>
 
     <!-- ============ FOOTER ============ -->
     <footer class="site-footer">
+
         <div class="container footer-grid">
 
             <div class="footer-col brand-col">
+
                 <div class="footer-logo">VALOUSWORLD</div>
-              <div class="socials">
-    <a href="#" title="Facebook">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
-        </svg>
-    </a>
-    <a href="#" title="Instagram">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="2" width="20" height="20" rx="5"/>
-            <circle cx="12" cy="12" r="4"/>
-            <circle cx="17.5" cy="6.5" r="0.8" fill="currentColor" stroke="none"/>
-        </svg>
-    </a>
-    <a href="#" title="Twitter">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/>
-        </svg>
-    </a>
-    <a href="#" title="YouTube">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-1.92 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z"/>
-            <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/>
-        </svg>
-    </a>
-    <a href="#" title="WhatsApp">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
-        </svg>
-    </a>
-</div>
+
+                <div class="socials">
+
+                    <a href="#" title="Facebook">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+                        </svg>
+                    </a>
+
+                    <a href="#" title="Instagram">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <rect x="2" y="2" width="20" height="20" rx="5"/>
+                            <circle cx="12" cy="12" r="4"/>
+                            <circle cx="17.5" cy="6.5" r="0.8" fill="currentColor" stroke="none"/>
+                        </svg>
+                    </a>
+
+                    <a href="#" title="Twitter">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/>
+                        </svg>
+                    </a>
+
+                    <a href="#" title="YouTube">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-1.92 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z"/>
+                            <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/>
+                        </svg>
+                    </a>
+
+                    <a href="#" title="WhatsApp">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                        </svg>
+                    </a>
+
+                </div>
+
                 <h4>Explore</h4>
+
                 <ul>
                     <li><a href="/">Search</a></li>
                     <li><a href="/">Return</a></li>
                     <li><a href="/">About Us</a></li>
                     <li><a href="/">HTML Sitemap</a></li>
                 </ul>
+
             </div>
 
             <div class="footer-col">
+
                 <h4>SHOP</h4>
+
                 <ul>
                     <li><a href="/">BEST SELLERS</a></li>
                     <li><a href="/">Special Prices</a></li>
@@ -216,10 +379,13 @@
                     <li><a href="/">NEW ARRIVALS</a></li>
                     <li><a href="/">Signature</a></li>
                 </ul>
+
             </div>
 
             <div class="footer-col">
+
                 <h4>TRENDING</h4>
+
                 <ul>
                     <li><a href="/">Signature Collection</a></li>
                     <li><a href="/">Anime Collection</a></li>
@@ -230,10 +396,13 @@
                     <li><a href="/">Sweatshirts & Hoodies</a></li>
                     <li><a href="/">Jackets</a></li>
                 </ul>
+
             </div>
 
             <div class="footer-col">
+
                 <h4>INFO</h4>
+
                 <ul>
                     <li><a href="/">Terms & Conditions</a></li>
                     <li><a href="/">Stores Near Me</a></li>
@@ -244,22 +413,30 @@
                     <li><a href="/">Returns & Exchange Policy</a></li>
                     <li><a href="/">Offers and Deals</a></li>
                 </ul>
+
             </div>
 
             <div class="footer-col newsletter-col">
+
                 <h4>WE'VE GOT YOU COVERED:</h4>
+
                 <p>Beyond the Outfit: Be the first to know about new arrivals, sales & exclusive drops.</p>
+
                 <form class="newsletter-form" onsubmit="event.preventDefault();alert('Subscribed!');">
                     <input type="email" placeholder="Email" required />
                     <button type="submit">→</button>
                 </form>
+
             </div>
 
         </div>
 
         <div class="footer-bottom">
-            <div class="container">© @DateTime.UtcNow.Year VALOUSWORLD. All rights reserved.</div>
+            <div class="container">
+                © @DateTime.UtcNow.Year VALOUSWORLD. All rights reserved.
+            </div>
         </div>
+
     </footer>
 
 </body>

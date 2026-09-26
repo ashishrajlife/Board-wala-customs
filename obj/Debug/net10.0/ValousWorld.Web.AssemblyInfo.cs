@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ValousWorld.Web")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7414d18d26d34846ad8da3b0e8672a8b2cab5880")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+306ef41a7fadd5cb1db9c4d6fce67092546f8607")]
 [assembly: System.Reflection.AssemblyProductAttribute("ValousWorld.Web")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ValousWorld.Web")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
