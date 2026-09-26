@@ -79,8 +79,8 @@ public class AuthController : Controller
             new ClaimsPrincipal(identity));
 
         return user.Role.RoleName == "Admin"
-            ? RedirectToAction("Dashboard", "Admin")
-            : RedirectToAction("Dashboard", "User");
+        ? RedirectToAction("Dashboard", "Admin")
+        : RedirectToAction("Index", "Home");
     }
 
     [HttpGet]
@@ -120,6 +120,6 @@ public class AuthController : Controller
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         Response.Cookies.Delete("access_token");
         Response.Cookies.Delete("refresh_token");
-        return RedirectToAction("Index", "Home");
+        return RedirectToAction("Login", "Auth");
     }
 }

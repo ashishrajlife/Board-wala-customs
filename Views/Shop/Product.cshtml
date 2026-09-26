@@ -1,0 +1,858 @@
+@model ValousWorld.Web.Models.Entities.Product
+@{
+    ViewData["Title"] = Model.Name;
+    ViewData["Breadcrumb"] = Html.Raw(
+        $"<a href='/'>Home</a> / <a href='/category/{Model.Category?.Slug}'>{Model.Category?.Name}</a> / <span>{Model.Name}</span>");
+
+    var related = ViewBag.Related as List<ValousWorld.Web.Models.Entities.Product> ?? new();
+
+    var galleryImgs = new[] { Model.Image1, Model.Image2, Model.Image3, Model.Image4 }
+        .Where(x => !string.IsNullOrWhiteSpace(x))
+        .ToList();
+
+    var sizes = (Model.Sizes ?? "")
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .ToList();
+
+    var colors = (Model.Colors ?? "")
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .ToList();
+}
+
+<!-- ================= Back Button ================= -->
+<div class="container">
+    <a href="javascript:history.back()" class="pdp-back-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"/>
+            <polyline points="12 19 5 12 12 5"/>
+        </svg>
+        BACK
+    </a>
+</div>
+
+<section class="product-detail">
+    <div class="container pdp-grid">
+
+        <!-- ================= LEFT: Gallery ================= -->
+        <div class="pdp-gallery">
+            @if (galleryImgs.Any())
+            {
+                <div class="pdp-main-wrap" id="pdpSlider">
+                    <img id="pdpMainImg"
+                         src="@galleryImgs.First()"
+                         alt="@Model.Name"
+                         class="pdp-main"
+                         data-current="0"
+                         data-total="@galleryImgs.Count" />
+
+                    @if (Model.SavePercent > 0)
+                    {
+                        <span class="pdp-save-badge">SAVE @Model.SavePercent%</span>
+                    }
+
+                    @if (galleryImgs.Count > 1)
+                    {
+                        <!-- Slider arrows (mobile only) -->
+                        <button type="button" class="pdp-nav pdp-nav-prev" id="pdpPrev" aria-label="Previous image">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="15 18 9 12 15 6"/>
+                            </svg>
+                        </button>
+                        <button type="button" class="pdp-nav pdp-nav-next" id="pdpNext" aria-label="Next image">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                        </button>
+
+                        <!-- Dot indicators (mobile only) -->
+                        <div class="pdp-dots" id="pdpDots">
+                            @for (int i = 0; i < galleryImgs.Count; i++)
+                            {
+                                <span class="pdp-dot @(i == 0 ? "active" : "")" data-index="@i"></span>
+                            }
+                        </div>
+                    }
+                </div>
+
+                @if (galleryImgs.Count > 1)
+                {
+                    <!-- Desktop thumbnails (hidden on mobile) -->
+                    <div class="pdp-thumbs" id="pdpThumbs">
+                        @for (int i = 0; i < galleryImgs.Count; i++)
+                        {
+                            var img = galleryImgs[i];
+                            <button type="button"
+                                    class="pdp-thumb @(i == 0 ? "active" : "")"
+                                    data-img="@img"
+                                    data-index="@i"
+                                    aria-label="View image @(i + 1)">
+                                <img src="@img" alt="@Model.Name @(i + 1)" />
+                            </button>
+                        }
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="pdp-main-wrap">
+                    <div class="pdp-no-image">No Image</div>
+                </div>
+            }
+        </div>
+
+        <!-- ================= RIGHT: Info ================= -->
+        <div class="pdp-info">
+            <p class="pdp-cat">@Model.Category?.Name</p>
+            <h1>@Model.Name</h1>
+
+            <div class="pdp-price-row">
+                <span class="pdp-sale">₹@Model.SalePrice.ToString("0.00")</span>
+                <span class="pdp-mrp">₹@Model.MRP.ToString("0")</span>
+                @if (Model.SavePercent > 0)
+                {
+                    <span class="pdp-save-pill">SAVE @Model.SavePercent%</span>
+                }
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.ShortDescription))
+            {
+                <p class="pdp-short">@Model.ShortDescription</p>
+            }
+
+            @if (sizes.Any())
+            {
+                <div class="pdp-block">
+                    <div class="pdp-block-head">
+                        <label>SIZE</label>
+                        <span class="pdp-size-guide">Size Guide</span>
+                    </div>
+                    <div class="pdp-sizes" id="pdpSizes">
+                        @foreach (var s in sizes)
+                        {
+                            <button type="button" class="pdp-size-chip" data-size="@s">@s</button>
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (colors.Any())
+            {
+                <div class="pdp-block">
+                    <label>COLOR</label>
+                    <div class="pdp-colors" id="pdpColors">
+                        @foreach (var c in colors)
+                        {
+                            var colorCss = c.Replace(" ", "").ToLower();
+                            <button type="button"
+                                    class="pdp-color-chip"
+                                    data-color="@c"
+                                    title="@c">
+                                <span class="pdp-color-dot" style="background-color:@colorCss;"></span>
+                                <span class="pdp-color-name">@c</span>
+                            </button>
+                        }
+                    </div>
+                </div>
+            }
+
+            <div class="pdp-block">
+                <label>QUANTITY</label>
+                <div class="pdp-qty" id="pdpQty">
+                    <button type="button" class="qty-btn" data-step="-1" aria-label="Decrease">−</button>
+                    <input type="text" class="qty-input" id="qtyInput" value="1" readonly />
+                    <button type="button" class="qty-btn" data-step="1" aria-label="Increase">+</button>
+                </div>
+            </div>
+
+            <div class="pdp-actions">
+                <button type="button" class="pdp-btn pdp-btn-primary" disabled title="Coming soon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <path d="M16 10a4 4 0 0 1-8 0"/>
+                    </svg>
+                    ADD TO CART
+                </button>
+
+                <button type="button" class="pdp-btn pdp-btn-outline" disabled title="Coming soon">
+                    BUY NOW
+                </button>
+            </div>
+
+            <div class="pdp-meta">
+                <p>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Free shipping above ₹999
+                </p>
+                <p>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Easy 7-day returns
+                </p>
+                <p>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Cash on delivery available
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(Model.Description))
+{
+    <section class="pdp-accordion">
+        <div class="container">
+            <details>
+                <summary>DESCRIPTION <span>+</span></summary>
+                <p>@Model.Description</p>
+            </details>
+            <details>
+                <summary>SHIPPING & RETURNS <span>+</span></summary>
+                <p>Free shipping on orders above ₹999. Easy 7-day returns on unused items with original tags. Cash on delivery available across India.</p>
+            </details>
+        </div>
+    </section>
+}
+
+@if (related.Any())
+{
+    <section class="products-section">
+        <div class="container">
+            <h2 class="section-title">YOU MAY ALSO LIKE</h2>
+            <div class="products-grid">
+                @foreach (var p in related)
+                {
+                    <a href="/product/@p.Slug" class="product-card">
+                        <div class="product-image">
+                            @if (p.SavePercent > 0)
+                            {
+                                <span class="save-badge">SAVE @p.SavePercent%</span>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(p.Image1))
+                            {
+                                <img src="@p.Image1" alt="@p.Name" loading="lazy" />
+                            }
+                        </div>
+                        <div class="product-info">
+                            <h3>@p.Name</h3>
+                            <div class="price-row">
+                                <span class="mrp">Rs.@p.MRP.ToString("0")</span>
+                                <span class="sale">Rs.@p.SalePrice.ToString("0.00")</span>
+                            </div>
+                        </div>
+                    </a>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+<script>
+    // ---- Image gallery + mobile slider ----
+    (function () {
+        const mainImg = document.getElementById('pdpMainImg');
+        const thumbs = document.querySelectorAll('.pdp-thumb');
+        const prevBtn = document.getElementById('pdpPrev');
+        const nextBtn = document.getElementById('pdpNext');
+        const dots = document.querySelectorAll('.pdp-dot');
+
+        if (!mainImg) return;
+
+        const images = [];
+        thumbs.forEach(t => images.push(t.dataset.img));
+
+        // Fallback: single image
+        if (images.length === 0) images.push(mainImg.src);
+
+        let current = 0;
+
+        function setActive(i) {
+            current = i;
+
+            // Main image
+            mainImg.src = images[current];
+            mainImg.style.opacity = '0';
+            setTimeout(() => { mainImg.style.opacity = '1'; }, 80);
+
+            // Thumbs
+            thumbs.forEach((t, idx) => t.classList.toggle('active', idx === current));
+
+            // Dots
+            dots.forEach((d, idx) => d.classList.toggle('active', idx === current));
+        }
+
+        function next() {
+            if (images.length <= 1) return;
+            setActive((current + 1) % images.length);
+        }
+
+        function prev() {
+            if (images.length <= 1) return;
+            setActive((current - 1 + images.length) % images.length);
+        }
+
+        thumbs.forEach(t => {
+            t.addEventListener('click', () => setActive(parseInt(t.dataset.index, 10) || 0));
+        });
+
+        dots.forEach(d => {
+            d.addEventListener('click', () => setActive(parseInt(d.dataset.index, 10) || 0));
+        });
+
+        if (prevBtn) prevBtn.addEventListener('click', prev);
+        if (nextBtn) nextBtn.addEventListener('click', next);
+
+        // Swipe support (mobile)
+        let touchStartX = 0;
+        mainImg.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        mainImg.addEventListener('touchend', e => {
+            const dx = e.changedTouches[0].screenX - touchStartX;
+            if (Math.abs(dx) < 40) return;
+            if (dx < 0) next(); else prev();
+        }, { passive: true });
+    })();
+
+    // ---- Size selector ----
+    (function () {
+        const chips = document.querySelectorAll('.pdp-size-chip');
+        chips.forEach(c => {
+            c.addEventListener('click', () => {
+                chips.forEach(x => x.classList.remove('active'));
+                c.classList.add('active');
+            });
+        });
+    })();
+
+    // ---- Color selector ----
+    (function () {
+        const chips = document.querySelectorAll('.pdp-color-chip');
+        chips.forEach(c => {
+            c.addEventListener('click', () => {
+                chips.forEach(x => x.classList.remove('active'));
+                c.classList.add('active');
+            });
+        });
+    })();
+
+    // ---- Quantity ----
+    (function () {
+        const qtyInput = document.getElementById('qtyInput');
+        const btns = document.querySelectorAll('.qty-btn');
+        if (!qtyInput) return;
+
+        btns.forEach(b => {
+            b.addEventListener('click', () => {
+                let v = parseInt(qtyInput.value, 10) || 1;
+                v += parseInt(b.dataset.step, 10);
+                if (v < 1) v = 1;
+                if (v > 10) v = 10;
+                qtyInput.value = v;
+            });
+        });
+    })();
+</script>
+
+<style>
+    /* ============================================================
+       PRODUCT DETAIL PAGE — page-scoped styles
+       ============================================================ */
+
+    /* ------------------ Back button ------------------ */
+    .pdp-back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin: 20px 0 0;
+        padding: 8px 14px;
+        background: var(--white);
+        border: 1.5px solid var(--gray-200);
+        color: var(--black);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        border-radius: 2px;
+        transition: all 0.15s;
+        cursor: pointer;
+        text-decoration: none;
+        line-height: 1;
+    }
+    .pdp-back-btn:hover {
+        border-color: var(--black);
+        background: var(--black);
+        color: var(--white);
+    }
+
+    /* ------------------ Product detail layout ------------------ */
+    .product-detail { padding: 24px 0 60px; }
+
+    .pdp-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 56px;
+        align-items: start;
+    }
+
+    /* ------------------ Gallery ------------------ */
+    .pdp-gallery {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        min-width: 0;
+    }
+
+    .pdp-main-wrap {
+        position: relative;
+        background: var(--gray-100);
+        overflow: hidden;
+        border-radius: 2px;
+    }
+
+    .pdp-main {
+        width: 100%;
+        aspect-ratio: 3/4;
+        object-fit: cover;
+        display: block;
+        transition: opacity 0.25s ease;
+    }
+
+    .pdp-no-image {
+        width: 100%;
+        aspect-ratio: 3/4;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--gray-400);
+        font-size: 12px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
+
+    .pdp-save-badge {
+        position: absolute;
+        top: 14px;
+        left: 14px;
+        background: var(--red);
+        color: var(--white);
+        font-size: 10px;
+        font-weight: 700;
+        padding: 5px 10px;
+        letter-spacing: 0.5px;
+        border-radius: 2px;
+        z-index: 3;
+    }
+
+    /* Slider arrows (hidden on desktop) */
+    .pdp-nav {
+        display: none;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid var(--gray-200);
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 3;
+        color: var(--black);
+        transition: all 0.15s;
+        padding: 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .pdp-nav:hover { background: var(--black); color: var(--white); border-color: var(--black); }
+    .pdp-nav-prev { left: 10px; }
+    .pdp-nav-next { right: 10px; }
+
+    /* Dot indicators (hidden on desktop) */
+    .pdp-dots {
+        display: none;
+        position: absolute;
+        bottom: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        gap: 6px;
+        z-index: 3;
+    }
+    .pdp-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: rgba(0,0,0,0.25);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .pdp-dot.active {
+        background: var(--black);
+        width: 20px;
+        border-radius: 4px;
+    }
+
+    /* Desktop thumbnails */
+    .pdp-thumbs {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+    }
+
+    .pdp-thumb {
+        border: 1.5px solid var(--gray-200);
+        background: var(--white);
+        padding: 0;
+        width: 100%;
+        aspect-ratio: 3/4;
+        overflow: hidden;
+        cursor: pointer;
+        border-radius: 2px;
+        transition: border-color 0.2s;
+    }
+    .pdp-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    .pdp-thumb:hover { border-color: var(--gray-400); }
+    .pdp-thumb.active { border-color: var(--black); }
+
+    /* ------------------ Info ------------------ */
+    .pdp-info {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .pdp-cat {
+        font-size: 11px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--gray-600);
+        margin-bottom: 10px;
+    }
+
+    .pdp-info h1 {
+        font-size: 26px;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        line-height: 1.2;
+        margin: 0 0 20px;
+        text-transform: uppercase;
+    }
+
+    .pdp-price-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+    }
+    .pdp-sale { font-size: 22px; font-weight: 800; color: var(--red); }
+    .pdp-mrp { font-size: 15px; color: var(--gray-400); text-decoration: line-through; }
+    .pdp-save-pill {
+        background: var(--red);
+        color: var(--white);
+        padding: 4px 10px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        border-radius: 2px;
+    }
+
+    .pdp-short {
+        color: var(--gray-600);
+        font-size: 14px;
+        line-height: 1.5;
+        margin-bottom: 22px;
+    }
+
+    .pdp-block { margin-bottom: 22px; }
+    .pdp-block label {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+        color: var(--black);
+    }
+    .pdp-block-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .pdp-block-head label { margin: 0; }
+    .pdp-size-guide {
+        font-size: 11px;
+        text-decoration: underline;
+        color: var(--gray-600);
+        cursor: pointer;
+    }
+
+    .pdp-sizes { display: flex; gap: 8px; flex-wrap: wrap; }
+    .pdp-size-chip {
+        background: var(--white);
+        border: 1.5px solid var(--gray-200);
+        min-width: 48px;
+        padding: 10px 16px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s;
+        border-radius: 2px;
+        letter-spacing: 0.5px;
+    }
+    .pdp-size-chip:hover { border-color: var(--black); }
+    .pdp-size-chip.active {
+        background: var(--black);
+        color: var(--white);
+        border-color: var(--black);
+    }
+
+    .pdp-colors { display: flex; gap: 10px; flex-wrap: wrap; }
+    .pdp-color-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--white);
+        border: 1.5px solid var(--gray-200);
+        padding: 8px 14px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s;
+        border-radius: 2px;
+    }
+    .pdp-color-chip:hover { border-color: var(--black); }
+    .pdp-color-chip.active { border-color: var(--black); background: var(--gray-100); }
+    .pdp-color-dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        border: 1px solid rgba(0,0,0,0.15);
+        display: inline-block;
+    }
+
+    .pdp-qty {
+        display: inline-flex;
+        align-items: center;
+        border: 1.5px solid var(--gray-200);
+        border-radius: 2px;
+        overflow: hidden;
+    }
+    .qty-btn {
+        background: var(--white);
+        border: none;
+        width: 42px;
+        height: 44px;
+        font-size: 18px;
+        font-weight: 600;
+        cursor: pointer;
+        color: var(--black);
+        transition: background 0.15s;
+    }
+    .qty-btn:hover { background: var(--gray-100); }
+    .qty-input {
+        width: 48px;
+        height: 44px;
+        border: none;
+        border-left: 1.5px solid var(--gray-200);
+        border-right: 1.5px solid var(--gray-200);
+        text-align: center;
+        font-size: 14px;
+        font-weight: 700;
+        outline: none;
+        background: var(--white);
+    }
+
+    .pdp-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin: 26px 0 20px;
+    }
+    .pdp-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 16px 24px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        border-radius: 2px;
+        cursor: pointer;
+        transition: all 0.2s;
+        line-height: 1;
+        border: 1.5px solid transparent;
+    }
+    .pdp-btn-primary {
+        background: var(--black);
+        color: var(--white);
+        border-color: var(--black);
+    }
+    .pdp-btn-primary:hover:not(:disabled) { background: var(--gray-800); }
+    .pdp-btn-outline {
+        background: transparent;
+        color: var(--black);
+        border-color: var(--black);
+    }
+    .pdp-btn-outline:hover:not(:disabled) {
+        background: var(--black);
+        color: var(--white);
+    }
+    .pdp-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .pdp-meta {
+        border-top: 1px solid var(--gray-200);
+        padding-top: 18px;
+        font-size: 13px;
+        color: var(--gray-600);
+    }
+    .pdp-meta p { display: flex; align-items: center; gap: 8px; padding: 5px 0; }
+    .pdp-meta svg { color: var(--black); flex-shrink: 0; }
+
+    /* ------------------ Accordions ------------------ */
+    .pdp-accordion {
+        border-top: 1px solid var(--gray-200);
+        padding: 30px 0;
+    }
+    .pdp-accordion details {
+        border-bottom: 1px solid var(--gray-200);
+        padding: 18px 0;
+    }
+    .pdp-accordion summary {
+        list-style: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        cursor: pointer;
+        gap: 12px;
+    }
+    .pdp-accordion summary::-webkit-details-marker { display: none; }
+    .pdp-accordion summary span {
+        font-size: 18px;
+        font-weight: 300;
+        transition: transform 0.2s;
+        flex-shrink: 0;
+    }
+    .pdp-accordion details[open] summary span { transform: rotate(45deg); }
+    .pdp-accordion p {
+        padding-top: 12px;
+        color: var(--gray-600);
+        font-size: 13px;
+        line-height: 1.7;
+        max-width: 720px;
+    }
+
+    .products-section { padding: 40px 0 60px; }
+    .section-title {
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin-bottom: 24px;
+    }
+
+    /* ============================================================
+       RESPONSIVE
+       ============================================================ */
+
+    /* ----- Tablet landscape (≤ 1024px) ----- */
+    @@media (max-width: 1024px) {
+        .pdp-grid { gap: 32px; }
+        .pdp-info h1 { font-size: 22px; }
+        .pdp-sale { font-size: 20px; }
+    }
+
+    /* ----- Tablet portrait (≤ 900px) — stack, show slider ----- */
+    @@media (max-width: 900px) {
+        .pdp-grid {
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+        .product-detail { padding: 18px 0 40px; }
+
+        /* Hide thumbnails */
+        .pdp-thumbs { display: none; }
+
+        /* Show arrows + dots */
+        .pdp-nav { display: inline-flex; }
+        .pdp-dots { display: flex; }
+
+        /* Give some bottom room for dots */
+        .pdp-main-wrap { padding-bottom: 0; }
+    }
+
+    /* ----- Mobile (≤ 500px) ----- */
+    @@media (max-width: 500px) {
+        .pdp-back-btn {
+            margin-top: 14px;
+            padding: 7px 12px;
+            font-size: 10px;
+            letter-spacing: 1px;
+        }
+
+        .product-detail { padding: 12px 0 32px; }
+
+        .pdp-nav {
+            width: 34px;
+            height: 34px;
+        }
+        .pdp-nav-prev { left: 8px; }
+        .pdp-nav-next { right: 8px; }
+        .pdp-nav svg { width: 15px; height: 15px; }
+
+        .pdp-dots { bottom: 10px; }
+        .pdp-dot { width: 6px; height: 6px; }
+        .pdp-dot.active { width: 16px; }
+
+        .pdp-info h1 {
+            font-size: 18px;
+            letter-spacing: 0.3px;
+            margin-bottom: 14px;
+        }
+
+        .pdp-price-row { gap: 10px; margin-bottom: 14px; }
+        .pdp-sale { font-size: 18px; }
+        .pdp-mrp { font-size: 13px; }
+        .pdp-save-pill { font-size: 9px; padding: 3px 8px; }
+
+        .pdp-short { font-size: 13px; margin-bottom: 18px; }
+
+        .pdp-block { margin-bottom: 18px; }
+        .pdp-block label { font-size: 10px; letter-spacing: 1.5px; }
+
+        .pdp-size-chip { min-width: 42px; padding: 9px 12px; font-size: 12px; }
+        .pdp-color-chip { padding: 7px 12px; font-size: 11px; }
+
+        .qty-btn { width: 38px; height: 40px; }
+        .qty-input { width: 42px; height: 40px; }
+
+        .pdp-btn { padding: 14px 18px; font-size: 11px; }
+        .pdp-meta { font-size: 12px; padding-top: 14px; }
+
+        .pdp-accordion { padding: 20px 0; }
+        .pdp-accordion summary { font-size: 12px; letter-spacing: 1px; }
+        .pdp-accordion p { font-size: 12px; }
+
+        .products-section { padding: 28px 0 40px; }
+        .section-title { font-size: 16px; margin-bottom: 18px; }
+    }
+
+    /* ----- Extra small (≤ 380px) ----- */
+    @@media (max-width: 380px) {
+        .pdp-info h1 { font-size: 16px; }
+        .pdp-size-chip { min-width: 38px; padding: 8px 10px; font-size: 11px; }
+        .pdp-btn { padding: 13px 14px; font-size: 10px; letter-spacing: 1px; }
+    }
+</style>

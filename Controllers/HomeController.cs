@@ -1,24 +1,24 @@
-using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using ValousWorld.Web.Models;
+using Microsoft.EntityFrameworkCore;
+using ValousWorld.Web.Data;
 
 namespace ValousWorld.Web.Controllers;
 
 public class HomeController : Controller
 {
-    public IActionResult Index()
-    {
-        return View();
-    }
+    private readonly AppDbContext _db;
+    public HomeController(AppDbContext db) => _db = db;
 
-    public IActionResult Privacy()
+    public async Task<IActionResult> Index()
     {
-        return View();
-    }
+        var products = await _db.Products
+            .Include(p => p.Category)
+            .Where(p => p.IsActive && p.IsNewArrival)
+            .OrderByDescending(p => p.CreatedAt)
+            .Take(12)
+            .ToListAsync();
 
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
-    {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        ViewBag.TotalProducts = await _db.Products.CountAsync(p => p.IsActive);
+        return View(products);
     }
 }

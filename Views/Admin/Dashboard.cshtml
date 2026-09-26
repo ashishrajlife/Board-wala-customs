@@ -1,11 +1,33 @@
-@{ ViewData["Title"] = "Admin Dashboard"; }
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    ViewData["Breadcrumb"] = Html.Raw("<span>Admin / Dashboard</span>");
+}
 
-<h1>Admin Dashboard</h1>
-<p>Welcome, <strong>@User.Identity?.Name</strong> — you have full access.</p>
-
-<div class="dashboard-grid">
-    <div class="dash-card"><h3>Users</h3><p>Manage all users here.</p></div>
-    <div class="dash-card"><h3>Products</h3><p>Coming next phase.</p></div>
-    <div class="dash-card"><h3>Orders</h3><p>Coming next phase.</p></div>
-    <div class="dash-card"><h3>Reports</h3><p>Coming next phase.</p></div>
+<div class="container admin-page">
+    <div class="dashboard-grid">
+        <div class="dash-card">
+            <h3>Products</h3>
+            <p class="dash-stat">@ViewBag.ProductCount</p>
+            <a href="/Admin/Products" class="btn-outline">Manage →</a>
+        </div>
+        <div class="dash-card">
+            <h3>Categories</h3>
+            <p class="dash-stat">@ViewBag.CategoryCount</p>
+            <a href="/Admin/Categories" class="btn-outline">Manage →</a>
+        </div>
+        <div class="dash-card">
+            <h3>Users</h3>
+            <p class="dash-stat">@ViewBag.UserCount</p>
+        </div>
+        <div class="dash-card">
+            <h3>New Arrivals</h3>
+            <p class="dash-stat">@ViewBag.NewArrivals</p>
+        </div>
+    </div>
 </div>
+<style>
+    .admin-page
+    {
+      padding: 20px;
+    }
+</style>

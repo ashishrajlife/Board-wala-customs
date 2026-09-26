@@ -1,52 +1,40 @@
-﻿@{
+﻿@model List<ValousWorld.Web.Models.Entities.Product>
+@{
     ViewData["Title"] = "New Arrivals";
     ViewData["Breadcrumb"] = Html.Raw("<a href='/'>Home</a> / <a href='/'>Shop</a> / <span>New Arrivals</span>");
 }
 
-<!-- ================= HERO ================= -->
 <section class="hero-banner">
     <div class="hero-overlay">
         <h1>NEW ARRIVALS</h1>
-       <div class="hero-tag">
-    <div class="tag-icon">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-        </svg>
-    </div>
-    <span>All-Day Comfort Fit</span>
-</div>
-<div class="hero-tag">
-    <div class="tag-icon">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/>
-        </svg>
-    </div>
-    <span>Effortless Fresh Look</span>
-</div>
-<div class="hero-tag">
-    <div class="tag-icon">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="6" cy="6" r="3"/>
-            <circle cx="6" cy="18" r="3"/>
-            <line x1="20" y1="4" x2="8.12" y2="15.88"/>
-            <line x1="14.47" y1="14.48" x2="20" y2="20"/>
-            <line x1="8.12" y1="8.12" x2="12" y2="12"/>
-        </svg>
-    </div>
-    <span>Easy To Style Silhouettes</span>
-</div>
+        <div class="hero-tags">
+            <div class="hero-tag">
+                <div class="tag-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <span>All-Day Comfort Fit</span>
+            </div>
+            <div class="hero-tag">
+                <div class="tag-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>
+                </div>
+                <span>Effortless Fresh Look</span>
+            </div>
+            <div class="hero-tag">
+                <div class="tag-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+                </div>
+                <span>Easy To Style Silhouettes</span>
+            </div>
+        </div>
     </div>
 </section>
 
-<!-- ================= FILTER BAR ================= -->
 <div class="filter-bar">
     <div class="container filter-inner">
         <div class="filter-left">
-         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-    <line x1="4" y1="6" x2="20" y2="6"/>
-    <line x1="4" y1="12" x2="14" y2="12"/>
-    <line x1="4" y1="18" x2="10" y2="18"/>
-</svg> FILTER AND SORT
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="18" x2="10" y2="18"/></svg>
+            FILTER AND SORT
         </div>
         <div class="filter-right">
             <select>
@@ -56,49 +44,43 @@
                 <option>PRICE: HIGH TO LOW</option>
                 <option>NEWEST</option>
             </select>
-            <span class="product-count">2956 PRODUCTS</span>
+            <span class="product-count">@ViewBag.TotalProducts PRODUCTS</span>
         </div>
     </div>
 </div>
 
-<!-- ================= PRODUCT GRID ================= -->
 <section class="products-section">
     <div class="container">
-        <div class="products-grid">
-
-            @* Sample products — replace with real DB data in Phase 2 *@
-            @{
-                var products = new[]
+        @if (!Model.Any())
+        {
+            <p style="text-align:center; padding:60px 0; color:#888;">
+                No products yet. <a href="/Admin/Products/Create" style="text-decoration:underline;">Add one in admin.</a>
+            </p>
+        }
+        else
+        {
+            <div class="products-grid">
+                @foreach (var p in Model)
                 {
-                    new { Name = "HUSTLE GANG BROWN CAP", Price = 1199, Sale = 899, Save = 25, Img = "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=600" },
-                    new { Name = "HUSTLE GANG BLACK CAP", Price = 1199, Sale = 899, Save = 25, Img = "https://images.unsplash.com/photo-1521369909029-2afed882baee?w=600" },
-                    new { Name = "HUSTLE REBEL CAP", Price = 1199, Sale = 899, Save = 25, Img = "https://images.unsplash.com/photo-1533055640609-24b498dfd74c?w=600" },
-                    new { Name = "HUSTLE BEAST INSTINCT HOODIE", Price = 2299, Sale = 1999, Save = 13, Img = "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=600" },
-                    new { Name = "OVERSIZED BLACK TEE", Price = 1499, Sale = 1099, Save = 27, Img = "https://images.unsplash.com/photo-1503341504253-dff4815485f1?w=600" },
-                    new { Name = "STREET CARGO PANTS", Price = 2499, Sale = 1799, Save = 28, Img = "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=600" },
-                    new { Name = "URBAN ZIP JACKET", Price = 3999, Sale = 2999, Save = 25, Img = "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=600" },
-                    new { Name = "GRAPHIC OVERSIZED TEE", Price = 1599, Sale = 1199, Save = 25, Img = "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600" }
-                };
-            }
-
-            @foreach (var p in products)
-            {
-                <div class="product-card">
-                    <div class="product-image">
-                        <span class="save-badge">SAVE @p.Save%</span>
-                        <img src="@p.Img" alt="@p.Name" loading="lazy" />
-                        <button class="quick-add">ADD TO CART</button>
-                    </div>
-                    <div class="product-info">
-                        <h3>@p.Name</h3>
-                        <div class="price-row">
-                            <span class="mrp">Rs.@p.Price</span>
-                            <span class="sale">Rs.@p.Sale.00</span>
+                    <a href="/product/@p.Slug" class="product-card">
+                        <div class="product-image">
+                            @if (p.SavePercent > 0)
+                            {
+                                <span class="save-badge">SAVE @p.SavePercent%</span>
+                            }
+                            <img src="@p.PrimaryImageUrl" alt="@p.Name" loading="lazy" />
+                            <button class="quick-add" onclick="event.preventDefault();">ADD TO CART</button>
                         </div>
-                    </div>
-                </div>
-            }
-
-        </div>
+                        <div class="product-info">
+                            <h3>@p.Name</h3>
+                            <div class="price-row">
+                                <span class="mrp">Rs.@p.MRP.ToString("0")</span>
+                                <span class="sale">Rs.@p.SalePrice.ToString("0.00")</span>
+                            </div>
+                        </div>
+                    </a>
+                }
+            </div>
+        }
     </div>
 </section>

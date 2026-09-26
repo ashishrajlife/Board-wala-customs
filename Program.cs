@@ -17,6 +17,11 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
 var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>()!;
 
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(opt =>
+{
+    opt.MultipartBodyLengthLimit = 10 * 1024 * 1024; // 6 MB (buffer above 5 MB limit)
+});
+
 // Auth: both Cookie (for MVC) and JWT (for API)
 builder.Services.AddAuthentication(options =>
 {
@@ -46,6 +51,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<IFileService, FileService>();
 
 var app = builder.Build();
 

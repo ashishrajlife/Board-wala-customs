@@ -14,12 +14,12 @@
     <!-- ============ ANNOUNCEMENT BAR ============ -->
     <div class="announcement-bar">
       <div class="marquee">
+    <span>EXTRA 10% OFF | Use code VALOUS10 | Min. cart ₹500 🔥</span>
+    <span>AS SEEN ON SOCIAL MEDIA</span>
+    <span>NEW DROP JUST LANDED — SHOP NOW! 🔥</span>
     <span>EXTRA 10% OFF | Use code VALOUS10 | Min. cart ₹500</span>
     <span>AS SEEN ON SOCIAL MEDIA</span>
-    <span>NEW DROP JUST LANDED — SHOP NOW!</span>
-    <span>EXTRA 10% OFF | Use code VALOUS10 | Min. cart ₹500</span>
-    <span>AS SEEN ON SOCIAL MEDIA</span>
-    <span>NEW DROP JUST LANDED — SHOP NOW!</span>
+    <span>NEW DROP JUST LANDED — SHOP NOW! 🔥</span>
 </div>
     </div>
 
@@ -36,17 +36,17 @@
         </button>
 
         <!-- LEFT NAV -->
-        <nav class="nav-left">
-            <a href="/">WOMEN
-                <svg class="caret" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-            </a>
-            <a href="/">MEN
-                <svg class="caret" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-            </a>
-            <a href="/">ACCESSORIES
-                <svg class="caret" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-            </a>
-        </nav>
+      <nav class="nav-left">
+    <a href="/category/caps">CAPS
+        <svg class="caret" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </a>
+    <a href="/category/hoodies">HOODIES
+        <svg class="caret" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </a>
+    <a href="/category/oversized-tees">TEES
+        <svg class="caret" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </a>
+</nav>
 
         <!-- CENTER LOGO -->
         <a href="/" class="brand-logo">
@@ -110,31 +110,18 @@
                 </a>
             }
 
-            <!-- WISHLIST -->
-            <a href="/" class="icon-link" title="Wishlist">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                </svg>
-            </a>
-
-            <!-- STORE -->
-            <a href="/" class="icon-link" title="Store">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 9l1.5-5h15L21 9"/>
-                    <path d="M3 9h18v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9z"/>
-                    <path d="M8 22V14h8v8"/>
-                </svg>
-            </a>
-
-            <!-- CART -->
-            <a href="/" class="icon-link cart-link" title="Cart">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-                    <line x1="3" y1="6" x2="21" y2="6"/>
-                    <path d="M16 10a4 4 0 0 1-8 0"/>
-                </svg>
-                <span class="cart-count">0</span>
-            </a>
+            <!-- CART (only for logged-in non-admin users) -->
+            @if (User.Identity?.IsAuthenticated == true && !User.IsInRole("Admin"))
+            {
+                <a href="/cart" class="icon-link cart-link" title="Cart">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <path d="M16 10a4 4 0 0 1-8 0"/>
+                    </svg>
+                    <span class="cart-count">0</span>
+                </a>
+            }
 
         </div>
     </div>
