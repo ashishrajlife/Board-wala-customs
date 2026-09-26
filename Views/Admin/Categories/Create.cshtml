@@ -2,31 +2,65 @@
 @{ ViewData["Title"] = "New Category"; }
 
 <div class="container admin-page">
-    <h1>NEW CATEGORY</h1>
+    <div class="admin-header">
+        <h1>NEW CATEGORY</h1>
+        <a href="/Admin/Categories" class="btn-outline">← BACK TO LIST</a>
+    </div>
+
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-    <form method="post" action="/Admin/Categories/Create" class="admin-form">
+    <form method="post" action="/Admin/Categories/Create"
+          enctype="multipart/form-data" class="admin-form">
         @Html.AntiForgeryToken()
 
-        <label>Name *</label>
-        <input asp-for="Name" required placeholder="e.g. Caps" />
+        <!-- LEFT -->
+        <div class="form-main">
+            <label>Category Name *</label>
+            <input asp-for="Name" required placeholder="e.g. Caps" />
 
-        <label>Slug (auto if empty)</label>
-        <input asp-for="Slug" placeholder="caps" />
+            <label>Slug (auto-generated if empty)</label>
+            <input asp-for="Slug" placeholder="caps" />
 
-        <label>Image URL</label>
-        <input asp-for="ImageUrl" placeholder="https://..." />
-
-        <label>Display Order</label>
-        <input asp-for="DisplayOrder" type="number" min="0" />
-
-        <div class="check-row">
-            <label><input asp-for="IsActive" type="checkbox" /> Active</label>
+            <label>Display Order</label>
+            <input asp-for="DisplayOrder" type="number" min="0" placeholder="0" />
         </div>
 
-        <div class="form-actions">
-            <button type="submit" class="btn-primary">CREATE CATEGORY</button>
-            <a href="/Admin/Categories" class="btn-outline">CANCEL</a>
+        <!-- RIGHT -->
+        <div class="form-side">
+            <h3>IMAGE</h3>
+
+            <label>Category Image</label>
+            <div class="upload-block">
+                <input type="file" name="imageFile" accept="image/*" id="imgInput" />
+                <div class="upload-hint">JPG, PNG, WEBP, GIF — Max 5 MB</div>
+                <img id="imgPreview" class="upload-preview" style="display:none;" alt="preview" />
+            </div>
+
+            <label style="margin-top:10px;">Or Image URL</label>
+            <input asp-for="ImageUrl" placeholder="https://..." />
+
+            <h3 style="margin-top:24px;">STATUS</h3>
+            <div class="check-row">
+                <label><input asp-for="IsActive" type="checkbox" /> Active</label>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">CREATE CATEGORY</button>
+                <a href="/Admin/Categories" class="btn-outline">CANCEL</a>
+            </div>
         </div>
     </form>
 </div>
+
+<script>
+    (function () {
+        const input = document.getElementById('imgInput');
+        const preview = document.getElementById('imgPreview');
+        input.addEventListener('change', () => {
+            const file = input.files[0];
+            if (!file) { preview.style.display = 'none'; return; }
+            preview.src = URL.createObjectURL(file);
+            preview.style.display = 'block';
+        });
+    })();
+</script>

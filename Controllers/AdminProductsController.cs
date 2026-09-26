@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ValousWorld.Web.Data;
 using ValousWorld.Web.Models.Entities;
+using ValousWorld.Web.Services;
 
 namespace ValousWorld.Web.Controllers;
 
@@ -12,7 +13,13 @@ namespace ValousWorld.Web.Controllers;
 public class AdminProductsController : Controller
 {
     private readonly AppDbContext _db;
-    public AdminProductsController(AppDbContext db) => _db = db;
+    private readonly IFileService _files;
+
+    public AdminProductsController(AppDbContext db, IFileService files)
+    {
+        _db = db;
+        _files = files;
+    }
 
     [Route("")]
     public async Task<IActionResult> Index()
@@ -34,16 +41,43 @@ public class AdminProductsController : Controller
 
     [HttpPost, Route("Create")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(Product model)
+    [RequestSizeLimit(12 * 1024 * 1024)]
+    public async Task<IActionResult> Create(Product model, IFormFile? primaryFile, IFormFile? secondaryFile)
     {
+        ModelState.Remove(nameof(Product.Category));
+
         if (!ModelState.IsValid)
         {
             await LoadCategoriesAsync(model.CategoryId);
             return View("~/Views/Admin/Products/Create.cshtml", model);
         }
 
+        try
+        {
+            if (primaryFile != null && primaryFile.Length > 0)
+                model.PrimaryImageUrl = await _files.SaveImageAsync(primaryFile, "products");
+
+            if (secondaryFile != null && secondaryFile.Length > 0)
+                model.SecondaryImageUrl = await _files.SaveImageAsync(secondaryFile, "products");
+        }
+        catch (Exception ex)
+        {
+            ModelState.AddModelError("", ex.Message);
+            await LoadCategoriesAsync(model.CategoryId);
+            return View("~/Views/Admin/Products/Create.cshtml", model);
+        }
+
+        if (string.IsNullOrWhiteSpace(model.PrimaryImageUrl))
+        {
+            ModelState.AddModelError("primaryFile", "Primary image is required.");
+            await LoadCategoriesAsync(model.CategoryId);
+            return View("~/Views/Admin/Products/Create.cshtml", model);
+        }
+
         model.Slug = string.IsNullOrWhiteSpace(model.Slug) ? Slugify(model.Name) : Slugify(model.Slug);
-        model.SavePercent = model.MRP > 0 ? (int)Math.Round((model.MRP - model.SalePrice) / model.MRP * 100) : 0;
+        model.SavePercent = model.MRP > 0
+            ? (int)Math.Round((model.MRP - model.SalePrice) / model.MRP * 100)
+            : 0;
         model.CreatedAt = DateTime.UtcNow;
 
         _db.Products.Add(model);
@@ -63,9 +97,13 @@ public class AdminProductsController : Controller
 
     [HttpPost, Route("Edit/{id:int}")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, Product model)
+    [RequestSizeLimit(12 * 1024 * 1024)]
+    public async Task<IActionResult> Edit(int id, Product model, IFormFile? primaryFile, IFormFile? secondaryFile)
     {
         if (id != model.ProductId) return BadRequest();
+
+        ModelState.Remove(nameof(Product.Category));
+
         if (!ModelState.IsValid)
         {
             await LoadCategoriesAsync(model.CategoryId);
@@ -75,18 +113,51 @@ public class AdminProductsController : Controller
         var existing = await _db.Products.FindAsync(id);
         if (existing == null) return NotFound();
 
+        try
+        {
+            // Primary image — replace if new file uploaded
+            if (primaryFile != null && primaryFile.Length > 0)
+            {
+                var oldUrl = existing.PrimaryImageUrl;
+                existing.PrimaryImageUrl = await _files.SaveImageAsync(primaryFile, "products");
+                _files.DeleteImage(oldUrl);
+            }
+            else if (!string.IsNullOrWhiteSpace(model.PrimaryImageUrl))
+            {
+                existing.PrimaryImageUrl = model.PrimaryImageUrl;
+            }
+
+            // Secondary image — replace if new file uploaded
+            if (secondaryFile != null && secondaryFile.Length > 0)
+            {
+                var oldUrl = existing.SecondaryImageUrl;
+                existing.SecondaryImageUrl = await _files.SaveImageAsync(secondaryFile, "products");
+                _files.DeleteImage(oldUrl);
+            }
+            else if (!string.IsNullOrWhiteSpace(model.SecondaryImageUrl))
+            {
+                existing.SecondaryImageUrl = model.SecondaryImageUrl;
+            }
+        }
+        catch (Exception ex)
+        {
+            ModelState.AddModelError("", ex.Message);
+            await LoadCategoriesAsync(model.CategoryId);
+            return View("~/Views/Admin/Products/Edit.cshtml", model);
+        }
+
         existing.Name = model.Name;
         existing.Slug = string.IsNullOrWhiteSpace(model.Slug) ? Slugify(model.Name) : Slugify(model.Slug);
         existing.ShortDescription = model.ShortDescription;
         existing.Description = model.Description;
         existing.MRP = model.MRP;
         existing.SalePrice = model.SalePrice;
-        existing.SavePercent = model.MRP > 0 ? (int)Math.Round((model.MRP - model.SalePrice) / model.MRP * 100) : 0;
+        existing.SavePercent = model.MRP > 0
+            ? (int)Math.Round((model.MRP - model.SalePrice) / model.MRP * 100)
+            : 0;
         existing.CategoryId = model.CategoryId;
         existing.Sizes = model.Sizes;
         existing.Colors = model.Colors;
-        existing.PrimaryImageUrl = model.PrimaryImageUrl;
-        existing.SecondaryImageUrl = model.SecondaryImageUrl;
         existing.IsActive = model.IsActive;
         existing.IsFeatured = model.IsFeatured;
         existing.IsNewArrival = model.IsNewArrival;
@@ -104,12 +175,22 @@ public class AdminProductsController : Controller
     public async Task<IActionResult> Delete(int id)
     {
         var product = await _db.Products.FindAsync(id);
-        if (product != null)
+        if (product == null)
         {
-            _db.Products.Remove(product);
-            await _db.SaveChangesAsync();
-            TempData["Success"] = "Product deleted.";
+            TempData["Error"] = "Product not found.";
+            return RedirectToAction(nameof(Index));
         }
+
+        var primary = product.PrimaryImageUrl;
+        var secondary = product.SecondaryImageUrl;
+
+        _db.Products.Remove(product);
+        await _db.SaveChangesAsync();
+
+        _files.DeleteImage(primary);
+        _files.DeleteImage(secondary);
+
+        TempData["Success"] = "Product deleted.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -120,10 +201,5 @@ public class AdminProductsController : Controller
     }
 
     private static string Slugify(string input)
-    {
-        return input.Trim().ToLower()
-            .Replace(" ", "-")
-            .Replace("'", "")
-            .Replace("\"", "");
-    }
+        => input.Trim().ToLower().Replace(" ", "-").Replace("'", "").Replace("\"", "");
 }

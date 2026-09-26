@@ -2,43 +2,112 @@
 @{ ViewData["Title"] = "Edit Product"; }
 
 <div class="container admin-page">
-    <h1>EDIT PRODUCT</h1>
+    <div class="admin-header">
+        <h1>EDIT PRODUCT</h1>
+        <a href="/Admin/Products" class="btn-outline">← BACK TO LIST</a>
+    </div>
+
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-    <form method="post" action="/Admin/Products/Edit/@Model.ProductId" class="admin-form">
+    <form method="post" action="/Admin/Products/Edit/@Model.ProductId"
+          enctype="multipart/form-data" class="admin-form">
         @Html.AntiForgeryToken()
         <input type="hidden" asp-for="ProductId" />
 
-        <label>Name *</label><input asp-for="Name" required />
-        <label>Slug</label><input asp-for="Slug" />
-        <label>Category *</label><select asp-for="CategoryId" asp-items="ViewBag.Categories" required></select>
-        <label>Short Description</label><input asp-for="ShortDescription" />
-        <label>Full Description</label><textarea asp-for="Description" rows="4"></textarea>
+        <!-- LEFT -->
+        <div class="form-main">
+            <label>Product Name *</label>
+            <input asp-for="Name" required />
 
-        <div class="form-row">
-            <div><label>MRP ₹ *</label><input asp-for="MRP" type="number" step="0.01" required /></div>
-            <div><label>Sale Price ₹ *</label><input asp-for="SalePrice" type="number" step="0.01" required /></div>
+            <label>Slug</label>
+            <input asp-for="Slug" />
+
+            <label>Category *</label>
+            <select asp-for="CategoryId" asp-items="ViewBag.Categories" required></select>
+
+            <label>Short Description</label>
+            <input asp-for="ShortDescription" />
+
+            <label>Full Description</label>
+            <textarea asp-for="Description" rows="6"></textarea>
+
+            <div class="form-row">
+                <div><label>MRP ₹ *</label><input asp-for="MRP" type="number" step="0.01" required /></div>
+                <div><label>Sale Price ₹ *</label><input asp-for="SalePrice" type="number" step="0.01" required /></div>
+            </div>
+
+            <div class="form-row">
+                <div><label>Sizes</label><input asp-for="Sizes" /></div>
+                <div><label>Colors</label><input asp-for="Colors" /></div>
+            </div>
+
+            <div class="form-row">
+                <div><label>Stock</label><input asp-for="Stock" type="number" /></div>
+                <div><label>Display Order</label><input asp-for="DisplayOrder" type="number" /></div>
+            </div>
         </div>
 
-        <label>Sizes</label><input asp-for="Sizes" />
-        <label>Colors</label><input asp-for="Colors" />
-        <label>Primary Image URL *</label><input asp-for="PrimaryImageUrl" required />
-        <label>Secondary Image URL</label><input asp-for="SecondaryImageUrl" />
+        <!-- RIGHT -->
+        <div class="form-side">
+            <h3>IMAGES</h3>
 
-        <div class="form-row">
-            <div><label>Stock</label><input asp-for="Stock" type="number" /></div>
-            <div><label>Display Order</label><input asp-for="DisplayOrder" type="number" /></div>
-        </div>
+            <label>Primary Image</label>
+            @if (!string.IsNullOrEmpty(Model.PrimaryImageUrl))
+            {
+                <div class="current-image">
+                    <img src="@Model.PrimaryImageUrl" alt="current primary" />
+                </div>
+            }
+            <div class="upload-block">
+                <input type="file" name="primaryFile" accept="image/*" id="primaryInput" />
+                <div class="upload-hint">JPG, PNG, WEBP, GIF — Max 5 MB</div>
+                <img id="primaryPreview" class="upload-preview" style="display:none;" alt="preview" />
+            </div>
+            <label style="margin-top:10px;">Or Primary URL</label>
+            <input asp-for="PrimaryImageUrl" />
 
-        <div class="check-row">
-            <label><input asp-for="IsActive" type="checkbox" /> Active</label>
-            <label><input asp-for="IsFeatured" type="checkbox" /> Featured</label>
-            <label><input asp-for="IsNewArrival" type="checkbox" /> New Arrival</label>
-        </div>
+            <label style="margin-top:16px;">Secondary Image</label>
+            @if (!string.IsNullOrEmpty(Model.SecondaryImageUrl))
+            {
+                <div class="current-image">
+                    <img src="@Model.SecondaryImageUrl" alt="current secondary" />
+                </div>
+            }
+            <div class="upload-block">
+                <input type="file" name="secondaryFile" accept="image/*" id="secondaryInput" />
+                <div class="upload-hint">JPG, PNG, WEBP, GIF — Max 5 MB</div>
+                <img id="secondaryPreview" class="upload-preview" style="display:none;" alt="preview" />
+            </div>
+            <label style="margin-top:10px;">Or Secondary URL</label>
+            <input asp-for="SecondaryImageUrl" />
 
-        <div class="form-actions">
-            <button type="submit" class="btn-primary">UPDATE PRODUCT</button>
-            <a href="/Admin/Products" class="btn-outline">CANCEL</a>
+            <h3 style="margin-top:24px;">FLAGS</h3>
+            <div class="check-row">
+                <label><input asp-for="IsActive" type="checkbox" /> Active</label>
+                <label><input asp-for="IsFeatured" type="checkbox" /> Featured</label>
+                <label><input asp-for="IsNewArrival" type="checkbox" /> New Arrival</label>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">UPDATE PRODUCT</button>
+                <a href="/Admin/Products" class="btn-outline">CANCEL</a>
+            </div>
         </div>
     </form>
 </div>
+
+<script>
+    function bindPreview(inputId, previewId) {
+        const input = document.getElementById(inputId);
+        const preview = document.getElementById(previewId);
+        if (!input || !preview) return;
+        input.addEventListener('change', () => {
+            const file = input.files[0];
+            if (!file) { preview.style.display = 'none'; return; }
+            preview.src = URL.createObjectURL(file);
+            preview.style.display = 'block';
+        });
+    }
+    bindPreview('primaryInput', 'primaryPreview');
+    bindPreview('secondaryInput', 'secondaryPreview');
+</script>

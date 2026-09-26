@@ -2,58 +2,117 @@
 @{ ViewData["Title"] = "New Product"; }
 
 <div class="container admin-page">
-    <h1>NEW PRODUCT</h1>
+    <div class="admin-header">
+        <h1>NEW PRODUCT</h1>
+        <a href="/Admin/Products" class="btn-outline">← BACK TO LIST</a>
+    </div>
+
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-    <form method="post" action="/Admin/Products/Create" class="admin-form">
+    <form method="post" action="/Admin/Products/Create"
+          enctype="multipart/form-data" class="admin-form">
         @Html.AntiForgeryToken()
 
-        <label>Name *</label>
-        <input asp-for="Name" required placeholder="Product name" />
+        <!-- ============ LEFT: Main fields ============ -->
+        <div class="form-main">
+            <label>Product Name *</label>
+            <input asp-for="Name" required placeholder="e.g. HUSTLE GANG BROWN CAP" />
 
-        <label>Slug (auto-generated if empty)</label>
-        <input asp-for="Slug" placeholder="product-slug" />
+            <label>Slug (auto-generated if empty)</label>
+            <input asp-for="Slug" placeholder="hustle-gang-brown-cap" />
 
-        <label>Category *</label>
-        <select asp-for="CategoryId" asp-items="ViewBag.Categories" required></select>
+            <label>Category *</label>
+            <select asp-for="CategoryId" asp-items="ViewBag.Categories" required></select>
 
-        <label>Short Description</label>
-        <input asp-for="ShortDescription" placeholder="One-line summary" />
+            <label>Short Description</label>
+            <input asp-for="ShortDescription" placeholder="One-line summary shown on product page" />
 
-        <label>Full Description</label>
-        <textarea asp-for="Description" rows="4" placeholder="Detailed description"></textarea>
+            <label>Full Description</label>
+            <textarea asp-for="Description" rows="6" placeholder="Detailed product description..."></textarea>
 
-        <div class="form-row">
-            <div><label>MRP ₹ *</label><input asp-for="MRP" type="number" step="0.01" required /></div>
-            <div><label>Sale Price ₹ *</label><input asp-for="SalePrice" type="number" step="0.01" required /></div>
+            <div class="form-row">
+                <div>
+                    <label>MRP ₹ *</label>
+                    <input asp-for="MRP" type="number" step="0.01" required placeholder="1199.00" />
+                </div>
+                <div>
+                    <label>Sale Price ₹ *</label>
+                    <input asp-for="SalePrice" type="number" step="0.01" required placeholder="899.00" />
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label>Sizes (comma separated)</label>
+                    <input asp-for="Sizes" placeholder="S,M,L,XL" />
+                </div>
+                <div>
+                    <label>Colors (comma separated)</label>
+                    <input asp-for="Colors" placeholder="Black,Brown" />
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label>Stock</label>
+                    <input asp-for="Stock" type="number" min="0" />
+                </div>
+                <div>
+                    <label>Display Order</label>
+                    <input asp-for="DisplayOrder" type="number" min="0" />
+                </div>
+            </div>
         </div>
 
-        <label>Sizes (comma separated)</label>
-        <input asp-for="Sizes" placeholder="S,M,L,XL" />
+        <!-- ============ RIGHT: Sidebar ============ -->
+        <div class="form-side">
+            <h3>IMAGES</h3>
 
-        <label>Colors (comma separated)</label>
-        <input asp-for="Colors" placeholder="Black,Brown" />
+            <label>Primary Image *</label>
+            <div class="upload-block">
+                <input type="file" name="primaryFile" accept="image/*" id="primaryInput" />
+                <div class="upload-hint">JPG, PNG, WEBP, GIF — Max 5 MB</div>
+                <img id="primaryPreview" class="upload-preview" style="display:none;" alt="preview" />
+            </div>
+            <label style="margin-top:10px;">Or Primary URL</label>
+            <input asp-for="PrimaryImageUrl" placeholder="https://..." />
 
-        <label>Primary Image URL *</label>
-        <input asp-for="PrimaryImageUrl" required placeholder="https://..." />
+            <label>Secondary Image</label>
+            <div class="upload-block">
+                <input type="file" name="secondaryFile" accept="image/*" id="secondaryInput" />
+                <div class="upload-hint">JPG, PNG, WEBP, GIF — Max 5 MB</div>
+                <img id="secondaryPreview" class="upload-preview" style="display:none;" alt="preview" />
+            </div>
+            <label style="margin-top:10px;">Or Secondary URL</label>
+            <input asp-for="SecondaryImageUrl" placeholder="https://..." />
 
-        <label>Secondary Image URL</label>
-        <input asp-for="SecondaryImageUrl" placeholder="https://..." />
+            <h3 style="margin-top:24px;">FLAGS</h3>
+            <div class="check-row">
+                <label><input asp-for="IsActive" type="checkbox" /> Active</label>
+                <label><input asp-for="IsFeatured" type="checkbox" /> Featured</label>
+                <label><input asp-for="IsNewArrival" type="checkbox" /> New Arrival</label>
+            </div>
 
-        <div class="form-row">
-            <div><label>Stock</label><input asp-for="Stock" type="number" min="0" /></div>
-            <div><label>Display Order</label><input asp-for="DisplayOrder" type="number" min="0" /></div>
-        </div>
-
-        <div class="check-row">
-            <label><input asp-for="IsActive" type="checkbox" /> Active</label>
-            <label><input asp-for="IsFeatured" type="checkbox" /> Featured</label>
-            <label><input asp-for="IsNewArrival" type="checkbox" /> New Arrival</label>
-        </div>
-
-        <div class="form-actions">
-            <button type="submit" class="btn-primary">CREATE PRODUCT</button>
-            <a href="/Admin/Products" class="btn-outline">CANCEL</a>
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">CREATE PRODUCT</button>
+                <a href="/Admin/Products" class="btn-outline">CANCEL</a>
+            </div>
         </div>
     </form>
 </div>
+
+<script>
+    function bindPreview(inputId, previewId) {
+        const input = document.getElementById(inputId);
+        const preview = document.getElementById(previewId);
+        if (!input || !preview) return;
+        input.addEventListener('change', () => {
+            const file = input.files[0];
+            if (!file) { preview.style.display = 'none'; return; }
+            preview.src = URL.createObjectURL(file);
+            preview.style.display = 'block';
+        });
+    }
+    bindPreview('primaryInput', 'primaryPreview');
+    bindPreview('secondaryInput', 'secondaryPreview');
+</script>

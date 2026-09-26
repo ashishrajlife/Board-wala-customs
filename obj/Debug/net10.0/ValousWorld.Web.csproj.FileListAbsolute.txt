@@ -468,8 +468,8 @@ E:\Board-wale\VALOUSWORLD\ValousWorld\obj\Debug\net10.0\ValousWorld.Web.genrunti
 E:\Board-wale\VALOUSWORLD\ValousWorld\obj\Debug\net10.0\ref\ValousWorld.Web.dll
 E:\Git-valousworld\Board-wala-customs\bin\Debug\net10.0\appsettings.Development.json
 E:\Git-valousworld\Board-wala-customs\bin\Debug\net10.0\appsettings.json
-E:\Git-valousworld\Board-wala-customs\bin\Debug\net10.0\ValousWorld.Web.staticwebassets.endpoints.json
 E:\Git-valousworld\Board-wala-customs\bin\Debug\net10.0\ValousWorld.Web.staticwebassets.runtime.json
+E:\Git-valousworld\Board-wala-customs\bin\Debug\net10.0\ValousWorld.Web.staticwebassets.endpoints.json
 E:\Git-valousworld\Board-wala-customs\bin\Debug\net10.0\ValousWorld.Web.exe
 E:\Git-valousworld\Board-wala-customs\bin\Debug\net10.0\ValousWorld.Web.deps.json
 E:\Git-valousworld\Board-wala-customs\bin\Debug\net10.0\ValousWorld.Web.runtimeconfig.json
@@ -700,4 +700,4 @@ E:\Git-valousworld\Board-wala-customs\obj\Debug\net10.0\refint\ValousWorld.Web.d
 E:\Git-valousworld\Board-wala-customs\obj\Debug\net10.0\ValousWorld.Web.pdb
 E:\Git-valousworld\Board-wala-customs\obj\Debug\net10.0\ValousWorld.Web.genruntimeconfig.cache
 E:\Git-valousworld\Board-wala-customs\obj\Debug\net10.0\ref\ValousWorld.Web.dll
-E:\Git-valousworld\Board-wala-customs\obj\Debug\net10.0\compressed\ebp4crdk20-{0}-0p9mp4f5kq-0p9mp4f5kq.gz
+E:\Git-valousworld\Board-wala-customs\obj\Debug\net10.0\compressed\ebp4crdk20-{0}-2bxwgpxtuy-2bxwgpxtuy.gz

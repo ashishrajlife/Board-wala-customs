@@ -11,28 +11,55 @@
     {
         <div class="alert-success">@TempData["Success"]</div>
     }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert-error">@TempData["Error"]</div>
+    }
 
     <div class="admin-table-wrap">
         <table class="admin-table">
             <thead>
-                <tr><th>Image</th><th>Name</th><th>Slug</th><th>Order</th><th>Active</th><th>Actions</th></tr>
+                <tr>
+                    <th>Image</th>
+                    <th>Name</th>
+                    <th>Slug</th>
+                    <th>Products</th>
+                    <th>Order</th>
+                    <th>Active</th>
+                    <th>Actions</th>
+                </tr>
             </thead>
             <tbody>
             @foreach (var c in Model)
             {
+                var productCount = (int)(ViewBag.ProductCounts as Dictionary<int, int> ?? new())[c.CategoryId];
                 <tr>
-                    <td>@if (!string.IsNullOrEmpty(c.ImageUrl)) { <img src="@c.ImageUrl" width="50" height="50" style="object-fit:cover;" /> }</td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(c.ImageUrl))
+                        {
+                            <img src="@c.ImageUrl" width="50" height="50" style="object-fit:cover;" />
+                        }
+                    </td>
                     <td>@c.Name</td>
                     <td>@c.Slug</td>
+                    <td>@productCount</td>
                     <td>@c.DisplayOrder</td>
                     <td>@(c.IsActive ? "Yes" : "No")</td>
-                    <td>
-                        <a href="/Admin/Categories/Edit/@c.CategoryId">Edit</a>
-                        <form method="post" action="/Admin/Categories/Delete/@c.CategoryId" style="display:inline" onsubmit="return confirm('Delete?')">
+                  <td>
+                    <a href="/Admin/Categories/Edit/@c.CategoryId">Edit</a>
+                    @if (productCount == 0)
+                    {
+                        <form method="post" action="/Admin/Categories/Delete/@c.CategoryId" style="display:inline"
+                            onsubmit="return confirm('Delete this category?');">
                             @Html.AntiForgeryToken()
                             <button class="link-danger">Delete</button>
                         </form>
-                    </td>
+                    }
+                    else
+                    {
+                        <span class="link-disabled" title="Cannot delete — @productCount product(s) linked">🔒 Locked</span>
+                    }
+                </td>
                 </tr>
             }
             </tbody>
