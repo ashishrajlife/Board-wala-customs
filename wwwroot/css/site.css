@@ -64,7 +64,7 @@ img { max-width: 100%; display: block; }
     letter-spacing: 0.5px;
     text-transform: uppercase;
 }
-.marquee { display: inline-flex; gap: 60px; animation: scroll-left 80s linear infinite; }
+.marquee { display: inline-flex; gap: 60px; animation: scroll-left 15s linear infinite; }
 .marquee span { padding-right: 60px; }
 @keyframes scroll-left {
     0%   { transform: translateX(0); }
@@ -119,6 +119,7 @@ img { max-width: 100%; display: block; }
     line-height: 0.95;
     text-align: center;
     user-select: none;
+    transform: scaleX(1.2);
 }
 .brand-logo .logo-line-1,
 .brand-logo .logo-line-2 {

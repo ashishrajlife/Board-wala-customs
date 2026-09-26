@@ -700,4 +700,4 @@ E:\Git-valousworld\Board-wala-customs\obj\Debug\net10.0\refint\ValousWorld.Web.d
 E:\Git-valousworld\Board-wala-customs\obj\Debug\net10.0\ValousWorld.Web.pdb
 E:\Git-valousworld\Board-wala-customs\obj\Debug\net10.0\ValousWorld.Web.genruntimeconfig.cache
 E:\Git-valousworld\Board-wala-customs\obj\Debug\net10.0\ref\ValousWorld.Web.dll
-E:\Git-valousworld\Board-wala-customs\obj\Debug\net10.0\compressed\ebp4crdk20-{0}-13awp4zpq4-13awp4zpq4.gz
+E:\Git-valousworld\Board-wala-customs\obj\Debug\net10.0\compressed\ebp4crdk20-{0}-o8unpe1809-o8unpe1809.gz
