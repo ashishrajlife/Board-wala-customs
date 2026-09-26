@@ -220,7 +220,7 @@ main { display: block; min-height: 40vh; }
 /* ================= HERO ================= */
 .hero-banner {
     background: #000 url('https://images.unsplash.com/photo-1523398002811-999ca8dec234?w=1600') center/cover no-repeat;
-    min-height: 480px;
+    min-height: auto;
     display: flex;
     align-items: center;
     justify-content: center;
