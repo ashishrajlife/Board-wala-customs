@@ -79,8 +79,8 @@ public class AuthController : Controller
             new ClaimsPrincipal(identity));
 
         return user.Role.RoleName == "Admin"
-            ? RedirectToAction("Dashboard", "Admin")
-            : RedirectToAction("Dashboard", "User");
+        ? RedirectToAction("Dashboard", "Admin")
+        : RedirectToAction("Index", "Home");
     }
 
     [HttpGet]

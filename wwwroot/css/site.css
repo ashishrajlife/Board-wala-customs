@@ -651,7 +651,7 @@ h1 {
 .dashboard-welcome { color: var(--gray-600); margin-bottom: var(--space-md); font-size: 14px; }
 .dashboard-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: var(--space-md);
     margin-top: var(--space-md);
 }
@@ -679,7 +679,7 @@ h1 {
 .dash-card p { color: var(--gray-600); font-size: 13px; }
 
 /* ================= ADMIN ================= */
-.admin-page { padding: var(--space-lg) 0 var(--space-xl); }
+.admin-page { padding: 15px; }
 .admin-header {
     display: flex;
     justify-content: space-between;
@@ -961,12 +961,30 @@ h1 {
 
     h1 { font-size: 22px; }
 
-    .dashboard-page { padding: var(--space-md) 0 var(--space-lg); }
-    .dashboard-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-sm); }
-    .dash-card { padding: var(--space-sm); }
+  .dashboard-page { padding: var(--space-md) 0 var(--space-lg); }
+    .dashboard-grid {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: var(--space-sm);
+        margin-top: var(--space-sm);
+    }
+    .dash-card {
+        padding: var(--space-sm);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .dash-card h3 { font-size: 12px; margin-bottom: 4px; }
+    .dash-stat { font-size: 24px; margin-bottom: 8px; }
+    .dash-card .btn-outline {
+        margin-top: auto;
+        width: 100%;
+        text-align: center;
+        padding: 10px 12px;
+        font-size: 11px;
+    }
     .dash-stat { font-size: 26px; }
 
-    .admin-page { padding: var(--space-md) 0 var(--space-lg); }
+    .admin-page { padding: 15px; }
     .admin-header { margin-bottom: var(--space-sm); }
     .admin-header h1 { font-size: 22px; }
 
@@ -1021,6 +1039,11 @@ h1 {
     .nav-right .icon-link[title="Logout"] { display: none; }
     h1 { font-size: 20px; }
     .hero-overlay h1 { font-size: 26px; }
+    .dashboard-grid { gap: 10px; }
+.dash-card { padding: 14px; }
+.dash-card h3 { font-size: 11px; }
+.dash-stat { font-size: 24px; }
+.dashboard-welcome { font-size: 12px; }
 }
 /* ================= FILE UPLOAD ================= */
 .upload-block {
