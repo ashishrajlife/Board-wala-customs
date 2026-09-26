@@ -45,20 +45,6 @@
         <!-- RIGHT -->
         <div class="form-side">
             <div class="form-card">
-                <h3>IMAGE</h3>
-
-                <label>Category Image</label>
-                <div class="upload-block">
-                    <input type="file" name="imageFile" accept="image/*" id="imgInput" />
-                    <div class="upload-hint">JPG, PNG, WEBP, GIF — Max 5 MB</div>
-                    <img id="imgPreview" class="upload-preview" style="display:none;" alt="preview" />
-                </div>
-
-                <label style="margin-top:12px;">Or Image URL</label>
-                <input asp-for="ImageUrl" placeholder="https://..." />
-            </div>
-
-            <div class="form-card">
                 <h3>STATUS</h3>
                 <div class="check-row">
                     <label><input asp-for="IsActive" type="checkbox" /> Active</label>

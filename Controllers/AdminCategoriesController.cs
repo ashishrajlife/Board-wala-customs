@@ -58,20 +58,6 @@ public class AdminCategoriesController : Controller
         if (!ModelState.IsValid)
             return View("~/Views/Admin/Categories/Create.cshtml", model);
 
-        // Handle upload
-        if (imageFile != null && imageFile.Length > 0)
-        {
-            try
-            {
-                model.ImageUrl = await _files.SaveImageAsync(imageFile, "categories");
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("imageFile", ex.Message);
-                return View("~/Views/Admin/Categories/Create.cshtml", model);
-            }
-        }
-
         model.Slug = string.IsNullOrWhiteSpace(model.Slug)
             ? Slugify(model.Name)
             : Slugify(model.Slug);
@@ -105,27 +91,6 @@ public class AdminCategoriesController : Controller
         var existing = await _db.Categories.FindAsync(id);
         if (existing == null) return NotFound();
 
-        // Replace image only if a new file was uploaded
-        if (imageFile != null && imageFile.Length > 0)
-        {
-            try
-            {
-                var oldUrl = existing.ImageUrl;
-                existing.ImageUrl = await _files.SaveImageAsync(imageFile, "categories");
-                _files.DeleteImage(oldUrl); // cleanup old file
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("imageFile", ex.Message);
-                return View("~/Views/Admin/Categories/Edit.cshtml", model);
-            }
-        }
-        else if (!string.IsNullOrWhiteSpace(model.ImageUrl))
-        {
-            // Admin manually edited the URL textbox
-            existing.ImageUrl = model.ImageUrl;
-        }
-
         existing.Name = model.Name;
         existing.Slug = string.IsNullOrWhiteSpace(model.Slug)
             ? Slugify(model.Name)
@@ -158,11 +123,9 @@ public class AdminCategoriesController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        var img = category.ImageUrl;
         _db.Categories.Remove(category);
         await _db.SaveChangesAsync();
 
-        _files.DeleteImage(img);
         TempData["Success"] = "Category deleted.";
         return RedirectToAction(nameof(Index));
     }
