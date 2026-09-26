@@ -4,7 +4,13 @@
 <div class="container admin-page">
     <div class="admin-header">
         <h1>PRODUCTS</h1>
-        <a href="/Admin/Products/Create" class="btn-primary">+ NEW PRODUCT</a>
+        <a href="/Admin/Products/Create" class="btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            NEW PRODUCT
+        </a>
     </div>
 
     @if (TempData["Success"] != null)
@@ -19,28 +25,86 @@
     <div class="admin-table-wrap">
         <table class="admin-table">
             <thead>
-                <tr><th>Image</th><th>Name</th><th>Category</th><th>MRP</th><th>Sale</th><th>Save%</th><th>Stock</th><th>Active</th><th>Actions</th></tr>
+                <tr>
+                    <th class="col-img">Image</th>
+                    <th>Name</th>
+                    <th class="col-hide-sm">Category</th>
+                    <th class="col-price">MRP</th>
+                    <th class="col-price">Sale</th>
+                    <th class="col-hide-sm">Save%</th>
+                    <th class="col-hide-sm">Stock</th>
+                    <th class="col-hide-sm">Active</th>
+                    <th class="col-actions">Actions</th>
+                </tr>
             </thead>
             <tbody>
-            @foreach (var p in Model)
+            @if (!Model.Any())
             {
                 <tr>
-                    <td><img src="@p.PrimaryImageUrl" alt="" width="50" height="60" style="object-fit:cover;" /></td>
-                    <td>@p.Name</td>
-                    <td>@p.Category?.Name</td>
-                    <td>₹@p.MRP</td>
-                    <td>₹@p.SalePrice</td>
-                    <td>@p.SavePercent%</td>
-                    <td>@p.Stock</td>
-                    <td>@(p.IsActive ? "Yes" : "No")</td>
-                    <td>
-                        <a href="/Admin/Products/Edit/@p.ProductId">Edit</a>
-                        <form method="post" action="/Admin/Products/Delete/@p.ProductId" style="display:inline" onsubmit="return confirm('Delete?')">
-                            @Html.AntiForgeryToken()
-                            <button class="link-danger">Delete</button>
-                        </form>
+                    <td colspan="9" class="empty-row">
+                        No products yet. <a href="/Admin/Products/Create">Create your first product →</a>
                     </td>
                 </tr>
+            }
+            else
+            {
+                @foreach (var p in Model)
+                {
+                    <tr>
+                        <td class="col-img">
+                            @if (!string.IsNullOrEmpty(p.PrimaryImageUrl))
+                            {
+                                <img src="@p.PrimaryImageUrl" alt="@p.Name" class="tbl-thumb" />
+                            }
+                            else
+                            {
+                                <div class="tbl-thumb-placeholder"></div>
+                            }
+                        </td>
+                        <td class="col-name">
+                            <div class="tbl-name">@p.Name</div>
+                            <div class="tbl-sub">@p.Category?.Name</div>
+                        </td>
+                        <td class="col-hide-sm">@p.Category?.Name</td>
+                        <td class="col-price"><s>₹@p.MRP.ToString("0")</s></td>
+                        <td class="col-price"><span class="tbl-sale">₹@p.SalePrice.ToString("0")</span></td>
+                        <td class="col-hide-sm"><span class="pill-red">@p.SavePercent%</span></td>
+                        <td class="col-hide-sm">@p.Stock</td>
+                        <td class="col-hide-sm">
+                            @if (p.IsActive)
+                            {
+                                <span class="pill-green">Active</span>
+                            }
+                            else
+                            {
+                                <span class="pill-gray">Inactive</span>
+                            }
+                        </td>
+                        <td class="col-actions">
+                            <div class="tbl-actions">
+                                <a href="/Admin/Products/Edit/@p.ProductId" class="icon-btn" title="Edit">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                    </svg>
+                                </a>
+                                <form method="post" action="/Admin/Products/Delete/@p.ProductId" style="display:inline"
+                                      onsubmit="return confirm('Delete this product?');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="icon-btn icon-btn-danger" title="Delete">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="3 6 5 6 21 6"/>
+                                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                                            <path d="M10 11v6"/>
+                                            <path d="M14 11v6"/>
+                                            <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
             }
             </tbody>
         </table>
