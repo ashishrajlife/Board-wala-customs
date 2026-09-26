@@ -21,6 +21,9 @@ public class AdminProductsController : Controller
         _files = files;
     }
 
+    // ============================================================
+    // INDEX
+    // ============================================================
     [Route("")]
     public async Task<IActionResult> Index()
     {
@@ -31,6 +34,9 @@ public class AdminProductsController : Controller
         return View("~/Views/Admin/Products/Index.cshtml", products);
     }
 
+    // ============================================================
+    // CREATE
+    // ============================================================
     [Route("Create")]
     public async Task<IActionResult> Create()
     {
@@ -41,10 +47,26 @@ public class AdminProductsController : Controller
 
     [HttpPost, Route("Create")]
     [ValidateAntiForgeryToken]
-    [RequestSizeLimit(12 * 1024 * 1024)]
-    public async Task<IActionResult> Create(Product model, IFormFile? primaryFile, IFormFile? secondaryFile)
+    [RequestSizeLimit(30 * 1024 * 1024)]
+    public async Task<IActionResult> Create(
+        Product model,
+        IFormFile? img1,
+        IFormFile? img2,
+        IFormFile? img3,
+        IFormFile? img4)
     {
         ModelState.Remove(nameof(Product.Category));
+        ModelState.Remove(nameof(Product.PrimaryImageUrl));
+        ModelState.Remove(nameof(Product.SecondaryImageUrl));
+
+        if (string.IsNullOrWhiteSpace(model.Slug))
+            model.Slug = Slugify(model.Name);
+
+        // At least 2 images required
+        var uploadedCount = new[] { img1, img2, img3, img4 }
+            .Count(f => f != null && f.Length > 0);
+        if (uploadedCount < 2)
+            ModelState.AddModelError("", "At least 2 images are required.");
 
         if (!ModelState.IsValid)
         {
@@ -54,11 +76,18 @@ public class AdminProductsController : Controller
 
         try
         {
-            if (primaryFile != null && primaryFile.Length > 0)
-                model.PrimaryImageUrl = await _files.SaveImageAsync(primaryFile, "products");
+            var uploads = new[] { img1, img2, img3, img4 };
+            var saved = new List<string>();
+            foreach (var f in uploads)
+            {
+                if (f != null && f.Length > 0)
+                    saved.Add(await _files.SaveImageAsync(f, "products"));
+            }
 
-            if (secondaryFile != null && secondaryFile.Length > 0)
-                model.SecondaryImageUrl = await _files.SaveImageAsync(secondaryFile, "products");
+            model.Image1 = saved.ElementAtOrDefault(0) ?? string.Empty;
+            model.Image2 = saved.ElementAtOrDefault(1) ?? string.Empty;
+            model.Image3 = saved.ElementAtOrDefault(2);
+            model.Image4 = saved.ElementAtOrDefault(3);
         }
         catch (Exception ex)
         {
@@ -67,14 +96,6 @@ public class AdminProductsController : Controller
             return View("~/Views/Admin/Products/Create.cshtml", model);
         }
 
-        if (string.IsNullOrWhiteSpace(model.PrimaryImageUrl))
-        {
-            ModelState.AddModelError("primaryFile", "Primary image is required.");
-            await LoadCategoriesAsync(model.CategoryId);
-            return View("~/Views/Admin/Products/Create.cshtml", model);
-        }
-
-        model.Slug = string.IsNullOrWhiteSpace(model.Slug) ? Slugify(model.Name) : Slugify(model.Slug);
         model.SavePercent = model.MRP > 0
             ? (int)Math.Round((model.MRP - model.SalePrice) / model.MRP * 100)
             : 0;
@@ -86,23 +107,35 @@ public class AdminProductsController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    // ============================================================
+    // EDIT
+    // ============================================================
     [Route("Edit/{id:int}")]
     public async Task<IActionResult> Edit(int id)
     {
         var product = await _db.Products.FindAsync(id);
         if (product == null) return NotFound();
+
         await LoadCategoriesAsync(product.CategoryId);
         return View("~/Views/Admin/Products/Edit.cshtml", product);
     }
 
     [HttpPost, Route("Edit/{id:int}")]
     [ValidateAntiForgeryToken]
-    [RequestSizeLimit(12 * 1024 * 1024)]
-    public async Task<IActionResult> Edit(int id, Product model, IFormFile? primaryFile, IFormFile? secondaryFile)
+    [RequestSizeLimit(30 * 1024 * 1024)]
+    public async Task<IActionResult> Edit(
+        int id,
+        Product model,
+        IFormFile? img1,
+        IFormFile? img2,
+        IFormFile? img3,
+        IFormFile? img4)
     {
         if (id != model.ProductId) return BadRequest();
 
         ModelState.Remove(nameof(Product.Category));
+        ModelState.Remove(nameof(Product.PrimaryImageUrl));
+        ModelState.Remove(nameof(Product.SecondaryImageUrl));
 
         if (!ModelState.IsValid)
         {
@@ -115,28 +148,30 @@ public class AdminProductsController : Controller
 
         try
         {
-            // Primary image — replace if new file uploaded
-            if (primaryFile != null && primaryFile.Length > 0)
+            // Replace image only if a new file was uploaded; else keep existing
+            if (img1 != null && img1.Length > 0)
             {
-                var oldUrl = existing.PrimaryImageUrl;
-                existing.PrimaryImageUrl = await _files.SaveImageAsync(primaryFile, "products");
-                _files.DeleteImage(oldUrl);
+                var old = existing.Image1;
+                existing.Image1 = await _files.SaveImageAsync(img1, "products");
+                _files.DeleteImage(old);
             }
-            else if (!string.IsNullOrWhiteSpace(model.PrimaryImageUrl))
+            if (img2 != null && img2.Length > 0)
             {
-                existing.PrimaryImageUrl = model.PrimaryImageUrl;
+                var old = existing.Image2;
+                existing.Image2 = await _files.SaveImageAsync(img2, "products");
+                _files.DeleteImage(old);
             }
-
-            // Secondary image — replace if new file uploaded
-            if (secondaryFile != null && secondaryFile.Length > 0)
+            if (img3 != null && img3.Length > 0)
             {
-                var oldUrl = existing.SecondaryImageUrl;
-                existing.SecondaryImageUrl = await _files.SaveImageAsync(secondaryFile, "products");
-                _files.DeleteImage(oldUrl);
+                var old = existing.Image3;
+                existing.Image3 = await _files.SaveImageAsync(img3, "products");
+                _files.DeleteImage(old);
             }
-            else if (!string.IsNullOrWhiteSpace(model.SecondaryImageUrl))
+            if (img4 != null && img4.Length > 0)
             {
-                existing.SecondaryImageUrl = model.SecondaryImageUrl;
+                var old = existing.Image4;
+                existing.Image4 = await _files.SaveImageAsync(img4, "products");
+                _files.DeleteImage(old);
             }
         }
         catch (Exception ex)
@@ -147,7 +182,9 @@ public class AdminProductsController : Controller
         }
 
         existing.Name = model.Name;
-        existing.Slug = string.IsNullOrWhiteSpace(model.Slug) ? Slugify(model.Name) : Slugify(model.Slug);
+        existing.Slug = string.IsNullOrWhiteSpace(model.Slug)
+            ? Slugify(model.Name)
+            : Slugify(model.Slug);
         existing.ShortDescription = model.ShortDescription;
         existing.Description = model.Description;
         existing.MRP = model.MRP;
@@ -170,6 +207,9 @@ public class AdminProductsController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    // ============================================================
+    // DELETE
+    // ============================================================
     [HttpPost, Route("Delete/{id:int}")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
@@ -181,19 +221,27 @@ public class AdminProductsController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        var primary = product.PrimaryImageUrl;
-        var secondary = product.SecondaryImageUrl;
+        var imgs = new[]
+        {
+            product.Image1,
+            product.Image2,
+            product.Image3,
+            product.Image4
+        };
 
         _db.Products.Remove(product);
         await _db.SaveChangesAsync();
 
-        _files.DeleteImage(primary);
-        _files.DeleteImage(secondary);
+        foreach (var img in imgs)
+            _files.DeleteImage(img);
 
         TempData["Success"] = "Product deleted.";
         return RedirectToAction(nameof(Index));
     }
 
+    // ============================================================
+    // HELPERS
+    // ============================================================
     private async Task LoadCategoriesAsync(int? selected = null)
     {
         var cats = await _db.Categories.OrderBy(c => c.DisplayOrder).ToListAsync();
@@ -201,5 +249,8 @@ public class AdminProductsController : Controller
     }
 
     private static string Slugify(string input)
-        => input.Trim().ToLower().Replace(" ", "-").Replace("'", "").Replace("\"", "");
+        => input.Trim().ToLower()
+            .Replace(" ", "-")
+            .Replace("'", "")
+            .Replace("\"", "");
 }

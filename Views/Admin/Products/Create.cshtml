@@ -4,7 +4,13 @@
 <div class="container admin-page">
     <div class="admin-header">
         <h1>NEW PRODUCT</h1>
-        <a href="/Admin/Products" class="btn-outline">← BACK TO LIST</a>
+        <a href="/Admin/Products" class="btn-outline">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"/>
+                <polyline points="12 19 5 12 12 5"/>
+            </svg>
+            BACK TO LIST
+        </a>
     </div>
 
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -13,78 +19,97 @@
           enctype="multipart/form-data" class="admin-form">
         @Html.AntiForgeryToken()
 
-        <!-- ============ LEFT: Main fields ============ -->
+        <!-- ============ LEFT ============ -->
         <div class="form-main">
-            <label>Product Name *</label>
-            <input asp-for="Name" required placeholder="e.g. HUSTLE GANG BROWN CAP" />
 
-            <label>Slug (auto-generated if empty)</label>
-            <input asp-for="Slug" placeholder="hustle-gang-brown-cap" />
+            <section class="form-section">
+                <h2 class="form-section-title">Basic Info</h2>
+                <div class="form-section-body">
+                    <label>Product Name *</label>
+                    <input asp-for="Name" required placeholder="e.g. HUSTLE GANG BROWN CAP" />
 
-            <label>Category *</label>
-            <select asp-for="CategoryId" asp-items="ViewBag.Categories" required></select>
+                    <label>Slug (auto-generated if empty)</label>
+                    <input asp-for="Slug" placeholder="hustle-gang-brown-cap" />
 
-            <label>Short Description</label>
-            <input asp-for="ShortDescription" placeholder="One-line summary shown on product page" />
-
-            <label>Full Description</label>
-            <textarea asp-for="Description" rows="6" placeholder="Detailed product description..."></textarea>
-
-            <div class="form-row">
-                <div>
-                    <label>MRP ₹ *</label>
-                    <input asp-for="MRP" type="number" step="0.01" required placeholder="1199.00" />
+                    <label>Category *</label>
+                    <select asp-for="CategoryId" asp-items="ViewBag.Categories" required></select>
                 </div>
-                <div>
-                    <label>Sale Price ₹ *</label>
-                    <input asp-for="SalePrice" type="number" step="0.01" required placeholder="899.00" />
-                </div>
-            </div>
+            </section>
 
-            <div class="form-row">
-                <div>
-                    <label>Sizes (comma separated)</label>
-                    <input asp-for="Sizes" placeholder="S,M,L,XL" />
-                </div>
-                <div>
-                    <label>Colors (comma separated)</label>
-                    <input asp-for="Colors" placeholder="Black,Brown" />
-                </div>
-            </div>
+            <section class="form-section">
+                <h2 class="form-section-title">Description</h2>
+                <div class="form-section-body">
+                    <label>Short Description</label>
+                    <input asp-for="ShortDescription" placeholder="One-line summary shown on product page" />
 
-            <div class="form-row">
-                <div>
-                    <label>Stock</label>
-                    <input asp-for="Stock" type="number" min="0" />
+                    <label>Full Description</label>
+                    <textarea asp-for="Description" rows="6" placeholder="Detailed product description..."></textarea>
                 </div>
-                <div>
-                    <label>Display Order</label>
-                    <input asp-for="DisplayOrder" type="number" min="0" />
+            </section>
+
+            <section class="form-section">
+                <h2 class="form-section-title">Pricing &amp; Inventory</h2>
+                <div class="form-section-body">
+                    <div class="form-row">
+                        <div>
+                            <label>MRP ₹ *</label>
+                            <input asp-for="MRP" type="number" step="0.01" required placeholder="1199.00" />
+                        </div>
+                        <div>
+                            <label>Sale Price ₹ *</label>
+                            <input asp-for="SalePrice" type="number" step="0.01" required placeholder="899.00" />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div>
+                            <label>Sizes (comma separated)</label>
+                            <input asp-for="Sizes" placeholder="S,M,L,XL" />
+                        </div>
+                        <div>
+                            <label>Colors (comma separated)</label>
+                            <input asp-for="Colors" placeholder="Black,Brown" />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div>
+                            <label>Stock</label>
+                            <input asp-for="Stock" type="number" min="0" />
+                        </div>
+                        <div>
+                            <label>Display Order</label>
+                            <input asp-for="DisplayOrder" type="number" min="0" />
+                        </div>
+                    </div>
                 </div>
-            </div>
+            </section>
         </div>
 
-        <!-- ============ RIGHT: Sidebar ============ -->
+        <!-- ============ RIGHT ============ -->
         <div class="form-side">
-            <h3>IMAGES</h3>
+            <h3>
+                IMAGES
+                <span class="req-note">(min 2)</span>
+            </h3>
 
-            <label>Primary Image *</label>
-            <div class="upload-block">
-                <input type="file" name="primaryFile" accept="image/*" id="primaryInput" />
-                <div class="upload-hint">JPG, PNG, WEBP, GIF — Max 5 MB</div>
-                <img id="primaryPreview" class="upload-preview" style="display:none;" alt="preview" />
-            </div>
-            <label style="margin-top:10px;">Or Primary URL</label>
-            <input asp-for="PrimaryImageUrl" placeholder="https://..." />
+            <div class="img-grid">
+                @for (int i = 1; i <= 4; i++)
+                {
+                    var inputId = $"img{i}";
+                    var previewId = $"img{i}Preview";
+                    var label = i <= 2 ? $"Image {i} *" : $"Image {i} (optional)";
 
-            <label>Secondary Image</label>
-            <div class="upload-block">
-                <input type="file" name="secondaryFile" accept="image/*" id="secondaryInput" />
-                <div class="upload-hint">JPG, PNG, WEBP, GIF — Max 5 MB</div>
-                <img id="secondaryPreview" class="upload-preview" style="display:none;" alt="preview" />
+                    <div class="img-slot">
+                        <label>@label</label>
+                        <div class="upload-block">
+                            <input type="file" name="@inputId" accept="image/*" id="@inputId" />
+                            <div class="upload-hint">JPG, PNG, WEBP — Max 5 MB</div>
+                            <img id="@previewId" class="upload-preview" style="display:none;" alt="preview" />
+                        </div>
+                    </div>
+                }
             </div>
-            <label style="margin-top:10px;">Or Secondary URL</label>
-            <input asp-for="SecondaryImageUrl" placeholder="https://..." />
 
             <h3 style="margin-top:24px;">FLAGS</h3>
             <div class="check-row">
@@ -94,7 +119,12 @@
             </div>
 
             <div class="form-actions">
-                <button type="submit" class="btn-primary">CREATE PRODUCT</button>
+                <button type="submit" class="btn-primary">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    CREATE PRODUCT
+                </button>
                 <a href="/Admin/Products" class="btn-outline">CANCEL</a>
             </div>
         </div>
@@ -102,17 +132,302 @@
 </div>
 
 <script>
-    function bindPreview(inputId, previewId) {
-        const input = document.getElementById(inputId);
-        const preview = document.getElementById(previewId);
+    ['img1', 'img2', 'img3', 'img4'].forEach(id => {
+        const input = document.getElementById(id);
+        const preview = document.getElementById(id + 'Preview');
         if (!input || !preview) return;
+
         input.addEventListener('change', () => {
             const file = input.files[0];
             if (!file) { preview.style.display = 'none'; return; }
             preview.src = URL.createObjectURL(file);
             preview.style.display = 'block';
         });
-    }
-    bindPreview('primaryInput', 'primaryPreview');
-    bindPreview('secondaryInput', 'secondaryPreview');
+    });
 </script>
+
+<style>
+    /* ============================================================
+       PRODUCTS CREATE — page-scoped styles
+       Font-sizes and color tokens are unchanged from the original
+       design; layout has been reworked into clearer sections and
+       made fluidly responsive from small phones to ultra-wide
+       desktops.
+       ============================================================ */
+
+    /* ---------- Form grid: main + sidebar ---------- */
+    .admin-form {
+        width: 100%;
+        max-width: 1400px; /* keeps the form readable on ultra-wide monitors */
+        margin: 0 auto var(--space-lg);
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+        gap: var(--space-lg) var(--space-xl);
+        align-items: start;
+    }
+
+    .admin-form .form-main {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-md);
+        min-width: 0;
+    }
+
+    /* ---------- Sectioned cards on the left column ---------- */
+    .form-section {
+        border: 1px solid var(--gray-200);
+        border-radius: 4px;
+        background: var(--white);
+        overflow: hidden;
+    }
+    .form-section-title {
+        margin: 0;
+        padding: 14px var(--space-md);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: var(--black);
+        background: var(--gray-100);
+        border-bottom: 1px solid var(--gray-200);
+    }
+    .form-section-body {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: var(--space-md);
+    }
+
+    .admin-form .form-side {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+        background: var(--gray-100);
+        padding: var(--space-md);
+        border: 1px solid var(--gray-200);
+        border-radius: 4px;
+        position: sticky;
+        top: 100px;
+    }
+
+    .admin-form .form-side h3 {
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--gray-200);
+        color: var(--black);
+    }
+
+    /* ---------- Labels & inputs ---------- */
+    .admin-form label {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin: 16px 0 6px;
+        color: var(--black);
+    }
+    .form-section-body label:first-of-type { margin-top: 0; }
+
+    .admin-form input[type=text],
+    .admin-form input[type=number],
+    .admin-form input[type=url],
+    .admin-form input[type=email],
+    .admin-form input:not([type]):not([type=file]):not([type=checkbox]),
+    .admin-form select,
+    .admin-form textarea {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1.5px solid var(--gray-200);
+        font-size: 14px;
+        outline: none;
+        transition: border 0.2s, box-shadow 0.2s;
+        background: var(--white);
+        border-radius: 2px;
+    }
+    .admin-form input:focus,
+    .admin-form select:focus,
+    .admin-form textarea:focus {
+        border-color: var(--black);
+        box-shadow: 0 0 0 2px rgba(0,0,0,0.05);
+    }
+    .admin-form textarea { resize: vertical; min-height: 120px; }
+
+    /* ---------- Two-column row, fluidly collapsing ---------- */
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: var(--space-md);
+    }
+
+    /* ---------- Image upload grid ---------- */
+    .img-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    /* ---------- Checkboxes ---------- */
+    .check-row {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin: var(--space-sm) 0;
+        padding: 12px 0;
+    }
+    .check-row label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-transform: none;
+        letter-spacing: 0;
+        margin: 0;
+        font-weight: 500;
+        font-size: 13px;
+        cursor: pointer;
+    }
+    .check-row input[type=checkbox] {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--black);
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+
+    /* ---------- Form actions ---------- */
+    .form-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: var(--space-md);
+        padding-top: var(--space-md);
+        border-top: 1px solid var(--gray-200);
+    }
+    .form-actions .btn-primary,
+    .form-actions .btn-outline {
+        width: 100%;
+        justify-content: center;
+        padding: 14px 20px;
+    }
+
+    /* ---------- Upload slot ---------- */
+    .img-slot {
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .upload-block {
+        border: 1.5px dashed var(--gray-200);
+        padding: 14px;
+        background: var(--white);
+        border-radius: 4px;
+        transition: border-color 0.2s, background 0.2s;
+        height: 100%;
+    }
+    .upload-block:hover {
+        border-color: var(--gray-400);
+        background: #fafafa;
+    }
+    .upload-block input[type=file] {
+        width: 100%;
+        font-size: 13px;
+        color: var(--gray-800);
+        cursor: pointer;
+    }
+    .upload-block input[type=file]::file-selector-button {
+        background: var(--black);
+        color: var(--white);
+        border: none;
+        padding: 8px 14px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin-right: 10px;
+        cursor: pointer;
+        transition: background 0.2s;
+        border-radius: 2px;
+    }
+    .upload-block input[type=file]::file-selector-button:hover {
+        background: var(--gray-800);
+    }
+    .upload-hint {
+        font-size: 11px;
+        color: var(--gray-600);
+        margin-top: 8px;
+        letter-spacing: 0.5px;
+    }
+    .upload-preview {
+        margin-top: 12px;
+        max-width: 100%;
+        max-height: 180px;
+        width: 100%;
+        object-fit: cover;
+        border: 1px solid var(--gray-200);
+        background: var(--white);
+        display: block;
+        border-radius: 2px;
+    }
+    .req-note {
+        font-size: 10px;
+        font-weight: 500;
+        color: var(--gray-600);
+        letter-spacing: 0.5px;
+        text-transform: none;
+        margin-left: 4px;
+    }
+
+    /* ============================================================
+       RESPONSIVE — Wide desktop (>= 1100px)
+       Two image upload slots per row once there's room to spare
+       ============================================================ */
+    @@media (min-width: 1100px) {
+        .img-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* ============================================================
+       RESPONSIVE — Tablet (<= 1024px)
+       Sidebar drops below the main column and stops being sticky
+       ============================================================ */
+    @@media (max-width: 1024px) {
+        .admin-form {
+            grid-template-columns: 1fr;
+            gap: var(--space-md);
+        }
+        .admin-form .form-side {
+            position: static;
+            top: auto;
+        }
+        .img-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* ============================================================
+       RESPONSIVE — Small tablet / large phone (<= 640px)
+       ============================================================ */
+    @@media (max-width: 640px) {
+        .img-grid { grid-template-columns: 1fr; }
+        .form-section-body { padding: var(--space-sm); }
+        .admin-form .form-side { padding: var(--space-sm); }
+    }
+
+    /* ============================================================
+       RESPONSIVE — Mobile (<= 500px)
+       ============================================================ */
+    @@media (max-width: 500px) {
+        .admin-form { padding: 0; }
+        .form-row { grid-template-columns: 1fr; gap: 0; }
+        .check-row { flex-direction: column; gap: 12px; }
+        .form-actions { flex-direction: column; }
+        .form-actions .btn-primary,
+        .form-actions .btn-outline {
+            width: 100%;
+            justify-content: center;
+            padding: 14px;
+        }
+    }
+</style>
