@@ -34,7 +34,7 @@
             <line x1="19" y1="12" x2="5" y2="12"/>
             <polyline points="12 19 5 12 12 5"/>
         </svg>
-        BACKitttttttttttttttttttttt
+        BACK
     </a>
 </div>
 
@@ -135,24 +135,6 @@
                     }
                 </div>
             }
-
-            @if (!string.IsNullOrWhiteSpace(Model.FitType) || !string.IsNullOrWhiteSpace(Model.Neckline))
-{
-    <p class="pdp-fit-line">
-        @if (!string.IsNullOrWhiteSpace(Model.FitType))
-        {
-            <span class="fw-bold">@Model.FitType</span>
-        }
-        @if (!string.IsNullOrWhiteSpace(Model.FitType) && !string.IsNullOrWhiteSpace(Model.Neckline))
-        {
-            <span class="pdp-cat-sep">·</span>
-        }
-        @if (!string.IsNullOrWhiteSpace(Model.Neckline))
-        {
-            <span class="fw-bold">@Model.Neckline</span>
-        }
-    </p>
-}
 
         <div class="pdp-block">
             <div class="pdp-block-head">
@@ -613,19 +595,6 @@
     color: var(--gray-400);
 }
 
-.pdp-fit-line {
-    font-size: 12px;
-    color: var(--gray-600);
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    margin: 0 0 12px;
-    padding: 0;
-}
-
-.pdp-fit-line span {
-    display: inline;
-}
-
 .pdp-meta-country {
     color: var(--gray-600);
     font-size: 12px;
@@ -636,11 +605,6 @@
 
 /* ---------- Mobile tweaks ---------- */
 @@media (max-width: 500px) {
-    .pdp-fit-line {
-        font-size: 11px;
-        letter-spacing: 0.3px;
-        margin-bottom: 10px;
-    }
     .pdp-meta-country {
         font-size: 11px;
     }
