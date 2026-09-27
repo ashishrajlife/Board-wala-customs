@@ -468,63 +468,83 @@
 </style>
 
 <script>
-    // Mobile filter drawer
-    (function () {
-        const sidebar = document.getElementById('shopSidebar');
-        const openBtn = document.getElementById('openFilters');
-        const closeBtn = document.getElementById('sidebarClose');
-        const backdrop = document.getElementById('sidebarBackdrop');
-        if (!sidebar || !openBtn) return;
+   // Mobile filter drawer
+(function () {
+    const sidebar = document.getElementById('shopSidebar');
+    const openBtn = document.getElementById('openFilters');
+    const closeBtn = document.getElementById('sidebarClose');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    if (!sidebar || !openBtn) return;
 
-        function isMobile() {
-            return window.matchMedia('(max-width: 768px)').matches;
-        }
+    function isMobile() {
+        return window.matchMedia('(max-width: 768px)').matches;
+    }
 
-        function open() {
-            sidebar.classList.add('open');
-            if (backdrop) backdrop.classList.add('open');
-            document.body.style.overflow = 'hidden';
-        }
+    function open() {
+        sidebar.classList.add('open');
+        if (backdrop) backdrop.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
 
-        function close() {
-            sidebar.classList.remove('open');
-            if (backdrop) backdrop.classList.remove('open');
-            document.body.style.overflow = '';
-        }
+    function close() {
+        sidebar.classList.remove('open');
+        if (backdrop) backdrop.classList.remove('open');
+        document.body.style.overflow = '';
+    }
 
-        openBtn.addEventListener('click', open);
-        if (closeBtn) closeBtn.addEventListener('click', close);
-        if (backdrop) backdrop.addEventListener('click', close);
+    openBtn.addEventListener('click', open);
+    if (closeBtn) closeBtn.addEventListener('click', close);
+    if (backdrop) backdrop.addEventListener('click', close);
 
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && sidebar.classList.contains('open')) close();
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && sidebar.classList.contains('open')) close();
+    });
+
+    // ---------- Auto-open decision ----------
+    // Don't auto-open if:
+    //   1) Search query present (?q=...)
+    //   2) Coming right after a filter form submit (skipAutoOpen flag)
+    //   3) Any filter is already applied in the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasSearchQuery = urlParams.has('q') && urlParams.get('q').trim() !== '';
+    const hasFilterParam =
+        urlParams.has('categoryId') ||
+        urlParams.has('minPrice') ||
+        urlParams.has('maxPrice') ||
+        urlParams.has('sizes') ||
+        urlParams.has('colors');
+
+    const skipAutoOpen = sessionStorage.getItem('skipAutoOpen') === '1';
+    sessionStorage.removeItem('skipAutoOpen');
+
+    if (isMobile()
+        && !hasSearchQuery
+        && !hasFilterParam
+        && !skipAutoOpen) {
+        open();
+    }
+
+    // Set skipAutoOpen flag when filter form submits
+    const filterForm = document.getElementById('filterForm');
+    if (filterForm) {
+        filterForm.addEventListener('submit', () => {
+            if (isMobile()) {
+                sessionStorage.setItem('skipAutoOpen', '1');
+            }
         });
+    }
 
-        // ---------- Auto-open on mobile only on first load ----------
-        const skipAutoOpen = sessionStorage.getItem('skipAutoOpen');
-        if (isMobile() && skipAutoOpen !== '1') {
+    // Reopen when resizing from desktop → mobile ONLY if nothing applied
+    let lastMobile = isMobile();
+    window.addEventListener('resize', () => {
+        const nowMobile = isMobile();
+        if (nowMobile && !lastMobile
+            && !sidebar.classList.contains('open')
+            && !hasSearchQuery
+            && !hasFilterParam) {
             open();
         }
-        sessionStorage.removeItem('skipAutoOpen');
-
-        // Skip auto-open when the filter form is submitted
-        const filterForm = document.getElementById('filterForm');
-        if (filterForm) {
-            filterForm.addEventListener('submit', () => {
-                if (isMobile()) {
-                    sessionStorage.setItem('skipAutoOpen', '1');
-                }
-            });
-        }
-
-        // Reopen when resizing from desktop → mobile
-        let lastMobile = isMobile();
-        window.addEventListener('resize', () => {
-            const nowMobile = isMobile();
-            if (nowMobile && !lastMobile && !sidebar.classList.contains('open')) {
-                open();
-            }
-            lastMobile = nowMobile;
-        });
-    })();
+        lastMobile = nowMobile;
+    });
+})();
 </script>

@@ -10,6 +10,86 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
+
+        /* ============================================================
+   MOBILE SEARCH — Icon + Overlay
+   ============================================================ */
+        .mobile-search-btn {
+            display: none;   /* hidden on desktop */
+        }
+
+        .mobile-search-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--white);
+            padding: 14px 16px;
+            z-index: 900;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .mobile-search-overlay.open {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideDown 0.2s ease-out;
+        }
+
+        @@keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to   { transform: translateY(0); opacity: 1; }
+        }
+
+        .mobile-search-overlay form {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            border: 1.5px solid var(--black);
+            padding: 0 12px;
+            height: 42px;
+            background: var(--white);
+        }
+
+        .mobile-search-overlay input {
+            flex: 1;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-size: 14px;
+            min-width: 0;
+            font-family: inherit;
+        }
+
+        .mobile-search-overlay button[type=submit] {
+            background: none;
+            border: none;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            color: var(--black);
+            cursor: pointer;
+        }
+
+        .mobile-search-close {
+            background: none;
+            border: none;
+            padding: 4px;
+            cursor: pointer;
+            color: var(--black);
+            display: flex;
+            align-items: center;
+        }
+
+        @@media (max-width: 900px) {
+            .mobile-search-btn { display: inline-flex; }
+
+            /* Hide desktop search box on mobile (already hidden) */
+            .search-box { display: none; }
+        }
+
         /* ============================================================
            NAV HOVER DROPDOWN
            ============================================================ */
@@ -80,6 +160,26 @@
 <body>
 
     <div class="nav-overlay" onclick="document.body.classList.remove('nav-open')"></div>
+    <!-- MOBILE SEARCH OVERLAY -->
+    <div class="mobile-search-overlay" id="mobileSearchOverlay">
+        <form method="get" action="/shop">
+            <input type="text" name="q" id="mobileSearchInput"
+                placeholder="Search products..."
+                value="@Context.Request.Query["q"]" />
+            <button type="submit" aria-label="Search">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="7"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+            </button>
+        </form>
+        <button type="button" class="mobile-search-close" id="closeMobileSearch" aria-label="Close">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+        </button>
+    </div>
 
     <!-- ============ ANNOUNCEMENT BAR ============ -->
     <div class="announcement-bar">
@@ -178,6 +278,14 @@
 
             <!-- RIGHT SIDE -->
             <div class="nav-right">
+
+                <!-- MOBILE SEARCH BUTTON (only mobile) -->
+                <button type="button" class="icon-link mobile-search-btn" id="openMobileSearch" title="Search" aria-label="Search">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="7"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                </button>
 
                 <!-- SEARCH -->
                   <form method="get" action="/shop" class="search-box">
@@ -413,6 +521,33 @@
         </div>
 
     </footer>
+<script>
+    // Mobile search toggle
+    (function () {
+        const btn = document.getElementById('openMobileSearch');
+        const overlay = document.getElementById('mobileSearchOverlay');
+        const closeBtn = document.getElementById('closeMobileSearch');
+        const input = document.getElementById('mobileSearchInput');
+        if (!btn || !overlay) return;
 
+        function open() {
+            overlay.classList.add('open');
+            document.body.style.overflow = 'hidden';
+            setTimeout(() => input && input.focus(), 100);
+        }
+        function close() {
+            overlay.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        btn.addEventListener('click', open);
+        if (closeBtn) closeBtn.addEventListener('click', close);
+
+        // Esc to close
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && overlay.classList.contains('open')) close();
+        });
+    })();
+</script>
 </body>
 </html>
