@@ -49,8 +49,8 @@
                 <h2 class="form-section-title">Pricing &amp; Inventory</h2>
                 <div class="form-section-body">
                     <div class="form-row">
-                        <div><label>MRP ₹ *</label><input asp-for="MRP" type="number" step="0.01" required /></div>
-                        <div><label>Sale Price ₹</label><input asp-for="SalePrice" type="number" step="0.01" /></div>
+                        <div><label>MRP ₹ *</label><input asp-for="MRP" type="number" required /></div>
+                        <div><label>Sale Price ₹</label><input asp-for="SalePrice" type="number" /></div>
                     </div>
 
                     <div class="form-row">
@@ -258,7 +258,19 @@
     }
     .form-section-body label:first-of-type { margin-top: 0; }
 
-    .admin-form input[type=text],
+    input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+     input[type=text],
     .admin-form input[type=number],
     .admin-form input[type=url],
     .admin-form input[type=email],
@@ -266,8 +278,8 @@
     .admin-form select,
     .admin-form textarea {
         width: 100%;
-        padding: 12px 14px;
-        border: 1.5px solid var(--gray-200);
+        padding: 11px 13px;
+        border: 1px solid var(--gray-200);
         font-size: 14px;
         outline: none;
         transition: border 0.2s, box-shadow 0.2s;
@@ -286,6 +298,7 @@
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
         gap: var(--space-md);
+        margin-bottom: 10px;
     }
     .img-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
     .check-row {
