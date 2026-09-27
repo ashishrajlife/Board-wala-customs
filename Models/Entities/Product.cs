@@ -11,9 +11,6 @@ public class Product
     [Required, StringLength(200)]
     public string Name { get; set; } = string.Empty;
 
-    [StringLength(200)]
-    public string Slug { get; set; } = string.Empty;
-
     [StringLength(500)]
     public string? ShortDescription { get; set; }
 
@@ -23,9 +20,8 @@ public class Product
     public decimal MRP { get; set; }
 
     [Column(TypeName = "decimal(10,2)")]
-    public decimal SalePrice { get; set; }
-
-    public int SavePercent { get; set; }
+    public decimal? SalePrice { get; set; }
+    public int? SavePercent { get; set; }
 
     public int CategoryId { get; set; }
     public Category? Category { get; set; }
@@ -39,17 +35,31 @@ public class Product
     [StringLength(300)] public string? Image3 { get; set; }
     [StringLength(300)] public string? Image4 { get; set; }
 
+    // ====================== Additional Details ======================
+    [StringLength(100)] public string? SKU { get; set; }
+    [StringLength(100)] public string? Brand { get; set; }
+    [StringLength(200)] public string? Composition { get; set; }
+    [StringLength(50)]  public string? GSM { get; set; }
+    [StringLength(200)] public string? PrintType { get; set; }
+    [StringLength(100)] public string? Neckline { get; set; }
+    [StringLength(100)] public string? FitType { get; set; }
+    [StringLength(100)] public string? CountryOfProduction { get; set; }
+    public string? WashCare { get; set; }
+    [StringLength(500)] public string? SizingNote { get; set; }
+    [StringLength(200)] public string? MRPNote { get; set; }
+    public string? AdditionalNote { get; set; }
+    [StringLength(1000)] public string? Tags { get; set; }
+    [StringLength(1000)] public string? Benefits { get; set; }
+    // =================================================================
+
     public bool IsActive { get; set; } = true;
     public bool IsFeatured { get; set; } = false;
     public bool IsNewArrival { get; set; } = true;
     public int Stock { get; set; } = 100;
-    public int DisplayOrder { get; set; } = 0;
-
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
 
     // ---------------- Compatibility helpers ----------------
-    // Keeps old code (views/controllers) working AND stores on Image1/Image2.
     [NotMapped]
     public string PrimaryImageUrl
     {

@@ -9,33 +9,43 @@ public class ShopController : Controller
     private readonly AppDbContext _db;
     public ShopController(AppDbContext db) => _db = db;
 
-    [Route("category/{slug}")]
-    public async Task<IActionResult> Category(string slug)
+    // ============================================================
+    // CATEGORY PAGE
+    // ============================================================
+    [Route("category/{id:int}")]
+    public async Task<IActionResult> Category(int id)
     {
-        var category = await _db.Categories.FirstOrDefaultAsync(c => c.Slug == slug && c.IsActive);
+        var category = await _db.Categories
+            .FirstOrDefaultAsync(c => c.CategoryId == id && c.IsActive);
         if (category == null) return NotFound();
 
         var products = await _db.Products
             .Include(p => p.Category)
             .Where(p => p.IsActive && p.CategoryId == category.CategoryId)
-            .OrderBy(p => p.DisplayOrder)
+            .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
 
         ViewBag.Category = category;
         return View("Category", products);
     }
 
-    [Route("product/{slug}")]
-    public async Task<IActionResult> Product(string slug)
+    // ============================================================
+    // PRODUCT DETAIL PAGE
+    // ============================================================
+    [Route("product/{id:int}")]
+    public async Task<IActionResult> Product(int id)
     {
         var product = await _db.Products
             .Include(p => p.Category)
-            .FirstOrDefaultAsync(p => p.Slug == slug && p.IsActive);
+            .FirstOrDefaultAsync(p => p.ProductId == id && p.IsActive);
         if (product == null) return NotFound();
 
         ViewBag.Related = await _db.Products
             .Include(p => p.Category)
-            .Where(p => p.IsActive && p.CategoryId == product.CategoryId && p.ProductId != product.ProductId)
+            .Where(p => p.IsActive
+                        && p.CategoryId == product.CategoryId
+                        && p.ProductId != product.ProductId)
+            .OrderByDescending(p => p.CreatedAt)
             .Take(4)
             .ToListAsync();
 

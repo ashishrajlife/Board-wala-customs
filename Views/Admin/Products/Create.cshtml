@@ -28,9 +28,6 @@
                     <label>Product Name *</label>
                     <input asp-for="Name" required placeholder="e.g. HUSTLE GANG BROWN CAP" />
 
-                    <label>Slug (auto-generated if empty)</label>
-                    <input asp-for="Slug" placeholder="hustle-gang-brown-cap" />
-
                     <label>Category *</label>
                     <select asp-for="CategoryId" asp-items="ViewBag.Categories" required></select>
                 </div>
@@ -53,11 +50,11 @@
                     <div class="form-row">
                         <div>
                             <label>MRP ₹ *</label>
-                            <input asp-for="MRP" type="number" step="0.01" required placeholder="1199.00" />
+                            <input asp-for="MRP" type="number" required placeholder="999" />
                         </div>
                         <div>
-                            <label>Sale Price ₹ *</label>
-                            <input asp-for="SalePrice" type="number" step="0.01" required placeholder="899.00" />
+                            <label>Sale Price ₹ <small style="color: orangered;"> (put value only if there is discount on item)</small></label>
+                            <input asp-for="SalePrice" type="number" placeholder="899" />
                         </div>
                     </div>
 
@@ -77,11 +74,78 @@
                             <label>Stock</label>
                             <input asp-for="Stock" type="number" min="0" />
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="form-section">
+                <h2 class="form-section-title">Product Details</h2>
+                <div class="form-section-body">
+
+                    <div class="form-row">
                         <div>
-                            <label>Display Order</label>
-                            <input asp-for="DisplayOrder" type="number" min="0" />
+                            <label>SKU</label>
+                            <input asp-for="SKU" placeholder="VW-TSH-001" />
+                        </div>
+                        <div>
+                            <label>Brand</label>
+                            <input asp-for="Brand" placeholder="VALOUSWORLD" />
                         </div>
                     </div>
+
+                    <div class="form-row">
+                        <div>
+                            <label>Composition</label>
+                            <input asp-for="Composition" placeholder="100% cotton" />
+                        </div>
+                        <div>
+                            <label>GSM</label>
+                            <input asp-for="GSM" placeholder="240" />
+                        </div>
+                    </div>
+
+                    <label>Print Type</label>
+                    <input asp-for="PrintType" placeholder="Embroidery, Screen Print & Puff Print" />
+
+                    <div class="form-row">
+                        <div>
+                            <label>Neckline</label>
+                            <input asp-for="Neckline" placeholder="Round neck" />
+                        </div>
+                        <div>
+                            <label>Fit Type</label>
+                            <input asp-for="FitType" placeholder="Oversized drop shoulder tee" />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div>
+                            <label>Country of Production</label>
+                            <input asp-for="CountryOfProduction" placeholder="India" />
+                        </div>
+                        <div>
+                            <label>Sizing Note</label>
+                            <input asp-for="SizingNote" placeholder="Garment measurement in inches" />
+                        </div>
+                    </div>
+
+                    <label>Wash Care</label>
+                    <textarea asp-for="WashCare" rows="4"
+                              placeholder="Machine wash cold with similar colors. Only non-chlorine. Tumble dry low."></textarea>
+
+                    <label>MRP Note</label>
+                    <input asp-for="MRPNote" placeholder="MRP: Rs.1199/- incl. of all taxes" />
+
+                    <label>Additional Note</label>
+                    <textarea asp-for="AdditionalNote" rows="3"
+                              placeholder="Colors may slightly vary depending on your screen brightness."></textarea>
+
+                    <label>Tags (comma separated)</label>
+                    <input asp-for="Tags" placeholder="100% cotton, Embroidery, Oversized drop shoulder tee" />
+
+                    <label>Benefits (comma separated)</label>
+                    <input asp-for="Benefits" placeholder="Free shipping, COD available, 7-day return" />
+
                 </div>
             </section>
         </div>
@@ -149,16 +213,11 @@
 <style>
     /* ============================================================
        PRODUCTS CREATE — page-scoped styles
-       Font-sizes and color tokens are unchanged from the original
-       design; layout has been reworked into clearer sections and
-       made fluidly responsive from small phones to ultra-wide
-       desktops.
        ============================================================ */
 
-    /* ---------- Form grid: main + sidebar ---------- */
     .admin-form {
         width: 100%;
-        max-width: 1400px; /* keeps the form readable on ultra-wide monitors */
+        max-width: 1400px;
         margin: 0 auto var(--space-lg);
         display: grid;
         grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
@@ -173,7 +232,6 @@
         min-width: 0;
     }
 
-    /* ---------- Sectioned cards on the left column ---------- */
     .form-section {
         border: 1px solid var(--gray-200);
         border-radius: 4px;
@@ -210,7 +268,6 @@
         position: sticky;
         top: 100px;
     }
-
     .admin-form .form-side h3 {
         font-size: 12px;
         font-weight: 800;
@@ -222,7 +279,6 @@
         color: var(--black);
     }
 
-    /* ---------- Labels & inputs ---------- */
     .admin-form label {
         display: block;
         font-size: 12px;
@@ -258,21 +314,18 @@
     }
     .admin-form textarea { resize: vertical; min-height: 120px; }
 
-    /* ---------- Two-column row, fluidly collapsing ---------- */
     .form-row {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
         gap: var(--space-md);
     }
 
-    /* ---------- Image upload grid ---------- */
     .img-grid {
         display: grid;
         grid-template-columns: 1fr;
         gap: 14px;
     }
 
-    /* ---------- Checkboxes ---------- */
     .check-row {
         display: flex;
         flex-direction: column;
@@ -299,7 +352,6 @@
         flex-shrink: 0;
     }
 
-    /* ---------- Form actions ---------- */
     .form-actions {
         display: flex;
         flex-direction: column;
@@ -315,11 +367,7 @@
         padding: 14px 20px;
     }
 
-    /* ---------- Upload slot ---------- */
-    .img-slot {
-        margin-bottom: 0;
-        padding-bottom: 0;
-    }
+    .img-slot { margin-bottom: 0; padding-bottom: 0; }
 
     .upload-block {
         border: 1.5px dashed var(--gray-200);
@@ -382,42 +430,20 @@
         margin-left: 4px;
     }
 
-    /* ============================================================
-       RESPONSIVE — Wide desktop (>= 1100px)
-       Two image upload slots per row once there's room to spare
-       ============================================================ */
+    /* ---------- RESPONSIVE ---------- */
     @@media (min-width: 1100px) {
         .img-grid { grid-template-columns: 1fr 1fr; }
     }
-
-    /* ============================================================
-       RESPONSIVE — Tablet (<= 1024px)
-       Sidebar drops below the main column and stops being sticky
-       ============================================================ */
     @@media (max-width: 1024px) {
-        .admin-form {
-            grid-template-columns: 1fr;
-            gap: var(--space-md);
-        }
-        .admin-form .form-side {
-            position: static;
-            top: auto;
-        }
+        .admin-form { grid-template-columns: 1fr; gap: var(--space-md); }
+        .admin-form .form-side { position: static; top: auto; }
         .img-grid { grid-template-columns: 1fr 1fr; }
     }
-
-    /* ============================================================
-       RESPONSIVE — Small tablet / large phone (<= 640px)
-       ============================================================ */
     @@media (max-width: 640px) {
         .img-grid { grid-template-columns: 1fr; }
         .form-section-body { padding: var(--space-sm); }
         .admin-form .form-side { padding: var(--space-sm); }
     }
-
-    /* ============================================================
-       RESPONSIVE — Mobile (<= 500px)
-       ============================================================ */
     @@media (max-width: 500px) {
         .admin-form { padding: 0; }
         .form-row { grid-template-columns: 1fr; gap: 0; }

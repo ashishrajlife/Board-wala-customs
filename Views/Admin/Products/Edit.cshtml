@@ -29,9 +29,6 @@
                     <label>Product Name *</label>
                     <input asp-for="Name" required />
 
-                    <label>Slug (auto if empty)</label>
-                    <input asp-for="Slug" />
-
                     <label>Category *</label>
                     <select asp-for="CategoryId" asp-items="ViewBag.Categories" required></select>
                 </div>
@@ -52,8 +49,8 @@
                 <h2 class="form-section-title">Pricing &amp; Inventory</h2>
                 <div class="form-section-body">
                     <div class="form-row">
-                        <div><label>MRP ₹ *</label><input asp-for="MRP" type="number" step="0.01" required /></div>
-                        <div><label>Sale Price ₹ *</label><input asp-for="SalePrice" type="number" step="0.01" required /></div>
+                        <div><label>MRP ₹ *</label><input asp-for="MRP" type="number" required /></div>
+                        <div><label>Sale Price ₹ <small  style="color: orangered;">(put value only if there is discount on item)</small></label><input asp-for="SalePrice" type="number" /></div>
                     </div>
 
                     <div class="form-row">
@@ -63,8 +60,54 @@
 
                     <div class="form-row">
                         <div><label>Stock</label><input asp-for="Stock" type="number" min="0" /></div>
-                        <div><label>Display Order</label><input asp-for="DisplayOrder" type="number" min="0" /></div>
                     </div>
+                </div>
+            </section>
+
+            <section class="form-section">
+                <h2 class="form-section-title">Product Details</h2>
+                <div class="form-section-body">
+
+                    <div class="form-row">
+                        <div><label>SKU</label><input asp-for="SKU" placeholder="VW-TSH-001" /></div>
+                        <div><label>Brand</label><input asp-for="Brand" placeholder="VALOUSWORLD" /></div>
+                    </div>
+
+                    <div class="form-row">
+                        <div><label>Composition</label><input asp-for="Composition" placeholder="100% cotton" /></div>
+                        <div><label>GSM</label><input asp-for="GSM" placeholder="240" /></div>
+                    </div>
+
+                    <label>Print Type</label>
+                    <input asp-for="PrintType" placeholder="Embroidery, Screen Print & Puff Print" />
+
+                    <div class="form-row">
+                        <div><label>Neckline</label><input asp-for="Neckline" placeholder="Round neck" /></div>
+                        <div><label>Fit Type</label><input asp-for="FitType" placeholder="Oversized drop shoulder tee" /></div>
+                    </div>
+
+                    <div class="form-row">
+                        <div><label>Country of Production</label><input asp-for="CountryOfProduction" placeholder="India" /></div>
+                        <div><label>Sizing Note</label><input asp-for="SizingNote" placeholder="Garment measurement in inches" /></div>
+                    </div>
+
+                    <label>Wash Care</label>
+                    <textarea asp-for="WashCare" rows="4"
+                              placeholder="Machine wash cold with similar colors. Only non-chlorine. Tumble dry low."></textarea>
+
+                    <label>MRP Note</label>
+                    <input asp-for="MRPNote" placeholder="MRP: Rs.1199/- incl. of all taxes" />
+
+                    <label>Additional Note</label>
+                    <textarea asp-for="AdditionalNote" rows="3"
+                              placeholder="Colors may slightly vary depending on your screen brightness."></textarea>
+
+                    <label>Tags (comma separated)</label>
+                    <input asp-for="Tags" placeholder="100% cotton, Embroidery, Oversized drop shoulder tee" />
+
+                    <label>Benefits (comma separated)</label>
+                    <input asp-for="Benefits" placeholder="Free shipping, COD available, 7-day return" />
+
                 </div>
             </section>
         </div>
@@ -142,13 +185,7 @@
 </script>
 
 <style>
-    /* ============================================================
-       PRODUCTS EDIT — page-scoped styles (mirrors Create.cshtml)
-       Font-sizes and color tokens are unchanged from the original
-       design; layout has been reworked into clearer sections and
-       made fluidly responsive from small phones to ultra-wide
-       desktops.
-       ============================================================ */
+    /* Same as Create.cshtml + .current-image */
 
     .admin-form {
         width: 100%;
@@ -165,8 +202,6 @@
         gap: var(--space-md);
         min-width: 0;
     }
-
-    /* ---------- Sectioned cards on the left column ---------- */
     .form-section {
         border: 1px solid var(--gray-200);
         border-radius: 4px;
@@ -190,7 +225,6 @@
         gap: 4px;
         padding: var(--space-md);
     }
-
     .admin-form .form-side {
         display: flex;
         flex-direction: column;
@@ -224,7 +258,19 @@
     }
     .form-section-body label:first-of-type { margin-top: 0; }
 
-    .admin-form input[type=text],
+    input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+     input[type=text],
     .admin-form input[type=number],
     .admin-form input[type=url],
     .admin-form input[type=email],
@@ -232,8 +278,8 @@
     .admin-form select,
     .admin-form textarea {
         width: 100%;
-        padding: 12px 14px;
-        border: 1.5px solid var(--gray-200);
+        padding: 11px 13px;
+        border: 1px solid var(--gray-200);
         font-size: 14px;
         outline: none;
         transition: border 0.2s, box-shadow 0.2s;
@@ -252,15 +298,9 @@
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
         gap: var(--space-md);
+        margin-bottom: 10px;
     }
-
-    /* ---------- Image upload grid ---------- */
-    .img-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 14px;
-    }
-
+    .img-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
     .check-row {
         display: flex;
         flex-direction: column;
@@ -300,11 +340,7 @@
         justify-content: center;
         padding: 14px 20px;
     }
-
-    .img-slot {
-        margin-bottom: 0;
-        padding-bottom: 0;
-    }
+    .img-slot { margin-bottom: 0; padding-bottom: 0; }
     .upload-block {
         border: 1.5px dashed var(--gray-200);
         padding: 14px;
@@ -313,10 +349,7 @@
         transition: border-color 0.2s, background 0.2s;
         height: 100%;
     }
-    .upload-block:hover {
-        border-color: var(--gray-400);
-        background: #fafafa;
-    }
+    .upload-block:hover { border-color: var(--gray-400); background: #fafafa; }
     .upload-block input[type=file] {
         width: 100%;
         font-size: 13px;
@@ -337,9 +370,7 @@
         transition: background 0.2s;
         border-radius: 2px;
     }
-    .upload-block input[type=file]::file-selector-button:hover {
-        background: var(--gray-800);
-    }
+    .upload-block input[type=file]::file-selector-button:hover { background: var(--gray-800); }
     .upload-hint {
         font-size: 11px;
         color: var(--gray-600);
@@ -381,34 +412,20 @@
         margin-left: 4px;
     }
 
-    /* ============================================================
-       RESPONSIVE — Wide desktop (>= 1100px)
-       ============================================================ */
-    @@media (min-width: 1100px) {
+    /* ---------- RESPONSIVE ---------- */
+   @@media (min-width: 1100px) {
         .img-grid { grid-template-columns: 1fr 1fr; }
     }
-
-    /* ============================================================
-       RESPONSIVE — Tablet (<= 1024px)
-       ============================================================ */
     @@media (max-width: 1024px) {
         .admin-form { grid-template-columns: 1fr; gap: var(--space-md); }
         .admin-form .form-side { position: static; top: auto; }
         .img-grid { grid-template-columns: 1fr 1fr; }
     }
-
-    /* ============================================================
-       RESPONSIVE — Small tablet / large phone (<= 640px)
-       ============================================================ */
     @@media (max-width: 640px) {
         .img-grid { grid-template-columns: 1fr; }
         .form-section-body { padding: var(--space-sm); }
         .admin-form .form-side { padding: var(--space-sm); }
     }
-
-    /* ============================================================
-       RESPONSIVE — Mobile (<= 500px)
-       ============================================================ */
     @@media (max-width: 500px) {
         .admin-form { padding: 0; }
         .form-row { grid-template-columns: 1fr; gap: 0; }

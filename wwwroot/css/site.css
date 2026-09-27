@@ -64,7 +64,7 @@ img { max-width: 100%; display: block; }
     letter-spacing: 0.5px;
     text-transform: uppercase;
 }
-.marquee { display: inline-flex; gap: 60px; animation: scroll-left 40s linear infinite; }
+.marquee { display: inline-flex; gap: 60px; animation: scroll-left 15s linear infinite; }
 .marquee span { padding-right: 60px; }
 @keyframes scroll-left {
     0%   { transform: translateX(0); }
@@ -119,6 +119,7 @@ img { max-width: 100%; display: block; }
     line-height: 0.95;
     text-align: center;
     user-select: none;
+    transform: scaleX(1.2);
 }
 .brand-logo .logo-line-1,
 .brand-logo .logo-line-2 {
@@ -127,7 +128,7 @@ img { max-width: 100%; display: block; }
     letter-spacing: 1.5px;
     text-transform: uppercase;
 }
-.brand-logo .logo-line-2 { font-weight: 400; }
+.brand-logo .logo-line-2 { font-weight: 900; }
 
 .nav-right {
     display: flex;
@@ -481,34 +482,6 @@ main { display: block; min-height: 40vh; }
 .big-btn { width: 100%; padding: 18px; font-size: 13px; margin-top: var(--space-md); }
 .pdp-meta { margin-top: var(--space-lg); font-size: 13px; color: var(--gray-600); }
 .pdp-meta p { padding: 6px 0; display: flex; align-items: center; gap: 8px; }
-
-/* ================= ACCORDION ================= */
-.accordion-section {
-    border-top: 1px solid var(--gray-200);
-    padding: var(--space-lg) 0;
-}
-.accordion-section details { border-bottom: 1px solid var(--gray-200); padding: 20px 0; }
-.accordion-section summary {
-    list-style: none;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    cursor: pointer;
-    text-transform: uppercase;
-    gap: var(--space-md);
-}
-.accordion-section summary::-webkit-details-marker { display: none; }
-.accordion-section summary span { font-size: 18px; font-weight: 300; flex-shrink: 0; }
-.accordion-section details[open] summary span { transform: rotate(45deg); }
-.accordion-section p {
-    padding-top: 14px;
-    color: var(--gray-600);
-    font-size: 13px;
-    max-width: 720px;
-}
 
 /* ================= FOOTER ================= */
 .site-footer {
@@ -894,9 +867,6 @@ h1 {
     .auth-card { padding: var(--space-md); margin: var(--space-lg) auto; }
 
     .footer-grid { grid-template-columns: 1fr; gap: var(--space-md); }
-
-    .accordion-section summary { font-size: 12px; letter-spacing: 1px; }
-    .accordion-section p { font-size: 12px; }
 }
 
 /* ---- Small mobile (≤ 380px) ---- */

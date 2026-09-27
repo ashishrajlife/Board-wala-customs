@@ -24,7 +24,6 @@ public class AdminCategoriesController : Controller
     public async Task<IActionResult> Index()
     {
         var categories = await _db.Categories
-            .OrderBy(c => c.DisplayOrder)
             .ToListAsync();
 
         // Count products for each category, defaulting to 0 if none
@@ -58,10 +57,6 @@ public class AdminCategoriesController : Controller
         if (!ModelState.IsValid)
             return View("~/Views/Admin/Categories/Create.cshtml", model);
 
-        model.Slug = string.IsNullOrWhiteSpace(model.Slug)
-            ? Slugify(model.Name)
-            : Slugify(model.Slug);
-
         _db.Categories.Add(model);
         await _db.SaveChangesAsync();
         TempData["Success"] = "Category created.";
@@ -92,10 +87,6 @@ public class AdminCategoriesController : Controller
         if (existing == null) return NotFound();
 
         existing.Name = model.Name;
-        existing.Slug = string.IsNullOrWhiteSpace(model.Slug)
-            ? Slugify(model.Name)
-            : Slugify(model.Slug);
-        existing.DisplayOrder = model.DisplayOrder;
         existing.IsActive = model.IsActive;
 
         await _db.SaveChangesAsync();
@@ -130,6 +121,6 @@ public class AdminCategoriesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    private static string Slugify(string input)
-        => input.Trim().ToLower().Replace(" ", "-").Replace("'", "").Replace("\"", "");
+    // private static string Slugify(string input)
+    //     => input.Trim().ToLower().Replace(" ", "-").Replace("'", "").Replace("\"", "");
 }
