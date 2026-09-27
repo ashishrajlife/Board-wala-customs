@@ -113,7 +113,7 @@
         <h1>@Model.Name</h1>
 
             <div class="pdp-price-row">
-                <span class="pdp-sale">₹@Model.SalePrice.ToString("0.00")</span>
+                <span class="pdp-sale">₹@Model.SalePrice</span> 
                 <span class="pdp-mrp">₹@Model.MRP.ToString("0")</span>
                 @if (Model.SavePercent > 0)
                 {

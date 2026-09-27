@@ -34,7 +34,7 @@
                             <h3>@p.Name</h3>
                             <div class="price-row">
                                 <span class="mrp">Rs.@p.MRP.ToString("0")</span>
-                                <span class="sale">Rs.@p.SalePrice.ToString("0.00")</span>
+                                <span class="sale"> @(p.SalePrice.HasValue ? p.SalePrice.Value.ToString("0.00") : "")"</span>
                             </div>
                         </div>
                     </a>

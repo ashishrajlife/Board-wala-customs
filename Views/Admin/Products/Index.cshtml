@@ -78,8 +78,15 @@
                             <div class="tbl-sub">@p.Category?.Name</div>
                         </td>
                         <td class="col-hide-sm" data-label="Category">@p.Category?.Name</td>
-                        <td class="col-price" data-label="MRP"><s>₹@p.MRP.ToString("0")</s></td>
-                        <td class="col-price" data-label="Sale"><span class="tbl-sale">₹@p.SalePrice.ToString("0")</span></td>
+                       @{ bool hasSale = p.SalePrice.HasValue && p.SalePrice.Value > 0 && p.SalePrice.Value < p.MRP; }
+                            <td class="col-price" data-label="MRP">
+                                @if (hasSale) { <s>₹@p.MRP.ToString("0")</s> }
+                                else { <span>₹@p.MRP.ToString("0")</span> }
+                            </td>
+                            <td class="col-price" data-label="Sale">
+                                @if (hasSale) { <span class="tbl-sale">₹@p.SalePrice.Value.ToString("0")</span> }
+                                else { <span class="tbl-muted">—</span> }
+                            </td>
                         <td class="col-hide-sm" data-label="Stock">@p.Stock</td>
                         <td class="col-hide-sm" data-label="Active">
                             @if (p.IsActive)
@@ -132,8 +139,8 @@
                             data-short="@p.ShortDescription"
                             data-desc="@p.Description"
                             data-mrp="@p.MRP.ToString("0.00")"
-                            data-sale="@p.SalePrice.ToString("0.00")"
-                            data-save="@p.SavePercent"
+                            data-sale="@(p.SalePrice.HasValue ? p.SalePrice.Value.ToString("0.00") : "")"
+                            data-save="@(p.SavePercent?.ToString() ?? "")"
                             data-sizes="@p.Sizes"
                             data-colors="@p.Colors"
                             data-stock="@p.Stock"
@@ -688,11 +695,16 @@
                 }).join('') +
                 '</div>';
 
-            var priceHtml = '<div class="pm-price-row">' +
-                '<span class="pm-sale">₹' + esc(data.sale) + '</span>' +
-                '<span class="pm-mrp">₹' + esc(data.mrp) + '</span>' +
-                (parseInt(data.save) > 0 ? '<span class="pm-save">SAVE ' + esc(data.save) + '%</span>' : '') +
-                '</div>';
+           var hasSale = data.sale && data.sale.trim() !== '';
+                var priceHtml = '<div class="pm-price-row">';
+                if (hasSale) {
+                    priceHtml += '<span class="pm-sale">₹' + esc(data.sale) + '</span>' +
+                                '<span class="pm-mrp">₹' + esc(data.mrp) + '</span>' +
+                                (parseInt(data.save) > 0 ? '<span class="pm-save">SAVE ' + esc(data.save) + '%</span>' : '');
+                } else {
+                    priceHtml += '<span class="pm-sale">₹' + esc(data.mrp) + '</span>';
+                }
+                priceHtml += '</div>';
 
             var basic = '<div class="pm-section"><h4>BASIC</h4><div class="pm-grid">' +
                 item('Category', data.category) +

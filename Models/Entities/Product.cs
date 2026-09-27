@@ -20,9 +20,8 @@ public class Product
     public decimal MRP { get; set; }
 
     [Column(TypeName = "decimal(10,2)")]
-    public decimal SalePrice { get; set; }
-
-    public int SavePercent { get; set; }
+    public decimal? SalePrice { get; set; }
+    public int? SavePercent { get; set; }
 
     public int CategoryId { get; set; }
     public Category? Category { get; set; }
