@@ -64,7 +64,7 @@
                 {
                     <a href="/product/@p.ProductId" class="product-card">
                         <div class="product-image">
-                            @if (p.SavePercent > 0)
+                          @if (p.SavePercent > 0 && p.SalePrice.HasValue && p.SalePrice.Value > 0)
                             {
                                 <span class="save-badge">SAVE @p.SavePercent%</span>
                             }
@@ -73,9 +73,16 @@
                         </div>
                         <div class="product-info">
                             <h3>@p.Name</h3>
-                            <div class="price-row">
-                                <span class="mrp">Rs.@p.MRP.ToString("0")</span>
-                                <span class="sale"> @(p.SalePrice.HasValue ? p.SalePrice.Value.ToString("0.00") : "")"</span> 
+                           <div class="price-row">
+                                @if (p.SavePercent > 0 && p.SalePrice.HasValue && p.SalePrice.Value > 0)
+                                {
+                                    <span class="mrp">Rs.@p.MRP.ToString("0")</span>
+                                    <span class="sale">Rs.@p.SalePrice.Value.ToString("0.00")</span>
+                                }
+                                else
+                                {
+                                    <span class="price-normal">Rs.@p.MRP.ToString("0")</span>
+                                }
                             </div>
                         </div>
                     </a>
@@ -84,3 +91,10 @@
         }
     </div>
 </section>
+<style>
+    .price-normal {
+    font-weight: 700;
+    color: var(--black);
+    font-size: 13px;
+}
+</style>
