@@ -1,4 +1,11 @@
-﻿<!DOCTYPE html>
+﻿@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    var isAuthPage = string.Equals(currentController, "Auth", StringComparison.OrdinalIgnoreCase)
+                     && (string.Equals(currentAction, "Login", StringComparison.OrdinalIgnoreCase)
+                         || string.Equals(currentAction, "Register", StringComparison.OrdinalIgnoreCase));
+}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -156,11 +163,12 @@
         }
     </style>
 </head>
-
 <body>
 
     <div class="nav-overlay" onclick="document.body.classList.remove('nav-open')"></div>
     <!-- MOBILE SEARCH OVERLAY -->
+    @if (!isAuthPage)
+   {
     <div class="mobile-search-overlay" id="mobileSearchOverlay">
         <form method="get" action="/shop">
             <input type="text" name="q" id="mobileSearchInput"
@@ -180,7 +188,7 @@
             </svg>
         </button>
     </div>
-
+}
     <!-- ============ ANNOUNCEMENT BAR ============ -->
     <div class="announcement-bar">
         <div class="marquee">
@@ -279,25 +287,37 @@
             <!-- RIGHT SIDE -->
             <div class="nav-right">
 
-                <!-- MOBILE SEARCH BUTTON (only mobile) -->
-                <button type="button" class="icon-link mobile-search-btn" id="openMobileSearch" title="Search" aria-label="Search">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="7"/>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                    </svg>
-                </button>
+                 @if (!isAuthPage)
+                    {
+                        // Hide search on auth pages
+                        var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+                        var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
 
-                <!-- SEARCH -->
-                  <form method="get" action="/shop" class="search-box">
-                    <input type="text" name="q" placeholder="Search..." value="@Context.Request.Query["q"]" />
-                    <button type="submit" aria-label="Search">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="11" cy="11" r="7"/>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                        </svg>
-                    </button>
-                </form>
+                        var isAuthPage = string.Equals(currentController, "Auth", StringComparison.OrdinalIgnoreCase)
+                                        && (string.Equals(currentAction, "Login", StringComparison.OrdinalIgnoreCase)
+                                            || string.Equals(currentAction, "Register", StringComparison.OrdinalIgnoreCase));
+                    }
+                        @if (!isAuthPage)
+                        {
+                        <!-- MOBILE SEARCH BUTTON -->
+                        <button type="button" class="icon-link mobile-search-btn" id="openMobileSearch" title="Search" aria-label="Search">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="7"/>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                            </svg>
+                        </button>
 
+                        <!-- DESKTOP SEARCH -->
+                        <form method="get" action="/shop" class="search-box">
+                            <input type="text" name="q" placeholder="Search..." value="@Context.Request.Query["q"]" />
+                            <button type="submit" aria-label="Search">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="7"/>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                                </svg>
+                            </button>
+                        </form>
+                    }
                 <!-- USER -->
                 @if (User.Identity?.IsAuthenticated == true)
                 {

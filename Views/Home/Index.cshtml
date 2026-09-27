@@ -98,4 +98,25 @@
         if (!sel || !form) return;
         sel.addEventListener('change', () => form.submit());
     })();
+ (function () {
+        const filterBar = document.querySelector('.filter-bar');
+        if (!filterBar) return;
+
+        const headerHeight = window.innerWidth <= 500 ? 62
+                           : window.innerWidth <= 768 ? 68
+                           : 78;
+
+        function checkStuck() {
+            const rect = filterBar.getBoundingClientRect();
+            if (rect.top <= headerHeight + 1) {
+                filterBar.classList.add('is-stuck');
+            } else {
+                filterBar.classList.remove('is-stuck');
+            }
+        }
+
+        window.addEventListener('scroll', checkStuck, { passive: true });
+        window.addEventListener('resize', checkStuck);
+        checkStuck();
+    })();    
 </script>

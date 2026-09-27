@@ -273,9 +273,21 @@ main { display: block; min-height: 40vh; }
 }
 
 /* ================= FILTER BAR ================= */
+/* ================= FILTER BAR (sticky) ================= */
 .filter-bar {
     border-bottom: 1px solid var(--gray-200);
     padding: 22px 0;
+    background: var(--white);
+    position: sticky;
+    top: 78px;              /* header height */
+    z-index: 90;            /* below header (header is z-index 100) */
+    transition: box-shadow 0.2s, padding 0.2s;
+}
+
+/* Shadow only when stuck */
+.filter-bar.is-stuck {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    padding: 14px 0;
 }
 .filter-inner {
     display: flex;
@@ -793,7 +805,13 @@ h1 {
     .hero-overlay h1 { font-size: clamp(32px, 10vw, 60px); }
     .hero-tags { gap: 10px var(--space-md); }
 
-    .filter-bar { padding: 16px 0; }
+    .filter-bar {
+    padding: 14px 0;
+    top: 68px;              /* mobile header height */
+    }
+    .filter-bar.is-stuck {
+        padding: 10px 0;
+    }
     .filter-inner { gap: 12px; }
     .filter-left, .filter-right { font-size: 11px; letter-spacing: 1px; }
     .filter-right { gap: var(--space-sm); }
@@ -855,7 +873,10 @@ h1 {
     .hero-tags { display: none; }
 
     .filter-inner { flex-direction: column; align-items: flex-start; }
-
+    .filter-bar {
+        padding: 12px 0;
+        top: 62px;              /* smaller mobile header */
+    }
     .products-grid { grid-template-columns: repeat(2, 1fr); gap: var(--space-sm); }
 
     .pdp-info h1 { font-size: 19px; }

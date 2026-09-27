@@ -506,23 +506,37 @@
     //   2) Coming right after a filter form submit (skipAutoOpen flag)
     //   3) Any filter is already applied in the URL
     const urlParams = new URLSearchParams(window.location.search);
-    const hasSearchQuery = urlParams.has('q') && urlParams.get('q').trim() !== '';
-    const hasFilterParam =
-        urlParams.has('categoryId') ||
-        urlParams.has('minPrice') ||
-        urlParams.has('maxPrice') ||
-        urlParams.has('sizes') ||
-        urlParams.has('colors');
+const hasSearchQuery = urlParams.has('q') && urlParams.get('q').trim() !== '';
+const hasFilterParam =
+    urlParams.has('categoryId') ||
+    urlParams.has('minPrice') ||
+    urlParams.has('maxPrice') ||
+    urlParams.has('sizes') ||
+    urlParams.has('colors');
 
-    const skipAutoOpen = sessionStorage.getItem('skipAutoOpen') === '1';
-    sessionStorage.removeItem('skipAutoOpen');
+const skipAutoOpen = sessionStorage.getItem('skipAutoOpen') === '1';
+sessionStorage.removeItem('skipAutoOpen');
 
-    if (isMobile()
-        && !hasSearchQuery
-        && !hasFilterParam
-        && !skipAutoOpen) {
-        open();
-    }
+// ← YE ADD KARO: user ne shop se product pe jaake back kiya hai
+const comingBackFromProduct = sessionStorage.getItem('skipAutoOpenOnReturn') === '1';
+sessionStorage.removeItem('skipAutoOpenOnReturn');
+
+if (isMobile()
+    && !hasSearchQuery
+    && !hasFilterParam
+    && !skipAutoOpen
+    && !comingBackFromProduct) {
+    open();
+}
+
+// When user clicks a product card, remember to skip auto-open on return
+document.querySelectorAll('.product-card').forEach(card => {
+    card.addEventListener('click', () => {
+        if (isMobile()) {
+            sessionStorage.setItem('skipAutoOpenOnReturn', '1');
+        }
+    });
+});
 
     // Set skipAutoOpen flag when filter form submits
     const filterForm = document.getElementById('filterForm');
