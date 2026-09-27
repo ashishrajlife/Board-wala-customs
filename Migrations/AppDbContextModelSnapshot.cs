@@ -55,7 +55,7 @@ namespace ValousWorld.Web.Migrations
                     b.HasIndex("Slug")
                         .IsUnique();
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", (string)null);
                 });
 
             modelBuilder.Entity("ValousWorld.Web.Models.Entities.Product", b =>
@@ -149,7 +149,7 @@ namespace ValousWorld.Web.Migrations
                     b.HasIndex("Slug")
                         .IsUnique();
 
-                    b.ToTable("Products");
+                    b.ToTable("Products", (string)null);
                 });
 
             modelBuilder.Entity("ValousWorld.Web.Models.Entities.RefreshToken", b =>
@@ -180,7 +180,7 @@ namespace ValousWorld.Web.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RefreshTokens");
+                    b.ToTable("RefreshTokens", (string)null);
                 });
 
             modelBuilder.Entity("ValousWorld.Web.Models.Entities.Role", b =>
@@ -200,7 +200,7 @@ namespace ValousWorld.Web.Migrations
                     b.HasIndex("RoleName")
                         .IsUnique();
 
-                    b.ToTable("Roles");
+                    b.ToTable("Roles", (string)null);
                 });
 
             modelBuilder.Entity("ValousWorld.Web.Models.Entities.User", b =>
@@ -245,7 +245,7 @@ namespace ValousWorld.Web.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("ValousWorld.Web.Models.Entities.Product", b =>

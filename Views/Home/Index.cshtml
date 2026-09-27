@@ -62,7 +62,7 @@
             <div class="products-grid">
                 @foreach (var p in Model)
                 {
-                    <a href="/product/@p.Slug" class="product-card">
+                    <a href="/product/@p.ProductId" class="product-card">
                         <div class="product-image">
                             @if (p.SavePercent > 0)
                             {

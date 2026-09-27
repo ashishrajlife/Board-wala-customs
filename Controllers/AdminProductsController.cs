@@ -59,9 +59,6 @@ public class AdminProductsController : Controller
         ModelState.Remove(nameof(Product.PrimaryImageUrl));
         ModelState.Remove(nameof(Product.SecondaryImageUrl));
 
-        if (string.IsNullOrWhiteSpace(model.Slug))
-            model.Slug = Slugify(model.Name);
-
         // At least 2 images required
         var uploadedCount = new[] { img1, img2, img3, img4 }
             .Count(f => f != null && f.Length > 0);
@@ -182,9 +179,6 @@ public class AdminProductsController : Controller
         }
 
         existing.Name = model.Name;
-        existing.Slug = string.IsNullOrWhiteSpace(model.Slug)
-            ? Slugify(model.Name)
-            : Slugify(model.Slug);
         existing.ShortDescription = model.ShortDescription;
         existing.Description = model.Description;
         existing.MRP = model.MRP;
@@ -199,7 +193,6 @@ public class AdminProductsController : Controller
         existing.IsFeatured = model.IsFeatured;
         existing.IsNewArrival = model.IsNewArrival;
         existing.Stock = model.Stock;
-        existing.DisplayOrder = model.DisplayOrder;
         existing.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
@@ -244,13 +237,13 @@ public class AdminProductsController : Controller
     // ============================================================
     private async Task LoadCategoriesAsync(int? selected = null)
     {
-        var cats = await _db.Categories.OrderBy(c => c.DisplayOrder).ToListAsync();
+        var cats = await _db.Categories.ToListAsync();
         ViewBag.Categories = new SelectList(cats, "CategoryId", "Name", selected);
     }
 
-    private static string Slugify(string input)
-        => input.Trim().ToLower()
-            .Replace(" ", "-")
-            .Replace("'", "")
-            .Replace("\"", "");
+    // private static string Slugify(string input)
+    //     => input.Trim().ToLower()
+    //         .Replace(" ", "-")
+    //         .Replace("'", "")
+    //         .Replace("\"", "");
 }

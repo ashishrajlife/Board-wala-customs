@@ -38,19 +38,17 @@ public class AppDbContext : DbContext
             modelBuilder.Entity<Role>().HasIndex(r => r.RoleName).IsUnique();
             modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
 
-            modelBuilder.Entity<Category>().HasIndex(c => c.Slug).IsUnique();
-            modelBuilder.Entity<Product>().HasIndex(p => p.Slug).IsUnique();
+            modelBuilder.Entity<Category>().HasIndex(c => c.CategoryId).IsUnique();
+            modelBuilder.Entity<Product>().HasIndex(p => p.ProductId).IsUnique();
 
             modelBuilder.Entity<Category>(e =>
             {
                 e.HasKey(c => c.CategoryId);
-                e.HasIndex(c => c.Slug).IsUnique();
             });
 
             modelBuilder.Entity<Product>(e =>
             {
                 e.HasKey(p => p.ProductId);
-                e.HasIndex(p => p.Slug).IsUnique();
                 e.HasOne(p => p.Category)
                 .WithMany(c => c.Products)
                 .HasForeignKey(p => p.CategoryId)

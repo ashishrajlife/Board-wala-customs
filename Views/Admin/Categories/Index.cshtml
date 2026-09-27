@@ -51,7 +51,6 @@
                     <tr>
                         <th class="col-img">Image</th>
                         <th class="col-name">Name</th>
-                        <th class="col-hide-sm">Slug</th>
                         <th class="col-hide-sm">Products</th>
                         <th class="col-hide-sm">Order</th>
                         <th class="col-hide-sm">Active</th>
@@ -65,11 +64,8 @@
                     <tr>
                         <td class="col-name" data-label="Name">
                             <div class="tbl-name">@c.Name</div>
-                            <div class="tbl-sub">@c.Slug</div>
                         </td>
-                        <td class="col-hide-sm" data-label="Slug">@c.Slug</td>
                         <td class="col-hide-sm" data-label="Products">@productCount</td>
-                        <td class="col-hide-sm" data-label="Order">@c.DisplayOrder</td>
                         <td class="col-hide-sm" data-label="Active">
                             @if (c.IsActive)
                             {

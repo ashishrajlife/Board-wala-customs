@@ -11,9 +11,6 @@ public class Product
     [Required, StringLength(200)]
     public string Name { get; set; } = string.Empty;
 
-    [StringLength(200)]
-    public string Slug { get; set; } = string.Empty;
-
     [StringLength(500)]
     public string? ShortDescription { get; set; }
 
@@ -43,8 +40,6 @@ public class Product
     public bool IsFeatured { get; set; } = false;
     public bool IsNewArrival { get; set; } = true;
     public int Stock { get; set; } = 100;
-    public int DisplayOrder { get; set; } = 0;
-
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
 

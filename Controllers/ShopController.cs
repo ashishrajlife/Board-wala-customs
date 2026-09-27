@@ -9,28 +9,27 @@ public class ShopController : Controller
     private readonly AppDbContext _db;
     public ShopController(AppDbContext db) => _db = db;
 
-    [Route("category/{slug}")]
-    public async Task<IActionResult> Category(string slug)
+    [Route("category/{CategoryId}")]
+    public async Task<IActionResult> Category(string CategoryId)
     {
-        var category = await _db.Categories.FirstOrDefaultAsync(c => c.Slug == slug && c.IsActive);
+        var category = await _db.Categories.FirstOrDefaultAsync(c => c.IsActive);
         if (category == null) return NotFound();
 
         var products = await _db.Products
             .Include(p => p.Category)
             .Where(p => p.IsActive && p.CategoryId == category.CategoryId)
-            .OrderBy(p => p.DisplayOrder)
             .ToListAsync();
 
         ViewBag.Category = category;
         return View("Category", products);
     }
 
-    [Route("product/{slug}")]
-    public async Task<IActionResult> Product(string slug)
+    [Route("product/{ProductId}")]
+    public async Task<IActionResult> Product(string ProductId)
     {
         var product = await _db.Products
             .Include(p => p.Category)
-            .FirstOrDefaultAsync(p => p.Slug == slug && p.IsActive);
+            .FirstOrDefaultAsync(p => p.IsActive);
         if (product == null) return NotFound();
 
         ViewBag.Related = await _db.Products

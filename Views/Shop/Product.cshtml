@@ -2,7 +2,7 @@
 @{
     ViewData["Title"] = Model.Name;
     ViewData["Breadcrumb"] = Html.Raw(
-        $"<a href='/'>Home</a> / <a href='/category/{Model.Category?.Slug}'>{Model.Category?.Name}</a> / <span>{Model.Name}</span>");
+        $"<a href='/'>Home</a> / <a href='/category/{Model.Category?.CategoryId}'>{Model.Category?.Name}</a> / <span>{Model.Name}</span>");
 
     var related = ViewBag.Related as List<ValousWorld.Web.Models.Entities.Product> ?? new();
 
@@ -221,7 +221,7 @@
             <div class="products-grid">
                 @foreach (var p in related)
                 {
-                    <a href="/product/@p.Slug" class="product-card">
+                    <a href="/product/@p.ProductId" class="product-card">
                         <div class="product-image">
                             @if (p.SavePercent > 0)
                             {

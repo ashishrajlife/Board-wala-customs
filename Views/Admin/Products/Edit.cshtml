@@ -29,9 +29,6 @@
                     <label>Product Name *</label>
                     <input asp-for="Name" required />
 
-                    <label>Slug (auto if empty)</label>
-                    <input asp-for="Slug" />
-
                     <label>Category *</label>
                     <select asp-for="CategoryId" asp-items="ViewBag.Categories" required></select>
                 </div>
@@ -63,7 +60,6 @@
 
                     <div class="form-row">
                         <div><label>Stock</label><input asp-for="Stock" type="number" min="0" /></div>
-                        <div><label>Display Order</label><input asp-for="DisplayOrder" type="number" min="0" /></div>
                     </div>
                 </div>
             </section>

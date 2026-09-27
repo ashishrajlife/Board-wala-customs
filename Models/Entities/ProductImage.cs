@@ -14,7 +14,5 @@ public class ProductImage
     [Required, MaxLength(500)]
     public string ImageUrl { get; set; } = string.Empty;
 
-    public int DisplayOrder { get; set; } = 0;
-
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
