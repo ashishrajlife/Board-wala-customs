@@ -112,12 +112,20 @@
         </p>
         <h1>@Model.Name</h1>
 
+         @{ bool hasSale = Model.SalePrice.HasValue && Model.SalePrice.Value > 0 && Model.SalePrice.Value < Model.MRP; }
             <div class="pdp-price-row">
-                <span class="pdp-sale">₹@Model.SalePrice</span> 
-                <span class="pdp-mrp">₹@Model.MRP.ToString("0")</span>
-                @if (Model.SavePercent > 0)
+                @if (hasSale)
                 {
-                    <span class="pdp-save-pill">SAVE @Model.SavePercent%</span>
+                    <span class="pdp-sale">₹@Model.SalePrice.Value.ToString("0")</span>
+                    <span class="pdp-mrp">₹@Model.MRP.ToString("0")</span>
+                    if (Model.SavePercent > 0)
+                    {
+                        <span class="pdp-save-pill">SAVE @Model.SavePercent%</span>
+                    }
+                }
+                else
+                {
+                    <span class="pdp-sale">₹@Model.MRP.ToString("0")</span>
                 }
             </div>
 
