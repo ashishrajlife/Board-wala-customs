@@ -90,9 +90,9 @@ public class AdminProductsController : Controller
             return View("~/Views/Admin/Products/Create.cshtml", model);
         }
 
-     model.SavePercent = (model.SalePrice.HasValue && model.MRP > 0 && model.SalePrice.Value < model.MRP)
-    ? (int?)Math.Round((model.MRP - model.SalePrice.Value) / model.MRP * 100)
-    : null;
+        model.SavePercent = (model.SalePrice.HasValue && model.SalePrice.Value > 0 && model.MRP > 0 && model.SalePrice.Value < model.MRP)
+        ? (int?)Math.Round((model.MRP - model.SalePrice.Value) / model.MRP * 100)
+        : null;
         model.CreatedAt = DateTime.UtcNow;
 
         _db.Products.Add(model);
@@ -180,9 +180,9 @@ public class AdminProductsController : Controller
         // Pricing
         existing.MRP = model.MRP;
         existing.SalePrice = model.SalePrice;
-        existing.SavePercent = (model.SalePrice.HasValue && model.MRP > 0 && model.SalePrice.Value < model.MRP)
-            ? (int?)Math.Round((model.MRP - model.SalePrice.Value) / model.MRP * 100)
-            : null;
+       existing.SavePercent = (model.SalePrice.HasValue && model.SalePrice.Value > 0 && model.MRP > 0 && model.SalePrice.Value < model.MRP)
+        ? (int?)Math.Round((model.MRP - model.SalePrice.Value) / model.MRP * 100)
+        : null;
         existing.CategoryId = model.CategoryId;
         existing.Sizes = model.Sizes;
         existing.Colors = model.Colors;

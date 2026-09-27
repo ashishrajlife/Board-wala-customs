@@ -139,7 +139,7 @@
                             data-short="@p.ShortDescription"
                             data-desc="@p.Description"
                             data-mrp="@p.MRP.ToString("0.00")"
-                            data-sale="@(p.SalePrice.HasValue ? p.SalePrice.Value.ToString("0.00") : "")"
+                           data-sale="@((p.SalePrice.HasValue && p.SalePrice.Value > 0) ? p.SalePrice.Value.ToString("0.00") : "")"
                             data-save="@(p.SavePercent?.ToString() ?? "")"
                             data-sizes="@p.Sizes"
                             data-colors="@p.Colors"
@@ -695,7 +695,7 @@
                 }).join('') +
                 '</div>';
 
-           var hasSale = data.sale && data.sale.trim() !== '';
+                var hasSale = data.sale && parseFloat(data.sale) > 0;
                 var priceHtml = '<div class="pm-price-row">';
                 if (hasSale) {
                     priceHtml += '<span class="pm-sale">₹' + esc(data.sale) + '</span>' +

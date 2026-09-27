@@ -27,7 +27,7 @@
                 {
                     <a href="/product/@p.ProductId" class="product-card">
                         <div class="product-image">
-                            @if (p.SavePercent > 0) { <span class="save-badge">SAVE @p.SavePercent%</span> }
+                            @if (p.SavePercent >= 1) { <span class="save-badge">SAVE @p.SavePercent%</span> }
                             <img src="@p.PrimaryImageUrl" alt="@p.Name" loading="lazy" />
                         </div>
                         <div class="product-info">
