@@ -844,7 +844,6 @@ h1 {
 
 /* ---- Mobile (≤ 500px) ---- */
 @media (max-width: 500px) {
-    .header-inner { height: 62px; }
     .brand-logo .logo-line-1,
     .brand-logo .logo-line-2 { font-size: 15px; }
     .nav-right { gap: 10px; }
@@ -883,4 +882,54 @@ h1 {
     .dash-card h3 { font-size: 11px; }
     .dash-stat { font-size: 24px; }
     .dashboard-welcome { font-size: 12px; }
+}
+/* ---------- Filter Products Button ---------- */
+.filter-products-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 24px;
+    background: var(--black);
+    color: var(--white);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    border: 1.5px solid var(--black);
+    border-radius: 2px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    line-height: 1;
+}
+
+.filter-products-btn:hover {
+    background: transparent;
+    color: var(--black);
+}
+
+.filter-products-btn svg {
+    flex-shrink: 0;
+}
+
+/* Update filter-inner to space them properly */
+.filter-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+}
+@media (max-width: 500px) {
+    .filter-inner {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .filter-products-btn {
+        justify-content: center;
+        width: 100%;
+    }
+    .product-count {
+        text-align: right;
+    }
 }

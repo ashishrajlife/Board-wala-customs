@@ -32,20 +32,13 @@
 
 <div class="filter-bar">
     <div class="container filter-inner">
-        <div class="filter-left">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="18" x2="10" y2="18"/></svg>
-            FILTER AND SORT
-        </div>
-        <div class="filter-right">
-            <select>
-                <option>FEATURED</option>
-                <option>BEST SELLING</option>
-                <option>PRICE: LOW TO HIGH</option>
-                <option>PRICE: HIGH TO LOW</option>
-                <option>NEWEST</option>
-            </select>
-            <span class="product-count">@ViewBag.TotalProducts PRODUCTS</span>
-        </div>
+        <a href="/shop" class="filter-products-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+            </svg>
+            FILTER PRODUCTS
+        </a>
+        <span class="product-count">@ViewBag.TotalProducts PRODUCTS</span>
     </div>
 </div>
 
@@ -98,3 +91,11 @@
     font-size: 13px;
 }
 </style>
+<script>
+    (function () {
+        const sel = document.getElementById('homeSort');
+        const form = document.getElementById('homeSortForm');
+        if (!sel || !form) return;
+        sel.addEventListener('change', () => form.submit());
+    })();
+</script>

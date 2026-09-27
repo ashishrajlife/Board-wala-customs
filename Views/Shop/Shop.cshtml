@@ -1,0 +1,530 @@
+@model List<ValousWorld.Web.Models.Entities.Product>
+@{
+    ViewData["Title"] = string.IsNullOrWhiteSpace(ViewBag.SearchQuery as string)
+        ? "Shop"
+        : $"Search: {ViewBag.SearchQuery}";
+
+    var categories = ViewBag.Categories as List<ValousWorld.Web.Models.Entities.Category> ?? new();
+    var selectedCategory = ViewBag.SelectedCategory as int?;
+    var selectedSort = ViewBag.SelectedSort as string ?? "featured";
+    var query = ViewBag.SearchQuery as string ?? "";
+    var total = (int)(ViewBag.TotalProducts ?? 0);
+}
+
+<!-- ================= HERO (compact) ================= -->
+<section class="shop-hero">
+    <div class="container">
+        <h1>
+            @if (!string.IsNullOrWhiteSpace(query))
+            {
+                <span>Search results for "</span>@query<span>"</span>
+            }
+            else if (selectedCategory.HasValue)
+            {
+                var cat = categories.FirstOrDefault(c => c.CategoryId == selectedCategory.Value);
+                <span>@cat?.Name</span>
+            }
+            else
+            {
+                <span>SHOP ALL</span>
+            }
+        </h1>
+        <p>@total product@(total == 1 ? "" : "s") found</p>
+    </div>
+</section>
+
+<section class="shop-section">
+    <div class="container shop-layout">
+
+        <!-- ============ SIDEBAR: FILTERS ============ -->
+        <aside class="shop-sidebar" id="shopSidebar">
+            <div class="sidebar-header">
+                <h3>FILTERS</h3>
+                <button type="button" class="sidebar-close" id="sidebarClose">&times;</button>
+            </div>
+
+            <form method="get" action="/shop" id="filterForm">
+
+                @if (!string.IsNullOrWhiteSpace(query))
+                {
+                    <input type="hidden" name="q" value="@query" />
+                }
+
+                <!-- Category -->
+                <div class="filter-group">
+                    <h4>CATEGORY</h4>
+                    <label class="filter-radio">
+                        <input type="radio" name="categoryId" value="" @(selectedCategory == null ? "checked" : "") />
+                        <span>All</span>
+                    </label>
+                    @foreach (var c in categories)
+                    {
+                        <label class="filter-radio">
+                            <input type="radio" name="categoryId" value="@c.CategoryId"
+                                   @(selectedCategory == c.CategoryId ? "checked" : "") />
+                            <span>@c.Name</span>
+                        </label>
+                    }
+                </div>
+
+                <!-- Price -->
+                <div class="filter-group">
+                    <h4>PRICE (₹)</h4>
+                    <div class="filter-price">
+                        <input type="number" name="minPrice" placeholder="Min"
+                               value="@(ViewBag.MinPrice ?? "")" min="0" />
+                        <span>–</span>
+                        <input type="number" name="maxPrice" placeholder="Max"
+                               value="@(ViewBag.MaxPrice ?? "")" min="0" />
+                    </div>
+                </div>
+
+                <!-- Sizes -->
+                <div class="filter-group">
+                    <h4>SIZE</h4>
+                    <div class="filter-chips">
+                        @foreach (var s in new[] { "XS", "S", "M", "L", "XL", "XXL", "Free Size" })
+                        {
+                            <label class="chip-check">
+                                <input type="checkbox" name="sizes" value="@s" />
+                                <span>@s</span>
+                            </label>
+                        }
+                    </div>
+                </div>
+
+                <!-- Sort -->
+                <div class="filter-group">
+                    <h4>SORT BY</h4>
+                    <select name="sort" class="filter-select">
+                        <option value="featured"     selected="@(selectedSort == "featured")">FEATURED</option>
+                        <option value="newest"       selected="@(selectedSort == "newest")">NEWEST</option>
+                        <option value="price-asc"    selected="@(selectedSort == "price-asc")">PRICE: LOW TO HIGH</option>
+                        <option value="price-desc"   selected="@(selectedSort == "price-desc")">PRICE: HIGH TO LOW</option>
+                        <option value="best-selling" selected="@(selectedSort == "best-selling")">BEST SELLING</option>
+                    </select>
+                </div>
+
+                <div class="filter-actions">
+                    <button type="submit" class="btn-primary">APPLY</button>
+                    <a href="/shop" class="btn-outline">CLEAR</a>
+                </div>
+            </form>
+        </aside>
+
+        <!-- ============ MAIN: PRODUCT GRID ============ -->
+        <main class="shop-main">
+
+            <div class="shop-toolbar">
+                <button type="button" class="toolbar-btn" id="openFilters">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                    </svg>
+                    FILTER Products
+                </button>
+
+                <span class="toolbar-count">@total PRODUCTS</span>
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div class="shop-empty">
+                    <p>No products matched your filters.</p>
+                    <a href="/shop">Clear filters →</a>
+                </div>
+            }
+            else
+            {
+                <div class="products-grid">
+                    @foreach (var p in Model)
+                    {
+                        <a href="/product/@p.ProductId" class="product-card">
+                            <div class="product-image">
+                                @if (p.SavePercent > 0 && p.SalePrice.HasValue && p.SalePrice.Value > 0)
+                                {
+                                    <span class="save-badge">SAVE @p.SavePercent%</span>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(p.Image1))
+                                {
+                                    <img src="@p.Image1" alt="@p.Name" loading="lazy" />
+                                }
+                                <button class="quick-add" onclick="event.preventDefault();">ADD TO CART</button>
+                            </div>
+                            <div class="product-info">
+                                <h3>@p.Name</h3>
+                                <div class="price-row">
+                                    @if (p.SavePercent > 0 && p.SalePrice.HasValue && p.SalePrice.Value > 0)
+                                    {
+                                        <span class="mrp">Rs.@p.MRP.ToString("0")</span>
+                                        <span class="sale">Rs.@p.SalePrice.Value.ToString("0.00")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="price-normal">Rs.@p.MRP.ToString("0")</span>
+                                    }
+                                </div>
+                            </div>
+                        </a>
+                    }
+                </div>
+            }
+        </main>
+    </div>
+</section>
+
+<!-- ============ Backdrop for mobile drawer ============ -->
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<style>
+    /* ============================================================
+       SHOP PAGE — page-scoped styles
+       ============================================================ */
+
+    .shop-hero {
+        padding: 40px 0 20px;
+        border-bottom: 1px solid var(--gray-200);
+    }
+    .shop-hero h1 {
+        font-size: clamp(24px, 4vw, 40px);
+        font-weight: 900;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin: 0 0 6px;
+        color: var(--black);
+    }
+    .shop-hero p {
+        font-size: 13px;
+        color: var(--gray-600);
+        margin: 0;
+        letter-spacing: 0.5px;
+    }
+
+    .shop-section { padding: 32px 0 60px; }
+
+    .shop-layout {
+        display: grid;
+        grid-template-columns: 240px 1fr;
+        gap: 32px;
+        align-items: start;
+    }
+
+    /* ------------------ Sidebar (desktop) ------------------ */
+    .shop-sidebar {
+        position: sticky;
+        top: 90px;
+        max-height: calc(100vh - 110px);
+        overflow-y: auto;
+        padding-right: 4px;
+    }
+    .sidebar-header {
+        display: none;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 12px;
+        margin-bottom: 16px;
+        border-bottom: 1px solid var(--gray-200);
+    }
+    .sidebar-header h3 {
+        font-size: 14px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin: 0;
+    }
+    .sidebar-close {
+        background: none;
+        border: none;
+        font-size: 28px;
+        line-height: 1;
+        color: var(--black);
+        cursor: pointer;
+        padding: 0 6px;
+    }
+
+    .filter-group {
+        padding-bottom: 20px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid var(--gray-200);
+    }
+    .filter-group:last-of-type { border-bottom: none; }
+
+    .filter-group h4 {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin: 0 0 12px;
+        color: var(--black);
+    }
+
+    .filter-radio {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 0;
+        font-size: 13px;
+        color: var(--gray-800);
+        cursor: pointer;
+        letter-spacing: 0.3px;
+    }
+    .filter-radio:hover { color: var(--black); }
+    .filter-radio input[type=radio] {
+        width: 15px;
+        height: 15px;
+        accent-color: var(--black);
+        cursor: pointer;
+    }
+
+    .filter-price {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .filter-price input {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1.5px solid var(--gray-200);
+        font-size: 13px;
+        outline: none;
+        border-radius: 2px;
+        font-family: inherit;
+    }
+    .filter-price input:focus { border-color: var(--black); }
+    .filter-price span { color: var(--gray-400); font-size: 12px; }
+
+    .filter-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip-check { position: relative; cursor: pointer; }
+    .chip-check input { position: absolute; opacity: 0; pointer-events: none; }
+    .chip-check span {
+        display: inline-block;
+        padding: 6px 12px;
+        border: 1.5px solid var(--gray-200);
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        border-radius: 2px;
+        transition: all 0.15s;
+        background: var(--white);
+        color: var(--gray-800);
+    }
+    .chip-check input:checked + span {
+        background: var(--black);
+        color: var(--white);
+        border-color: var(--black);
+    }
+
+    .filter-select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1.5px solid var(--gray-200);
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        background: var(--white);
+        outline: none;
+        cursor: pointer;
+        border-radius: 2px;
+        font-family: inherit;
+        text-transform: uppercase;
+    }
+    .filter-select:focus { border-color: var(--black); }
+
+    .filter-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 8px;
+    }
+    .filter-actions .btn-primary,
+    .filter-actions .btn-outline {
+        width: 100%;
+        justify-content: center;
+        padding: 12px;
+    }
+
+    /* ------------------ Toolbar ------------------ */
+    .shop-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 0;
+        margin-bottom: 24px;
+        border-bottom: 1px solid var(--gray-200);
+        flex-wrap: wrap;
+        background: var(--white);
+    }
+    .toolbar-btn {
+        display: none;
+        align-items: center;
+        gap: 6px;
+        padding: 9px 14px;
+        border: 1.5px solid var(--gray-200);
+        background: black;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        border-radius: 2px;
+        cursor: pointer;
+        color: white;
+    }
+    .toolbar-btn:hover { border-color: var(--black); }
+    .toolbar-count {
+        margin-left: auto;
+        font-size: 11px;
+        letter-spacing: 1.5px;
+        color: var(--gray-600);
+    }
+
+    /* ------------------ Grid ------------------ */
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+    }
+
+    .shop-empty {
+        text-align: center;
+        padding: 80px 20px;
+        color: var(--gray-600);
+    }
+    .shop-empty p { font-size: 14px; margin-bottom: 12px; }
+    .shop-empty a {
+        text-decoration: underline;
+        color: var(--black);
+        font-weight: 600;
+        font-size: 13px;
+    }
+
+    /* ------------------ Backdrop (mobile) ------------------ */
+    .sidebar-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 400;
+    }
+    .sidebar-backdrop.open { display: block; }
+
+    /* ============================================================
+       RESPONSIVE
+       ============================================================ */
+
+    @@media (max-width: 1024px) {
+        .shop-layout {
+            grid-template-columns: 200px 1fr;
+            gap: 24px;
+        }
+        .products-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    }
+
+    @@media (max-width: 768px) {
+        .shop-layout { grid-template-columns: 1fr; gap: 0; }
+
+        /* Sidebar → drawer */
+        .shop-sidebar {
+            position: fixed;
+            top: 0;
+            left: -100%;                       /* closed by default */
+            width: 82%;
+            max-width: 340px;
+            height: 100vh;
+            background: var(--white);
+            padding: 20px;
+            z-index: 500;
+            overflow-y: auto;
+            transition: left 0.3s ease;
+            border-right: 1px solid var(--gray-200);
+            box-shadow: 2px 0 20px rgba(0,0,0,0.08);
+            max-height: 100vh;
+        }
+        .shop-sidebar.open { left: 0; }
+
+        .sidebar-header { display: flex; }
+        .toolbar-btn { display: inline-flex; }
+
+        /* Sticky toolbar on mobile */
+        .shop-toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--white);
+            padding: 12px 0;
+            margin: 0 0 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .products-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+        .shop-hero { padding: 24px 0 14px; }
+    }
+
+    @@media (max-width: 500px) {
+        .products-grid { grid-template-columns: 1fr; gap: 20px; }
+        .shop-sidebar { width: 88%; padding: 16px; }
+        .toolbar-btn { flex: 1; justify-content: center; }
+        .toolbar-count { width: 100%; text-align: right; margin-left: 0; }
+        .chip-check span { padding: 5px 10px; font-size: 11px; }
+    }
+</style>
+
+<script>
+    // Mobile filter drawer
+    (function () {
+        const sidebar = document.getElementById('shopSidebar');
+        const openBtn = document.getElementById('openFilters');
+        const closeBtn = document.getElementById('sidebarClose');
+        const backdrop = document.getElementById('sidebarBackdrop');
+        if (!sidebar || !openBtn) return;
+
+        function isMobile() {
+            return window.matchMedia('(max-width: 768px)').matches;
+        }
+
+        function open() {
+            sidebar.classList.add('open');
+            if (backdrop) backdrop.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function close() {
+            sidebar.classList.remove('open');
+            if (backdrop) backdrop.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        openBtn.addEventListener('click', open);
+        if (closeBtn) closeBtn.addEventListener('click', close);
+        if (backdrop) backdrop.addEventListener('click', close);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && sidebar.classList.contains('open')) close();
+        });
+
+        // ---------- Auto-open on mobile only on first load ----------
+        const skipAutoOpen = sessionStorage.getItem('skipAutoOpen');
+        if (isMobile() && skipAutoOpen !== '1') {
+            open();
+        }
+        sessionStorage.removeItem('skipAutoOpen');
+
+        // Skip auto-open when the filter form is submitted
+        const filterForm = document.getElementById('filterForm');
+        if (filterForm) {
+            filterForm.addEventListener('submit', () => {
+                if (isMobile()) {
+                    sessionStorage.setItem('skipAutoOpen', '1');
+                }
+            });
+        }
+
+        // Reopen when resizing from desktop → mobile
+        let lastMobile = isMobile();
+        window.addEventListener('resize', () => {
+            const nowMobile = isMobile();
+            if (nowMobile && !lastMobile && !sidebar.classList.contains('open')) {
+                open();
+            }
+            lastMobile = nowMobile;
+        });
+    })();
+</script>
