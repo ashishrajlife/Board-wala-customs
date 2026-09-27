@@ -483,34 +483,6 @@ main { display: block; min-height: 40vh; }
 .pdp-meta { margin-top: var(--space-lg); font-size: 13px; color: var(--gray-600); }
 .pdp-meta p { padding: 6px 0; display: flex; align-items: center; gap: 8px; }
 
-/* ================= ACCORDION ================= */
-.accordion-section {
-    border-top: 1px solid var(--gray-200);
-    padding: var(--space-lg) 0;
-}
-.accordion-section details { border-bottom: 1px solid var(--gray-200); padding: 20px 0; }
-.accordion-section summary {
-    list-style: none;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    cursor: pointer;
-    text-transform: uppercase;
-    gap: var(--space-md);
-}
-.accordion-section summary::-webkit-details-marker { display: none; }
-.accordion-section summary span { font-size: 18px; font-weight: 300; flex-shrink: 0; }
-.accordion-section details[open] summary span { transform: rotate(45deg); }
-.accordion-section p {
-    padding-top: 14px;
-    color: var(--gray-600);
-    font-size: 13px;
-    max-width: 720px;
-}
-
 /* ================= FOOTER ================= */
 .site-footer {
     background: var(--black);
@@ -895,9 +867,6 @@ h1 {
     .auth-card { padding: var(--space-md); margin: var(--space-lg) auto; }
 
     .footer-grid { grid-template-columns: 1fr; gap: var(--space-md); }
-
-    .accordion-section summary { font-size: 12px; letter-spacing: 1px; }
-    .accordion-section p { font-size: 12px; }
 }
 
 /* ---- Small mobile (≤ 380px) ---- */

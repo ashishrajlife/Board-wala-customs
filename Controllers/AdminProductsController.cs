@@ -56,10 +56,7 @@ public class AdminProductsController : Controller
         IFormFile? img4)
     {
         ModelState.Remove(nameof(Product.Category));
-        ModelState.Remove(nameof(Product.PrimaryImageUrl));
-        ModelState.Remove(nameof(Product.SecondaryImageUrl));
 
-        // At least 2 images required
         var uploadedCount = new[] { img1, img2, img3, img4 }
             .Count(f => f != null && f.Length > 0);
         if (uploadedCount < 2)
@@ -131,8 +128,6 @@ public class AdminProductsController : Controller
         if (id != model.ProductId) return BadRequest();
 
         ModelState.Remove(nameof(Product.Category));
-        ModelState.Remove(nameof(Product.PrimaryImageUrl));
-        ModelState.Remove(nameof(Product.SecondaryImageUrl));
 
         if (!ModelState.IsValid)
         {
@@ -145,7 +140,6 @@ public class AdminProductsController : Controller
 
         try
         {
-            // Replace image only if a new file was uploaded; else keep existing
             if (img1 != null && img1.Length > 0)
             {
                 var old = existing.Image1;
@@ -178,9 +172,12 @@ public class AdminProductsController : Controller
             return View("~/Views/Admin/Products/Edit.cshtml", model);
         }
 
+        // Basic
         existing.Name = model.Name;
         existing.ShortDescription = model.ShortDescription;
         existing.Description = model.Description;
+
+        // Pricing
         existing.MRP = model.MRP;
         existing.SalePrice = model.SalePrice;
         existing.SavePercent = model.MRP > 0
@@ -189,10 +186,28 @@ public class AdminProductsController : Controller
         existing.CategoryId = model.CategoryId;
         existing.Sizes = model.Sizes;
         existing.Colors = model.Colors;
+        existing.Stock = model.Stock;
+
+        // Additional Details
+        existing.SKU = model.SKU;
+        existing.Brand = model.Brand;
+        existing.Composition = model.Composition;
+        existing.GSM = model.GSM;
+        existing.PrintType = model.PrintType;
+        existing.Neckline = model.Neckline;
+        existing.FitType = model.FitType;
+        existing.CountryOfProduction = model.CountryOfProduction;
+        existing.WashCare = model.WashCare;
+        existing.SizingNote = model.SizingNote;
+        existing.MRPNote = model.MRPNote;
+        existing.AdditionalNote = model.AdditionalNote;
+        existing.Tags = model.Tags;
+        existing.Benefits = model.Benefits;
+
+        // Flags
         existing.IsActive = model.IsActive;
         existing.IsFeatured = model.IsFeatured;
         existing.IsNewArrival = model.IsNewArrival;
-        existing.Stock = model.Stock;
         existing.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
@@ -214,13 +229,7 @@ public class AdminProductsController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        var imgs = new[]
-        {
-            product.Image1,
-            product.Image2,
-            product.Image3,
-            product.Image4
-        };
+        var imgs = new[] { product.Image1, product.Image2, product.Image3, product.Image4 };
 
         _db.Products.Remove(product);
         await _db.SaveChangesAsync();
@@ -240,10 +249,4 @@ public class AdminProductsController : Controller
         var cats = await _db.Categories.ToListAsync();
         ViewBag.Categories = new SelectList(cats, "CategoryId", "Name", selected);
     }
-
-    // private static string Slugify(string input)
-    //     => input.Trim().ToLower()
-    //         .Replace(" ", "-")
-    //         .Replace("'", "")
-    //         .Replace("\"", "");
 }

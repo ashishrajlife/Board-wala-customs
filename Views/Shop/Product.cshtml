@@ -17,6 +17,14 @@
     var colors = (Model.Colors ?? "")
         .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
         .ToList();
+
+    var tags = (Model.Tags ?? "")
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .ToList();
+
+    var benefits = (Model.Benefits ?? "")
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .ToList();
 }
 
 <!-- ================= Back Button ================= -->
@@ -26,7 +34,7 @@
             <line x1="19" y1="12" x2="5" y2="12"/>
             <polyline points="12 19 5 12 12 5"/>
         </svg>
-        BACK
+        BACKitttttttttttttttttttttt
     </a>
 </div>
 
@@ -52,7 +60,6 @@
 
                     @if (galleryImgs.Count > 1)
                     {
-                        <!-- Slider arrows (mobile only) -->
                         <button type="button" class="pdp-nav pdp-nav-prev" id="pdpPrev" aria-label="Previous image">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="15 18 9 12 15 6"/>
@@ -64,7 +71,6 @@
                             </svg>
                         </button>
 
-                        <!-- Dot indicators (mobile only) -->
                         <div class="pdp-dots" id="pdpDots">
                             @for (int i = 0; i < galleryImgs.Count; i++)
                             {
@@ -76,7 +82,6 @@
 
                 @if (galleryImgs.Count > 1)
                 {
-                    <!-- Desktop thumbnails (hidden on mobile) -->
                     <div class="pdp-thumbs" id="pdpThumbs">
                         @for (int i = 0; i < galleryImgs.Count; i++)
                         {
@@ -102,8 +107,10 @@
 
         <!-- ================= RIGHT: Info ================= -->
         <div class="pdp-info">
-            <p class="pdp-cat">@Model.Category?.Name</p>
-            <h1>@Model.Name</h1>
+            <p class="pdp-cat">
+            @Model.Category?.Name
+        </p>
+        <h1>@Model.Name</h1>
 
             <div class="pdp-price-row">
                 <span class="pdp-sale">₹@Model.SalePrice.ToString("0.00")</span>
@@ -119,13 +126,43 @@
                 <p class="pdp-short">@Model.ShortDescription</p>
             }
 
+            @if (tags.Any())
+            {
+                <div class="pdp-tags">
+                    @foreach (var t in tags)
+                    {
+                        <span class="pdp-tag">@t</span>
+                    }
+                </div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Model.FitType) || !string.IsNullOrWhiteSpace(Model.Neckline))
+{
+    <p class="pdp-fit-line">
+        @if (!string.IsNullOrWhiteSpace(Model.FitType))
+        {
+            <span class="fw-bold">@Model.FitType</span>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.FitType) && !string.IsNullOrWhiteSpace(Model.Neckline))
+        {
+            <span class="pdp-cat-sep">·</span>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.Neckline))
+        {
+            <span class="fw-bold">@Model.Neckline</span>
+        }
+    </p>
+}
+
+        <div class="pdp-block">
+            <div class="pdp-block-head">
+                <label>SIZE</label>
+                <button type="button" class="pdp-size-guide" id="openSizeChart">Size Guide</button>
+            </div>
+
             @if (sizes.Any())
             {
                 <div class="pdp-block">
-                    <div class="pdp-block-head">
-                        <label>SIZE</label>
-                        <span class="pdp-size-guide">Size Guide</span>
-                    </div>
                     <div class="pdp-sizes" id="pdpSizes">
                         @foreach (var s in sizes)
                         {
@@ -173,38 +210,165 @@
                     </svg>
                     ADD TO CART
                 </button>
-
                 <button type="button" class="pdp-btn pdp-btn-outline" disabled title="Coming soon">
                     BUY NOW
                 </button>
             </div>
 
-            <div class="pdp-meta">
-                <p>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    Free shipping above ₹999
+          <div class="pdp-meta">
+            <p>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Free shipping above ₹999
+            </p>
+            <p>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Easy 7-day returns
+            </p>
+            <p>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Cash on delivery available
+            </p>
+
+            @if (!string.IsNullOrWhiteSpace(Model.CountryOfProduction))
+            {
+                <p class="pdp-meta-country">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="2" y1="12" x2="22" y2="12"/>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                    </svg>
+                    Made in @Model.CountryOfProduction
                 </p>
-                <p>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    Easy 7-day returns
-                </p>
-                <p>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    Cash on delivery available
-                </p>
-            </div>
+            }
+        </div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.MRPNote) || !string.IsNullOrWhiteSpace(Model.AdditionalNote))
+            {
+                <div class="pdp-notes">
+                    @if (!string.IsNullOrWhiteSpace(Model.MRPNote))
+                    {
+                        <p class="pdp-note">@Model.MRPNote</p>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.AdditionalNote))
+                    {
+                        <p class="pdp-note pdp-note-muted">@Model.AdditionalNote</p>
+                    }
+                </div>
+            }
         </div>
     </div>
 </section>
 
-@if (!string.IsNullOrWhiteSpace(Model.Description))
+<!-- ================= Size Chart Modal ================= -->
+<div class="size-chart-modal" id="sizeChartModal">
+    <div class="size-chart-backdrop" id="sizeChartBackdrop"></div>
+    <div class="size-chart-panel">
+        <div class="size-chart-header">
+            <h3>SIZE GUIDE</h3>
+            <button type="button" class="size-chart-close" id="closeSizeChart" aria-label="Close">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+
+        <p class="size-chart-sub">All measurements are in inches. Garment measurements may vary by ±0.5".</p>
+
+        <div class="size-chart-table-wrap">
+            <table class="size-chart-table">
+                <thead>
+                    <tr>
+                        <th>Size</th>
+                        <th>Chest</th>
+                        <th>Length</th>
+                        <th>Shoulder</th>
+                        <th>Sleeve</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>S</td>  <td>40</td><td>27</td><td>18</td><td>8.5</td></tr>
+                    <tr><td>M</td>  <td>42</td><td>28</td><td>19</td><td>9.0</td></tr>
+                    <tr><td>L</td>  <td>44</td><td>29</td><td>20</td><td>9.5</td></tr>
+                    <tr><td>XL</td> <td>46</td><td>30</td><td>21</td><td>10.0</td></tr>
+                    <tr><td>XXL</td><td>48</td><td>31</td><td>22</td><td>10.5</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.Description) || !string.IsNullOrWhiteSpace(Model.WashCare)
+     || !string.IsNullOrWhiteSpace(Model.SKU) || !string.IsNullOrWhiteSpace(Model.Composition))
 {
     <section class="pdp-accordion">
         <div class="container">
-            <details>
-                <summary>DESCRIPTION <span>+</span></summary>
-                <p>@Model.Description</p>
-            </details>
+
+            @if (!string.IsNullOrWhiteSpace(Model.SKU) || !string.IsNullOrWhiteSpace(Model.Composition)
+                 || !string.IsNullOrWhiteSpace(Model.GSM) || !string.IsNullOrWhiteSpace(Model.PrintType)
+                 || !string.IsNullOrWhiteSpace(Model.Neckline) || !string.IsNullOrWhiteSpace(Model.FitType)
+                 || !string.IsNullOrWhiteSpace(Model.CountryOfProduction) || !string.IsNullOrWhiteSpace(Model.Brand)
+                 || !string.IsNullOrWhiteSpace(Model.SizingNote))
+            {
+                <details>
+                    <summary>PRODUCT DETAILS <span>+</span></summary>
+                    <div class="pdp-details-grid">
+                        @if (!string.IsNullOrWhiteSpace(Model.SKU))
+                        {
+                            <div class="pdp-detail-item"><span>SKU</span><strong>@Model.SKU</strong></div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.Brand))
+                        {
+                            <div class="pdp-detail-item"><span>Brand</span><strong>@Model.Brand</strong></div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.Composition))
+                        {
+                            <div class="pdp-detail-item"><span>Composition</span><strong>@Model.Composition</strong></div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.GSM))
+                        {
+                            <div class="pdp-detail-item"><span>GSM</span><strong>@Model.GSM</strong></div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.PrintType))
+                        {
+                            <div class="pdp-detail-item"><span>Print / Work</span><strong>@Model.PrintType</strong></div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.Neckline))
+                        {
+                            <div class="pdp-detail-item"><span>Neckline</span><strong>@Model.Neckline</strong></div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.FitType))
+                        {
+                            <div class="pdp-detail-item"><span>Fit</span><strong>@Model.FitType</strong></div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.CountryOfProduction))
+                        {
+                            <div class="pdp-detail-item"><span>Country of Production</span><strong>@Model.CountryOfProduction</strong></div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.SizingNote))
+                        {
+                            <div class="pdp-detail-item"><span>Sizing Note</span><strong>@Model.SizingNote</strong></div>
+                        }
+                    </div>
+                </details>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Model.Description))
+            {
+                <details>
+                    <summary>DESCRIPTION <span>+</span></summary>
+                    <p style="white-space: pre-line;">@Model.Description</p>
+                </details>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Model.WashCare))
+            {
+                <details>
+                    <summary>WASH CARE <span>+</span></summary>
+                    <p style="white-space: pre-line;">@Model.WashCare</p>
+                </details>
+            }
+
             <details>
                 <summary>SHIPPING & RETURNS <span>+</span></summary>
                 <p>Free shipping on orders above ₹999. Easy 7-day returns on unused items with original tags. Cash on delivery available across India.</p>
@@ -212,40 +376,6 @@
         </div>
     </section>
 }
-
-@if (related.Any())
-{
-    <section class="products-section">
-        <div class="container">
-            <h2 class="section-title">YOU MAY ALSO LIKE</h2>
-            <div class="products-grid">
-                @foreach (var p in related)
-                {
-                    <a href="/product/@p.ProductId" class="product-card">
-                        <div class="product-image">
-                            @if (p.SavePercent > 0)
-                            {
-                                <span class="save-badge">SAVE @p.SavePercent%</span>
-                            }
-                            @if (!string.IsNullOrWhiteSpace(p.Image1))
-                            {
-                                <img src="@p.Image1" alt="@p.Name" loading="lazy" />
-                            }
-                        </div>
-                        <div class="product-info">
-                            <h3>@p.Name</h3>
-                            <div class="price-row">
-                                <span class="mrp">Rs.@p.MRP.ToString("0")</span>
-                                <span class="sale">Rs.@p.SalePrice.ToString("0.00")</span>
-                            </div>
-                        </div>
-                    </a>
-                }
-            </div>
-        </div>
-    </section>
-}
-
 <script>
     // ---- Image gallery + mobile slider ----
     (function () {
@@ -254,59 +384,32 @@
         const prevBtn = document.getElementById('pdpPrev');
         const nextBtn = document.getElementById('pdpNext');
         const dots = document.querySelectorAll('.pdp-dot');
-
         if (!mainImg) return;
 
         const images = [];
         thumbs.forEach(t => images.push(t.dataset.img));
-
-        // Fallback: single image
         if (images.length === 0) images.push(mainImg.src);
 
         let current = 0;
 
         function setActive(i) {
             current = i;
-
-            // Main image
             mainImg.src = images[current];
             mainImg.style.opacity = '0';
             setTimeout(() => { mainImg.style.opacity = '1'; }, 80);
-
-            // Thumbs
             thumbs.forEach((t, idx) => t.classList.toggle('active', idx === current));
-
-            // Dots
             dots.forEach((d, idx) => d.classList.toggle('active', idx === current));
         }
+        function next() { if (images.length > 1) setActive((current + 1) % images.length); }
+        function prev() { if (images.length > 1) setActive((current - 1 + images.length) % images.length); }
 
-        function next() {
-            if (images.length <= 1) return;
-            setActive((current + 1) % images.length);
-        }
-
-        function prev() {
-            if (images.length <= 1) return;
-            setActive((current - 1 + images.length) % images.length);
-        }
-
-        thumbs.forEach(t => {
-            t.addEventListener('click', () => setActive(parseInt(t.dataset.index, 10) || 0));
-        });
-
-        dots.forEach(d => {
-            d.addEventListener('click', () => setActive(parseInt(d.dataset.index, 10) || 0));
-        });
-
+        thumbs.forEach(t => t.addEventListener('click', () => setActive(parseInt(t.dataset.index, 10) || 0)));
+        dots.forEach(d => d.addEventListener('click', () => setActive(parseInt(d.dataset.index, 10) || 0)));
         if (prevBtn) prevBtn.addEventListener('click', prev);
         if (nextBtn) nextBtn.addEventListener('click', next);
 
-        // Swipe support (mobile)
         let touchStartX = 0;
-        mainImg.addEventListener('touchstart', e => {
-            touchStartX = e.changedTouches[0].screenX;
-        }, { passive: true });
-
+        mainImg.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
         mainImg.addEventListener('touchend', e => {
             const dx = e.changedTouches[0].screenX - touchStartX;
             if (Math.abs(dx) < 40) return;
@@ -341,7 +444,6 @@
         const qtyInput = document.getElementById('qtyInput');
         const btns = document.querySelectorAll('.qty-btn');
         if (!qtyInput) return;
-
         btns.forEach(b => {
             b.addEventListener('click', () => {
                 let v = parseInt(qtyInput.value, 10) || 1;
@@ -352,6 +454,25 @@
             });
         });
     })();
+
+    // ---- Size Chart Modal ----
+    (function () {
+        const modal = document.getElementById('sizeChartModal');
+        const openBtn = document.getElementById('openSizeChart');
+        const closeBtn = document.getElementById('closeSizeChart');
+        const backdrop = document.getElementById('sizeChartBackdrop');
+        if (!modal || !openBtn) return;
+
+        function open() { modal.classList.add('open'); document.body.style.overflow = 'hidden'; }
+        function close() { modal.classList.remove('open'); document.body.style.overflow = ''; }
+
+        openBtn.addEventListener('click', open);
+        if (closeBtn) closeBtn.addEventListener('click', close);
+        if (backdrop) backdrop.addEventListener('click', close);
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && modal.classList.contains('open')) close();
+        });
+    })();
 </script>
 
 <style>
@@ -359,7 +480,6 @@
        PRODUCT DETAIL PAGE — page-scoped styles
        ============================================================ */
 
-    /* ------------------ Back button ------------------ */
     .pdp-back-btn {
         display: inline-flex;
         align-items: center;
@@ -379,15 +499,9 @@
         text-decoration: none;
         line-height: 1;
     }
-    .pdp-back-btn:hover {
-        border-color: var(--black);
-        background: var(--black);
-        color: var(--white);
-    }
+    .pdp-back-btn:hover { border-color: var(--black); background: var(--black); color: var(--white); }
 
-    /* ------------------ Product detail layout ------------------ */
     .product-detail { padding: 24px 0 60px; }
-
     .pdp-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -395,21 +509,8 @@
         align-items: start;
     }
 
-    /* ------------------ Gallery ------------------ */
-    .pdp-gallery {
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-        min-width: 0;
-    }
-
-    .pdp-main-wrap {
-        position: relative;
-        background: var(--gray-100);
-        overflow: hidden;
-        border-radius: 2px;
-    }
-
+    .pdp-gallery { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+    .pdp-main-wrap { position: relative; background: var(--gray-100); overflow: hidden; border-radius: 2px; }
     .pdp-main {
         width: 100%;
         aspect-ratio: 3/4;
@@ -417,48 +518,30 @@
         display: block;
         transition: opacity 0.25s ease;
     }
-
     .pdp-no-image {
-        width: 100%;
-        aspect-ratio: 3/4;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--gray-400);
-        font-size: 12px;
-        letter-spacing: 2px;
-        text-transform: uppercase;
+        width: 100%; aspect-ratio: 3/4;
+        display: flex; align-items: center; justify-content: center;
+        color: var(--gray-400); font-size: 12px;
+        letter-spacing: 2px; text-transform: uppercase;
     }
-
     .pdp-save-badge {
-        position: absolute;
-        top: 14px;
-        left: 14px;
-        background: var(--red);
-        color: var(--white);
-        font-size: 10px;
-        font-weight: 700;
-        padding: 5px 10px;
-        letter-spacing: 0.5px;
-        border-radius: 2px;
-        z-index: 3;
+        position: absolute; top: 14px; left: 14px;
+        background: var(--red); color: var(--white);
+        font-size: 10px; font-weight: 700;
+        padding: 5px 10px; letter-spacing: 0.5px;
+        border-radius: 2px; z-index: 3;
     }
 
-    /* Slider arrows (hidden on desktop) */
     .pdp-nav {
         display: none;
         position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
+        top: 50%; transform: translateY(-50%);
         background: rgba(255, 255, 255, 0.95);
         border: 1px solid var(--gray-200);
-        width: 38px;
-        height: 38px;
+        width: 38px; height: 38px;
         border-radius: 50%;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        z-index: 3;
+        align-items: center; justify-content: center;
+        cursor: pointer; z-index: 3;
         color: var(--black);
         transition: all 0.15s;
         padding: 0;
@@ -468,161 +551,161 @@
     .pdp-nav-prev { left: 10px; }
     .pdp-nav-next { right: 10px; }
 
-    /* Dot indicators (hidden on desktop) */
     .pdp-dots {
         display: none;
-        position: absolute;
-        bottom: 12px;
-        left: 50%;
+        position: absolute; bottom: 12px; left: 50%;
         transform: translateX(-50%);
-        gap: 6px;
-        z-index: 3;
+        gap: 6px; z-index: 3;
     }
     .pdp-dot {
-        width: 7px;
-        height: 7px;
+        width: 7px; height: 7px;
         border-radius: 50%;
         background: rgba(0,0,0,0.25);
         cursor: pointer;
         transition: all 0.2s;
     }
-    .pdp-dot.active {
-        background: var(--black);
-        width: 20px;
-        border-radius: 4px;
-    }
+    .pdp-dot.active { background: var(--black); width: 20px; border-radius: 4px; }
 
-    /* Desktop thumbnails */
-    .pdp-thumbs {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 10px;
-    }
-
+    .pdp-thumbs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
     .pdp-thumb {
         border: 1.5px solid var(--gray-200);
         background: var(--white);
-        padding: 0;
-        width: 100%;
+        padding: 0; width: 100%;
         aspect-ratio: 3/4;
-        overflow: hidden;
-        cursor: pointer;
+        overflow: hidden; cursor: pointer;
         border-radius: 2px;
         transition: border-color 0.2s;
     }
-    .pdp-thumb img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-    }
+    .pdp-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .pdp-thumb:hover { border-color: var(--gray-400); }
     .pdp-thumb.active { border-color: var(--black); }
 
-    /* ------------------ Info ------------------ */
-    .pdp-info {
-        display: flex;
-        flex-direction: column;
-        min-width: 0;
-    }
-
+    .pdp-info { display: flex; flex-direction: column; min-width: 0; }
     .pdp-cat {
-        font-size: 11px;
-        letter-spacing: 2px;
+        font-size: 11px; letter-spacing: 2px;
         text-transform: uppercase;
-        color: var(--gray-600);
-        margin-bottom: 10px;
+        color: var(--gray-600); margin-bottom: 10px;
     }
-
     .pdp-info h1 {
-        font-size: 26px;
-        font-weight: 800;
-        letter-spacing: 0.5px;
-        line-height: 1.2;
+        font-size: 26px; font-weight: 800;
+        letter-spacing: 0.5px; line-height: 1.2;
         margin: 0 0 20px;
         text-transform: uppercase;
     }
-
     .pdp-price-row {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        flex-wrap: wrap;
+        display: flex; align-items: center;
+        gap: 14px; flex-wrap: wrap;
         margin-bottom: 20px;
     }
     .pdp-sale { font-size: 22px; font-weight: 800; color: var(--red); }
     .pdp-mrp { font-size: 15px; color: var(--gray-400); text-decoration: line-through; }
     .pdp-save-pill {
-        background: var(--red);
-        color: var(--white);
-        padding: 4px 10px;
-        font-size: 10px;
-        font-weight: 700;
-        letter-spacing: 1px;
+        background: var(--red); color: var(--white);
+        padding: 4px 10px; font-size: 10px;
+        font-weight: 700; letter-spacing: 1px;
         border-radius: 2px;
     }
+    .pdp-short { color: var(--gray-600); font-size: 14px; line-height: 1.5; margin-bottom: 18px; }
 
-    .pdp-short {
-        color: var(--gray-600);
-        font-size: 14px;
-        line-height: 1.5;
-        margin-bottom: 22px;
+    /* ---------- pdp-info quick details ---------- */
+.pdp-cat-sep {
+    margin: 0 6px;
+    color: var(--gray-400);
+}
+
+.pdp-fit-line {
+    font-size: 12px;
+    color: var(--gray-600);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin: 0 0 12px;
+    padding: 0;
+}
+
+.pdp-fit-line span {
+    display: inline;
+}
+
+.pdp-meta-country {
+    color: var(--gray-600);
+    font-size: 12px;
+    padding-top: 8px !important;
+    border-top: 1px dashed var(--gray-200);
+    margin-top: 8px;
+}
+
+/* ---------- Mobile tweaks ---------- */
+@@media (max-width: 500px) {
+    .pdp-fit-line {
+        font-size: 11px;
+        letter-spacing: 0.3px;
+        margin-bottom: 10px;
+    }
+    .pdp-meta-country {
+        font-size: 11px;
+    }
+}
+
+    /* Tags */
+    .pdp-tags {
+        display: flex; flex-wrap: wrap;
+        gap: 6px; margin-bottom: 22px;
+    }
+    .pdp-tag {
+        display: inline-block;
+        font-size: 11px; font-weight: 600;
+        letter-spacing: 0.5px;
+        padding: 5px 10px;
+        background: var(--gray-100);
+        color: var(--gray-800);
+        border-radius: 2px;
+        text-transform: uppercase;
     }
 
     .pdp-block { margin-bottom: 22px; }
     .pdp-block label {
         display: block;
-        font-size: 11px;
-        font-weight: 700;
+        font-size: 11px; font-weight: 700;
         letter-spacing: 2px;
         text-transform: uppercase;
         margin-bottom: 10px;
         color: var(--black);
     }
     .pdp-block-head {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
+        display: flex; justify-content: space-between;
+        align-items: center; margin-bottom: 10px;
     }
     .pdp-block-head label { margin: 0; }
+
     .pdp-size-guide {
-        font-size: 11px;
-        text-decoration: underline;
-        color: var(--gray-600);
-        cursor: pointer;
+        background: none; border: none; padding: 0;
+        font-size: 11px; text-decoration: underline;
+        color: var(--gray-600); cursor: pointer;
+        font-family: inherit; text-transform: none;
+        letter-spacing: normal;
     }
+    .pdp-size-guide:hover { color: var(--black); }
 
     .pdp-sizes { display: flex; gap: 8px; flex-wrap: wrap; }
     .pdp-size-chip {
         background: var(--white);
         border: 1.5px solid var(--gray-200);
-        min-width: 48px;
-        padding: 10px 16px;
-        font-size: 13px;
-        font-weight: 600;
+        min-width: 48px; padding: 10px 16px;
+        font-size: 13px; font-weight: 600;
         cursor: pointer;
         transition: all 0.15s;
-        border-radius: 2px;
-        letter-spacing: 0.5px;
+        border-radius: 2px; letter-spacing: 0.5px;
     }
     .pdp-size-chip:hover { border-color: var(--black); }
-    .pdp-size-chip.active {
-        background: var(--black);
-        color: var(--white);
-        border-color: var(--black);
-    }
+    .pdp-size-chip.active { background: var(--black); color: var(--white); border-color: var(--black); }
 
     .pdp-colors { display: flex; gap: 10px; flex-wrap: wrap; }
     .pdp-color-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
+        display: inline-flex; align-items: center; gap: 8px;
         background: var(--white);
         border: 1.5px solid var(--gray-200);
         padding: 8px 14px;
-        font-size: 12px;
-        font-weight: 600;
+        font-size: 12px; font-weight: 600;
         cursor: pointer;
         transition: all 0.15s;
         border-radius: 2px;
@@ -630,94 +713,154 @@
     .pdp-color-chip:hover { border-color: var(--black); }
     .pdp-color-chip.active { border-color: var(--black); background: var(--gray-100); }
     .pdp-color-dot {
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
+        width: 14px; height: 14px; border-radius: 50%;
         border: 1px solid rgba(0,0,0,0.15);
         display: inline-block;
     }
 
     .pdp-qty {
-        display: inline-flex;
-        align-items: center;
+        display: inline-flex; align-items: center;
         border: 1.5px solid var(--gray-200);
-        border-radius: 2px;
-        overflow: hidden;
+        border-radius: 2px; overflow: hidden;
     }
     .qty-btn {
-        background: var(--white);
-        border: none;
-        width: 42px;
-        height: 44px;
-        font-size: 18px;
-        font-weight: 600;
-        cursor: pointer;
-        color: var(--black);
+        background: var(--white); border: none;
+        width: 42px; height: 44px;
+        font-size: 18px; font-weight: 600;
+        cursor: pointer; color: var(--black);
         transition: background 0.15s;
     }
     .qty-btn:hover { background: var(--gray-100); }
     .qty-input {
-        width: 48px;
-        height: 44px;
+        width: 48px; height: 44px;
         border: none;
         border-left: 1.5px solid var(--gray-200);
         border-right: 1.5px solid var(--gray-200);
         text-align: center;
-        font-size: 14px;
-        font-weight: 700;
-        outline: none;
-        background: var(--white);
+        font-size: 14px; font-weight: 700;
+        outline: none; background: var(--white);
     }
 
-    .pdp-actions {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        margin: 26px 0 20px;
-    }
+    .pdp-actions { display: flex; flex-direction: column; gap: 10px; margin: 26px 0 20px; }
     .pdp-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        padding: 16px 24px;
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 1.5px;
-        text-transform: uppercase;
-        border-radius: 2px;
-        cursor: pointer;
-        transition: all 0.2s;
-        line-height: 1;
+        display: inline-flex; align-items: center; justify-content: center;
+        gap: 10px; padding: 16px 24px;
+        font-size: 12px; font-weight: 700;
+        letter-spacing: 1.5px; text-transform: uppercase;
+        border-radius: 2px; cursor: pointer;
+        transition: all 0.2s; line-height: 1;
         border: 1.5px solid transparent;
     }
-    .pdp-btn-primary {
-        background: var(--black);
-        color: var(--white);
-        border-color: var(--black);
-    }
+    .pdp-btn-primary { background: var(--black); color: var(--white); border-color: var(--black); }
     .pdp-btn-primary:hover:not(:disabled) { background: var(--gray-800); }
     .pdp-btn-outline {
-        background: transparent;
-        color: var(--black);
+        background: transparent; color: var(--black);
         border-color: var(--black);
     }
-    .pdp-btn-outline:hover:not(:disabled) {
-        background: var(--black);
-        color: var(--white);
-    }
+    .pdp-btn-outline:hover:not(:disabled) { background: var(--black); color: var(--white); }
     .pdp-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 
     .pdp-meta {
         border-top: 1px solid var(--gray-200);
         padding-top: 18px;
-        font-size: 13px;
-        color: var(--gray-600);
+        font-size: 13px; color: var(--gray-600);
     }
     .pdp-meta p { display: flex; align-items: center; gap: 8px; padding: 5px 0; }
     .pdp-meta svg { color: var(--black); flex-shrink: 0; }
 
-    /* ------------------ Accordions ------------------ */
+    /* Notes */
+    .pdp-notes {
+        margin-top: 18px; padding-top: 14px;
+        border-top: 1px solid var(--gray-200);
+    }
+    .pdp-note {
+        font-size: 12px; color: var(--gray-800);
+        padding: 4px 0; line-height: 1.5;
+    }
+    .pdp-note-muted { color: var(--gray-600); font-style: italic; }
+
+    /* Size Chart Modal */
+    .size-chart-modal { display: none; position: fixed; inset: 0; z-index: 1000; }
+    .size-chart-modal.open { display: block; }
+    .size-chart-backdrop {
+        position: absolute; inset: 0;
+        background: rgba(0,0,0,0.55);
+        animation: fadeIn 0.2s ease;
+    }
+    .size-chart-panel {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        background: var(--white);
+        width: calc(100% - 40px);
+        max-width: 620px;
+        max-height: 85vh;
+        overflow-y: auto;
+        border-radius: 4px;
+        padding: 24px;
+        animation: popIn 0.25s ease;
+    }
+    @@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @@keyframes popIn {
+        from { opacity: 0; transform: translate(-50%, -46%) scale(0.96); }
+        to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+    .size-chart-header {
+        display: flex; justify-content: space-between;
+        align-items: center;
+        padding-bottom: 14px;
+        border-bottom: 1px solid var(--gray-200);
+        margin-bottom: 14px;
+    }
+    .size-chart-header h3 {
+        font-size: 14px; font-weight: 800;
+        letter-spacing: 1.5px; text-transform: uppercase;
+        margin: 0;
+    }
+    .size-chart-close {
+        background: none; border: none;
+        width: 32px; height: 32px;
+        display: inline-flex; align-items: center; justify-content: center;
+        border-radius: 50%; cursor: pointer;
+        color: var(--black); transition: background 0.15s;
+    }
+    .size-chart-close:hover { background: var(--gray-100); }
+    .size-chart-sub {
+        font-size: 12px; color: var(--gray-600);
+        margin-bottom: 16px; line-height: 1.5;
+    }
+    .size-chart-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border: 1px solid var(--gray-200);
+        border-radius: 2px;
+    }
+    .size-chart-table {
+        width: 100%; border-collapse: collapse;
+        font-size: 13px; min-width: 400px;
+    }
+    .size-chart-table thead { background: var(--gray-100); }
+    .size-chart-table th {
+        padding: 12px 14px; text-align: left;
+        font-size: 10px; font-weight: 800;
+        letter-spacing: 1.2px; text-transform: uppercase;
+        color: var(--gray-800);
+        border-bottom: 1px solid var(--gray-200);
+        border-right: 1px solid var(--gray-200);
+        white-space: nowrap;
+    }
+    .size-chart-table th:last-child { border-right: none; }
+    .size-chart-table td {
+        padding: 11px 14px;
+        border-bottom: 1px solid var(--gray-200);
+        border-right: 1px solid var(--gray-200);
+        color: var(--gray-800);
+    }
+    .size-chart-table td:last-child { border-right: none; }
+    .size-chart-table tbody tr:last-child td { border-bottom: none; }
+    .size-chart-table tbody tr:hover { background: var(--gray-100); }
+
+    /* Accordions */
     .pdp-accordion {
         border-top: 1px solid var(--gray-200);
         padding: 30px 0;
@@ -728,20 +871,15 @@
     }
     .pdp-accordion summary {
         list-style: none;
-        display: flex;
-        justify-content: space-between;
+        display: flex; justify-content: space-between;
         align-items: center;
-        font-size: 13px;
-        font-weight: 700;
-        letter-spacing: 1.5px;
-        text-transform: uppercase;
-        cursor: pointer;
-        gap: 12px;
+        font-size: 13px; font-weight: 700;
+        letter-spacing: 1.5px; text-transform: uppercase;
+        cursor: pointer; gap: 12px;
     }
     .pdp-accordion summary::-webkit-details-marker { display: none; }
     .pdp-accordion summary span {
-        font-size: 18px;
-        font-weight: 300;
+        font-size: 18px; font-weight: 300;
         transition: transform 0.2s;
         flex-shrink: 0;
     }
@@ -749,107 +887,90 @@
     .pdp-accordion p {
         padding-top: 12px;
         color: var(--gray-600);
-        font-size: 13px;
-        line-height: 1.7;
+        font-size: 13px; line-height: 1.7;
         max-width: 720px;
+    }
+
+    /* Product details grid inside accordion */
+    .pdp-details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px; padding-top: 12px;
+        max-width: 720px;
+    }
+    .pdp-detail-item {
+        display: flex; flex-direction: column;
+        gap: 3px;
+        padding: 10px 12px;
+        background: var(--gray-100);
+        border-radius: 2px;
+    }
+    .pdp-detail-item span {
+        font-size: 10px; font-weight: 700;
+        letter-spacing: 1.2px; text-transform: uppercase;
+        color: var(--gray-600);
+    }
+    .pdp-detail-item strong {
+        font-size: 13px; font-weight: 600;
+        color: var(--black);
     }
 
     .products-section { padding: 40px 0 60px; }
     .section-title {
-        font-size: 18px;
-        font-weight: 800;
-        letter-spacing: 1px;
-        text-transform: uppercase;
+        font-size: 18px; font-weight: 800;
+        letter-spacing: 1px; text-transform: uppercase;
         margin-bottom: 24px;
     }
 
-    /* ============================================================
-       RESPONSIVE
-       ============================================================ */
-
-    /* ----- Tablet landscape (≤ 1024px) ----- */
+    /* ---------- RESPONSIVE ---------- */
     @@media (max-width: 1024px) {
         .pdp-grid { gap: 32px; }
         .pdp-info h1 { font-size: 22px; }
         .pdp-sale { font-size: 20px; }
     }
-
-    /* ----- Tablet portrait (≤ 900px) — stack, show slider ----- */
     @@media (max-width: 900px) {
-        .pdp-grid {
-            grid-template-columns: 1fr;
-            gap: 24px;
-        }
+        .pdp-grid { grid-template-columns: 1fr; gap: 24px; }
         .product-detail { padding: 18px 0 40px; }
-
-        /* Hide thumbnails */
         .pdp-thumbs { display: none; }
-
-        /* Show arrows + dots */
         .pdp-nav { display: inline-flex; }
         .pdp-dots { display: flex; }
-
-        /* Give some bottom room for dots */
-        .pdp-main-wrap { padding-bottom: 0; }
     }
-
-    /* ----- Mobile (≤ 500px) ----- */
     @@media (max-width: 500px) {
-        .pdp-back-btn {
-            margin-top: 14px;
-            padding: 7px 12px;
-            font-size: 10px;
-            letter-spacing: 1px;
-        }
-
+        .pdp-back-btn { margin-top: 14px; padding: 7px 12px; font-size: 10px; letter-spacing: 1px; }
         .product-detail { padding: 12px 0 32px; }
-
-        .pdp-nav {
-            width: 34px;
-            height: 34px;
-        }
+        .pdp-nav { width: 34px; height: 34px; }
         .pdp-nav-prev { left: 8px; }
         .pdp-nav-next { right: 8px; }
         .pdp-nav svg { width: 15px; height: 15px; }
-
         .pdp-dots { bottom: 10px; }
         .pdp-dot { width: 6px; height: 6px; }
         .pdp-dot.active { width: 16px; }
-
-        .pdp-info h1 {
-            font-size: 18px;
-            letter-spacing: 0.3px;
-            margin-bottom: 14px;
-        }
-
+        .pdp-info h1 { font-size: 18px; letter-spacing: 0.3px; margin-bottom: 14px; }
         .pdp-price-row { gap: 10px; margin-bottom: 14px; }
         .pdp-sale { font-size: 18px; }
         .pdp-mrp { font-size: 13px; }
         .pdp-save-pill { font-size: 9px; padding: 3px 8px; }
-
-        .pdp-short { font-size: 13px; margin-bottom: 18px; }
-
+        .pdp-short { font-size: 13px; margin-bottom: 14px; }
+        .pdp-tag { font-size: 10px; padding: 4px 8px; }
         .pdp-block { margin-bottom: 18px; }
         .pdp-block label { font-size: 10px; letter-spacing: 1.5px; }
-
         .pdp-size-chip { min-width: 42px; padding: 9px 12px; font-size: 12px; }
         .pdp-color-chip { padding: 7px 12px; font-size: 11px; }
-
         .qty-btn { width: 38px; height: 40px; }
         .qty-input { width: 42px; height: 40px; }
-
         .pdp-btn { padding: 14px 18px; font-size: 11px; }
         .pdp-meta { font-size: 12px; padding-top: 14px; }
-
         .pdp-accordion { padding: 20px 0; }
         .pdp-accordion summary { font-size: 12px; letter-spacing: 1px; }
         .pdp-accordion p { font-size: 12px; }
-
+        .pdp-details-grid { grid-template-columns: 1fr; gap: 8px; }
+        .size-chart-panel { padding: 18px; width: calc(100% - 24px); max-height: 90vh; }
+        .size-chart-header h3 { font-size: 13px; }
+        .size-chart-table { font-size: 12px; min-width: 340px; }
+        .size-chart-table th, .size-chart-table td { padding: 9px 10px; }
         .products-section { padding: 28px 0 40px; }
         .section-title { font-size: 16px; margin-bottom: 18px; }
     }
-
-    /* ----- Extra small (≤ 380px) ----- */
     @@media (max-width: 380px) {
         .pdp-info h1 { font-size: 16px; }
         .pdp-size-chip { min-width: 38px; padding: 8px 10px; font-size: 11px; }
