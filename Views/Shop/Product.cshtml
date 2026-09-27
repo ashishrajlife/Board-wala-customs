@@ -135,7 +135,40 @@
                     }
                 </div>
             }
-
+            @if (!string.IsNullOrWhiteSpace(Model.Brand)
+            || !string.IsNullOrWhiteSpace(Model.Composition)
+            || !string.IsNullOrWhiteSpace(Model.GSM)
+            || !string.IsNullOrWhiteSpace(Model.PrintType)
+            || !string.IsNullOrWhiteSpace(Model.FitType)
+            || !string.IsNullOrWhiteSpace(Model.Neckline))
+            {
+                <div class="pdp-tags pdp-tags-details">
+                    @if (!string.IsNullOrWhiteSpace(Model.Brand))
+                    {
+                        <span class="pdp-tag"><strong>Brand:</strong> @Model.Brand</span>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.Composition))
+                    {
+                        <span class="pdp-tag"><strong>Composition:</strong> @Model.Composition</span>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.GSM))
+                    {
+                        <span class="pdp-tag"><strong>GSM:</strong> @Model.GSM</span>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.PrintType))
+                    {
+                        <span class="pdp-tag"><strong>Print:</strong> @Model.PrintType</span>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.FitType))
+                    {
+                        <span class="pdp-tag"><strong>Fit:</strong> @Model.FitType</span>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.Neckline))
+                    {
+                        <span class="pdp-tag"><strong>Neckline:</strong> @Model.Neckline</span>
+                    }
+                </div>
+            }
         <div class="pdp-block">
             <div class="pdp-block-head">
                 <label>SIZE</label>
@@ -761,7 +794,7 @@
         max-height: 85vh;
         overflow-y: auto;
         border-radius: 4px;
-        padding: 24px;
+        padding: 15px;
         animation: popIn 0.25s ease;
     }
     @@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -772,7 +805,6 @@
     .size-chart-header {
         display: flex; justify-content: space-between;
         align-items: center;
-        padding-bottom: 14px;
         border-bottom: 1px solid var(--gray-200);
         margin-bottom: 14px;
     }
@@ -790,39 +822,52 @@
     }
     .size-chart-close:hover { background: var(--gray-100); }
     .size-chart-sub {
-        font-size: 12px; color: var(--gray-600);
+        font-size: 14px; color: darkgray;
+        font-weight: 600;
         margin-bottom: 16px; line-height: 1.5;
     }
-    .size-chart-table-wrap {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        border: 1px solid var(--gray-200);
-        border-radius: 2px;
-    }
-    .size-chart-table {
-        width: 100%; border-collapse: collapse;
-        font-size: 13px; min-width: 400px;
-    }
-    .size-chart-table thead { background: var(--gray-100); }
-    .size-chart-table th {
-        padding: 12px 14px; text-align: left;
-        font-size: 10px; font-weight: 800;
-        letter-spacing: 1.2px; text-transform: uppercase;
-        color: var(--gray-800);
-        border-bottom: 1px solid var(--gray-200);
-        border-right: 1px solid var(--gray-200);
-        white-space: nowrap;
-    }
-    .size-chart-table th:last-child { border-right: none; }
-    .size-chart-table td {
-        padding: 11px 14px;
-        border-bottom: 1px solid var(--gray-200);
-        border-right: 1px solid var(--gray-200);
-        color: var(--gray-800);
-    }
-    .size-chart-table td:last-child { border-right: none; }
-    .size-chart-table tbody tr:last-child td { border-bottom: none; }
-    .size-chart-table tbody tr:hover { background: var(--gray-100); }
+ .size-chart-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--gray-200);
+    border-radius: 2px;
+}
+
+.size-chart-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 400px;
+}
+
+.size-chart-table thead {
+    background: var(--gray-100);
+}
+
+.size-chart-table th {
+    padding: 12px 14px;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--gray-800);
+
+    /* Border everywhere */
+    border: 1px solid black;
+    white-space: nowrap;
+}
+
+.size-chart-table td {
+    padding: 11px 14px;
+    color: var(--gray-800);
+    text-align: center;
+    border: 1px solid black;
+}
+
+.size-chart-table tbody tr:hover {
+    background: black);
+}
 
     /* Accordions */
     .pdp-accordion {
@@ -928,7 +973,7 @@
         .pdp-accordion summary { font-size: 12px; letter-spacing: 1px; }
         .pdp-accordion p { font-size: 12px; }
         .pdp-details-grid { grid-template-columns: 1fr; gap: 8px; }
-        .size-chart-panel { padding: 18px; width: calc(100% - 24px); max-height: 90vh; }
+        .size-chart-panel { padding: 15px; width: calc(100% - 24px); max-height: 90vh; }
         .size-chart-header h3 { font-size: 13px; }
         .size-chart-table { font-size: 12px; min-width: 340px; }
         .size-chart-table th, .size-chart-table td { padding: 9px 10px; }
@@ -940,4 +985,39 @@
         .pdp-size-chip { min-width: 38px; padding: 8px 10px; font-size: 11px; }
         .pdp-btn { padding: 13px 14px; font-size: 10px; letter-spacing: 1px; }
     }
+
+    /* pdp-details at right side of screen  */
+    /* ---------- Details as tags (Brand: X, Composition: Y) ---------- */
+.pdp-tags-details {
+    margin-bottom: 22px; /* spacing before the size selector */
+}
+
+.pdp-tags-details .pdp-tag {
+    text-transform: none;      /* keep the label readable, not all-caps */
+    letter-spacing: 0.2px;
+    font-weight: 500;
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.pdp-tags-details .pdp-tag strong {
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--black);
+    margin-right: 4px;
+}
+
+@@media (max-width: 500px) {
+    .pdp-tags-details .pdp-tag {
+        font-size: 11px;
+        padding: 5px 10px;
+    }
+    .pdp-tags-details .pdp-tag strong {
+        font-size: 9.5px;
+        letter-spacing: 0.8px;
+    }
+}
+
 </style>

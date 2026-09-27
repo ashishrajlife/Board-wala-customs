@@ -3,24 +3,24 @@
 
 <div class="container admin-page">
     <div class="admin-header">
-    <h1>PRODUCTS</h1>
-    <div class="admin-header-actions">
-        <a href="http://localhost:5132/Admin/Dashboard" class="btn-secondary">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="19" y1="12" x2="5" y2="12"/>
-                <polyline points="12 19 5 12 12 5"/>
-            </svg>
-            BACK
-        </a>
-        <a href="/Admin/Products/Create" class="btn-primary">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                <line x1="12" y1="5" x2="12" y2="19"/>
-                <line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            NEW PRODUCT
-        </a>
+        <h1>PRODUCTS</h1>
+        <div class="admin-header-actions">
+            <a href="/Admin/Dashboard" class="btn-secondary">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"/>
+                    <polyline points="12 19 5 12 12 5"/>
+                </svg>
+                BACK
+            </a>
+            <a href="/Admin/Products/Create" class="btn-primary">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                NEW PRODUCT
+            </a>
+        </div>
     </div>
-</div>
 
     @if (TempData["Success"] != null)
     {
@@ -54,7 +54,6 @@
                         <th class="col-hide-sm">Category</th>
                         <th class="col-price">MRP</th>
                         <th class="col-price">Sale</th>
-                        <th class="col-hide-sm">Save%</th>
                         <th class="col-hide-sm">Stock</th>
                         <th class="col-hide-sm">Active</th>
                         <th class="col-actions">Actions</th>
@@ -81,7 +80,6 @@
                         <td class="col-hide-sm" data-label="Category">@p.Category?.Name</td>
                         <td class="col-price" data-label="MRP"><s>₹@p.MRP.ToString("0")</s></td>
                         <td class="col-price" data-label="Sale"><span class="tbl-sale">₹@p.SalePrice.ToString("0")</span></td>
-                        <td class="col-hide-sm" data-label="Save%"><span class="pill-red">@p.SavePercent%</span></td>
                         <td class="col-hide-sm" data-label="Stock">@p.Stock</td>
                         <td class="col-hide-sm" data-label="Active">
                             @if (p.IsActive)
@@ -95,6 +93,14 @@
                         </td>
                         <td class="col-actions" data-label="Actions">
                             <div class="tbl-actions">
+                                <button type="button" class="icon-btn js-view-btn" title="View details"
+                                        data-pid="@p.ProductId">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                        <circle cx="12" cy="12" r="3"/>
+                                    </svg>
+                                    <span class="icon-btn-label">View</span>
+                                </button>
                                 <a href="/Admin/Products/Edit/@p.ProductId" class="icon-btn" title="Edit">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -117,12 +123,69 @@
                                 </form>
                             </div>
                         </td>
+
+                        <!-- Hidden data bag for the modal -->
+                        <td class="js-product-data" hidden
+                            data-pid="@p.ProductId"
+                            data-name="@p.Name"
+                            data-category="@p.Category?.Name"
+                            data-short="@p.ShortDescription"
+                            data-desc="@p.Description"
+                            data-mrp="@p.MRP.ToString("0.00")"
+                            data-sale="@p.SalePrice.ToString("0.00")"
+                            data-save="@p.SavePercent"
+                            data-sizes="@p.Sizes"
+                            data-colors="@p.Colors"
+                            data-stock="@p.Stock"
+                            data-sku="@p.SKU"
+                            data-brand="@p.Brand"
+                            data-composition="@p.Composition"
+                            data-gsm="@p.GSM"
+                            data-print="@p.PrintType"
+                            data-neckline="@p.Neckline"
+                            data-fit="@p.FitType"
+                            data-country="@p.CountryOfProduction"
+                            data-washcare="@p.WashCare"
+                            data-sizing="@p.SizingNote"
+                            data-mrpnote="@p.MRPNote"
+                            data-additional="@p.AdditionalNote"
+                            data-tags="@p.Tags"
+                            data-benefits="@p.Benefits"
+                            data-img1="@p.Image1"
+                            data-img2="@p.Image2"
+                            data-img3="@p.Image3"
+                            data-img4="@p.Image4"
+                            data-active="@(p.IsActive ? "1" : "0")"
+                            data-featured="@(p.IsFeatured ? "1" : "0")"
+                            data-newarrival="@(p.IsNewArrival ? "1" : "0")"
+                            data-created="@p.CreatedAt.ToString("yyyy-MM-dd HH:mm")"
+                            data-updated="@(p.UpdatedAt?.ToString("yyyy-MM-dd HH:mm") ?? "")">
+                        </td>
                     </tr>
                 }
                 </tbody>
             </table>
         </div>
     }
+</div>
+
+<!-- ============ Product details modal ============ -->
+<div class="confirm-overlay js-product-modal" id="productModal">
+    <div class="product-modal-panel" role="dialog" aria-modal="true">
+        <div class="product-modal-header">
+            <h3>PRODUCT DETAILS</h3>
+            <button type="button" class="product-modal-close" id="productModalClose" aria-label="Close">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="product-modal-body" id="productModalBody">
+            <!-- Filled by JS -->
+        </div>
+    </div>
 </div>
 
 <!-- ============ Delete confirmation modal ============ -->
@@ -149,43 +212,26 @@
        PRODUCTS INDEX — page-scoped styles
        ============================================================ */
 
-    /* ---------- Empty state ---------- */
     .empty-state {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        gap: 10px;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        text-align: center; gap: 10px;
         padding: clamp(40px, 10vw, 72px) 20px;
         border: 1px solid var(--gray-200);
         border-radius: 4px;
         background: var(--white);
     }
     .empty-state-icon {
-        width: 56px;
-        height: 56px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        width: 56px; height: 56px;
+        display: flex; align-items: center; justify-content: center;
         border-radius: 50%;
         background: var(--gray-100);
         color: var(--gray-400);
         margin-bottom: 4px;
     }
-    .empty-state p {
-        color: var(--gray-600);
-        font-size: 13px;
-        margin: 0;
-    }
-    .empty-state a {
-        text-decoration: underline;
-        color: var(--black);
-        font-weight: 600;
-        font-size: 13px;
-    }
+    .empty-state p { color: var(--gray-600); font-size: 13px; margin: 0; }
+    .empty-state a { text-decoration: underline; color: var(--black); font-weight: 600; font-size: 13px; }
 
-    /* ---------- Table wrapper ---------- */
     .admin-table-wrap {
         width: 100%;
         overflow-x: auto;
@@ -194,33 +240,22 @@
         background: var(--white);
         border-radius: 6px;
     }
-
-    /* ---------- Table base (slimmer / less bulky) ---------- */
     .admin-table {
         width: 100%;
         border-collapse: collapse;
         font-size: 12.5px;
         min-width: 680px;
     }
-
-    .admin-table thead {
-        background: #1c1c1c;
-        border-bottom: 1.5px solid #1c1c1c;
-    }
-
+    .admin-table thead { background: #1c1c1c; border-bottom: 1.5px solid #1c1c1c; }
     .admin-table th {
         padding: 10px 12px;
         text-align: center;
-        font-size: 10px;
-        font-weight: 700;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        color: #f2f2f2;
-        white-space: nowrap;
+        font-size: 10px; font-weight: 700;
+        letter-spacing: 1px; text-transform: uppercase;
+        color: #f2f2f2; white-space: nowrap;
         border-right: 1px solid rgba(255,255,255,0.08);
     }
     .admin-table th:last-child { border-right: none; }
-
     .admin-table td {
         padding: 9px 12px;
         text-align: center;
@@ -234,81 +269,57 @@
     .admin-table tbody tr { transition: background 0.15s; }
     .admin-table tbody tr:hover { background: var(--gray-100); }
 
-    /* ---------- Column widths ---------- */
     .admin-table .col-img { width: 60px; }
     .admin-table .col-price { width: 80px; white-space: nowrap; }
-    .admin-table .col-actions { width: 100px; }
+    .admin-table .col-actions { width: 130px; }
 
-    /* ---------- Thumbnail (slimmer) ---------- */
     .tbl-thumb {
-        width: 40px;
-        height: 48px;
+        width: 40px; height: 48px;
         object-fit: cover;
         border: 1px solid var(--gray-200);
         background: var(--gray-100);
-        display: block;
-        margin: 0 auto;
+        display: block; margin: 0 auto;
         border-radius: 2px;
     }
     .tbl-thumb-placeholder {
-        width: 40px;
-        height: 48px;
+        width: 40px; height: 48px;
         background: var(--gray-100);
         border: 1px dashed var(--gray-200);
         margin: 0 auto;
         border-radius: 2px;
     }
-
-    /* ---------- Name cell ---------- */
     .tbl-name {
-        font-weight: 600;
-        font-size: 12.5px;
+        font-weight: 600; font-size: 12.5px;
         text-transform: uppercase;
-        letter-spacing: 0.3px;
-        line-height: 1.3;
+        letter-spacing: 0.3px; line-height: 1.3;
         margin-bottom: 2px;
         color: var(--black);
     }
-    .tbl-sub {
-        font-size: 11px;
-        color: var(--gray-600);
-        letter-spacing: 0.3px;
-        display: none; /* shown on the mobile card layout only */
-    }
+    .tbl-sub { font-size: 11px; color: var(--gray-600); display: none; }
 
-    /* ---------- Prices ---------- */
     .tbl-sale { color: var(--red); font-weight: 700; }
     .admin-table .col-price s { color: var(--gray-400); }
 
-    /* ---------- Status pills ---------- */
     .pill-red, .pill-green, .pill-gray {
         display: inline-block;
-        font-size: 10px;
-        font-weight: 700;
+        font-size: 10px; font-weight: 700;
         letter-spacing: 0.5px;
-        padding: 3px 8px;
-        text-transform: uppercase;
+        padding: 3px 8px; text-transform: uppercase;
         border-radius: 2px;
     }
     .pill-red { background: #fdecea; color: #b71c1c; }
     .pill-green { background: #e8f5e9; color: #2e7d32; }
     .pill-gray { background: var(--gray-100); color: var(--gray-600); }
 
-    /* ---------- Action buttons ---------- */
     .tbl-actions {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
+        display: flex; align-items: center;
+        justify-content: center; gap: 6px;
     }
     .tbl-actions-form { display: inline-flex; }
     .icon-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
+        display: inline-flex; align-items: center; justify-content: center;
         gap: 6px;
-        width: 28px;
-        height: 28px;
+        width: 28px; height: 28px;
         border: 1.5px solid var(--gray-200);
         background: var(--white);
         color: var(--gray-800);
@@ -318,149 +329,243 @@
         text-decoration: none;
         padding: 0;
     }
-    .icon-btn:hover {
-        border-color: var(--black);
-        background: var(--black);
-        color: var(--white);
-    }
-    .icon-btn-danger:hover {
-        border-color: var(--red);
-        background: var(--red);
-        color: var(--white);
-    }
-    .icon-btn-label {
-        display: none; /* revealed as a text label on the card layout */
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-    }
+    .icon-btn:hover { border-color: var(--black); background: var(--black); color: var(--white); }
+    .icon-btn-danger:hover { border-color: var(--red); background: var(--red); color: var(--white); }
+    .icon-btn-label { display: none; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
 
-    /* ============================================================
-       DELETE CONFIRMATION MODAL
-       ============================================================ */
+    /* ---------- Product Details modal ---------- */
     .confirm-overlay {
         display: none;
-        position: fixed;
-        inset: 0;
+        position: fixed; inset: 0;
         background: rgba(0,0,0,0.55);
         z-index: 1000;
-        align-items: center;
-        justify-content: center;
+        align-items: center; justify-content: center;
         padding: 16px;
     }
-    .confirm-overlay.is-open {
-        display: flex;
-    }
-    .confirm-box {
+    .confirm-overlay.is-open { display: flex; }
+
+    .product-modal-panel {
         background: var(--white);
         width: 100%;
-        max-width: 340px;
+        max-width: 720px;
+        max-height: 88vh;
+        overflow-y: auto;
+        border-radius: 10px;
+        padding: 0;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+        animation: confirmPop 0.15s ease-out;
+        display: flex;
+        flex-direction: column;
+    }
+    @@keyframes confirmPop { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+    .product-modal-header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--gray-200);
+        position: sticky; top: 0; background: var(--white); z-index: 2;
+    }
+    .product-modal-header h3 {
+        margin: 0;
+        font-size: 14px; font-weight: 800;
+        letter-spacing: 1.5px; text-transform: uppercase;
+        color: var(--black);
+    }
+    .product-modal-close {
+        background: none; border: none;
+        width: 32px; height: 32px;
+        display: inline-flex; align-items: center; justify-content: center;
+        border-radius: 50%; cursor: pointer;
+        color: var(--black);
+        transition: background 0.15s;
+    }
+    .product-modal-close:hover { background: var(--gray-100); }
+
+    .product-modal-body { padding: 20px; }
+
+    .pm-images {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-bottom: 18px;
+    }
+    .pm-image {
+        aspect-ratio: 3/4;
+        border-radius: 4px;
+        overflow: hidden;
+        border: 1px solid var(--gray-200);
+        background: var(--gray-100);
+    }
+    .pm-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .pm-image.empty {
+        display: flex; align-items: center; justify-content: center;
+        color: var(--gray-400); font-size: 10px;
+        letter-spacing: 1px; text-transform: uppercase;
+    }
+
+    .pm-title {
+        font-size: 16px; font-weight: 800;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        margin: 0 0 4px;
+        color: var(--black);
+    }
+    .pm-cat {
+        font-size: 11px; letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: var(--gray-600);
+        margin-bottom: 16px;
+    }
+
+    .pm-price-row {
+        display: flex; align-items: center; gap: 12px;
+        margin-bottom: 16px; flex-wrap: wrap;
+    }
+    .pm-sale { font-size: 18px; font-weight: 800; color: var(--red); }
+    .pm-mrp { font-size: 13px; color: var(--gray-400); text-decoration: line-through; }
+    .pm-save {
+        background: var(--red); color: var(--white);
+        padding: 3px 8px; border-radius: 2px;
+        font-size: 10px; font-weight: 700;
+        letter-spacing: 1px;
+    }
+
+    .pm-section {
+        margin-top: 18px;
+        padding-top: 16px;
+        border-top: 1px solid var(--gray-200);
+    }
+    .pm-section h4 {
+        margin: 0 0 12px;
+        font-size: 11px; font-weight: 800;
+        letter-spacing: 1.5px; text-transform: uppercase;
+        color: var(--gray-600);
+    }
+
+    .pm-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+    }
+    .pm-item {
+        padding: 10px 12px;
+        background: var(--gray-100);
+        border-radius: 4px;
+    }
+    .pm-item-label {
+        display: block;
+        font-size: 10px; font-weight: 700;
+        letter-spacing: 1px; text-transform: uppercase;
+        color: var(--gray-600);
+        margin-bottom: 3px;
+    }
+    .pm-item-value {
+        font-size: 13px; font-weight: 600;
+        color: var(--black);
+        word-break: break-word;
+    }
+    .pm-item-value.muted { color: var(--gray-400); font-weight: 500; font-style: italic; }
+
+    .pm-full {
+        padding: 12px 14px;
+        background: var(--gray-100);
+        border-radius: 4px;
+        font-size: 13px;
+        line-height: 1.6;
+        color: var(--gray-800);
+        white-space: pre-line;
+        margin-top: 8px;
+    }
+
+    .pm-tags {
+        display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;
+    }
+    .pm-tag {
+        font-size: 11px; font-weight: 600;
+        padding: 4px 10px;
+        background: var(--gray-100);
+        color: var(--gray-800);
+        border-radius: 2px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .pm-flag {
+        display: inline-block;
+        padding: 3px 10px;
+        font-size: 10px; font-weight: 700;
+        letter-spacing: 0.8px; text-transform: uppercase;
+        border-radius: 2px;
+        margin-right: 6px;
+    }
+    .pm-flag-on { background: #e8f5e9; color: #2e7d32; }
+    .pm-flag-off { background: var(--gray-100); color: var(--gray-600); }
+
+    /* ---------- Delete confirmation modal ---------- */
+    .confirm-box {
+        background: var(--white);
+        width: 100%; max-width: 340px;
         border-radius: 8px;
         padding: 24px 22px 20px;
         text-align: center;
         box-shadow: 0 10px 40px rgba(0,0,0,0.25);
         animation: confirmPop 0.15s ease-out;
     }
-    @@keyframes confirmPop {
-        from { transform: scale(0.92); opacity: 0; }
-        to { transform: scale(1); opacity: 1; }
-    }
     .confirm-icon {
-        width: 44px;
-        height: 44px;
-        margin: 0 auto 12px;
-        border-radius: 50%;
-        background: #fdecea;
-        color: #b71c1c;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        width: 44px; height: 44px; margin: 0 auto 12px;
+        border-radius: 50%; background: #fdecea; color: #b71c1c;
+        display: flex; align-items: center; justify-content: center;
     }
     .confirm-box h3 {
-        margin: 0 0 6px;
-        font-size: 15px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-        color: var(--black);
+        margin: 0 0 6px; font-size: 15px; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.3px; color: var(--black);
     }
-    .confirm-box p {
-        margin: 0 0 18px;
-        font-size: 12.5px;
-        color: var(--gray-600);
-    }
-    .confirm-actions {
-        display: flex;
-        gap: 10px;
-    }
+    .confirm-box p { margin: 0 0 18px; font-size: 12.5px; color: var(--gray-600); }
+    .confirm-actions { display: flex; gap: 10px; }
     .btn-cancel, .btn-confirm-danger {
-        flex: 1;
-        padding: 10px 0;
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: all 0.15s;
+        flex: 1; padding: 10px 0;
+        font-size: 12px; font-weight: 700;
+        letter-spacing: 0.5px; text-transform: uppercase;
+        border-radius: 4px; cursor: pointer; transition: all 0.15s;
     }
-    .btn-cancel {
-        background: var(--white);
-        border: 1.5px solid var(--gray-200);
-        color: var(--gray-800);
-    }
+    .btn-cancel { background: var(--white); border: 1.5px solid var(--gray-200); color: var(--gray-800); }
     .btn-cancel:hover { background: var(--gray-100); }
-    .btn-confirm-danger {
-        background: var(--red);
-        border: 1.5px solid var(--red);
-        color: var(--white);
-    }
+    .btn-confirm-danger { background: var(--red); border: 1.5px solid var(--red); color: var(--white); }
     .btn-confirm-danger:hover { opacity: 0.9; }
 
-    /* ============================================================
-       RESPONSIVE — Large desktop / ultra-wide (>= 1440px)
-       ============================================================ */
+    .admin-header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .btn-secondary {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 9px 14px; font-size: 12px; font-weight: 700;
+        letter-spacing: 0.5px; text-transform: uppercase;
+        border: 1.5px solid var(--gray-200);
+        background: var(--white); color: var(--gray-800);
+        border-radius: 4px; text-decoration: none;
+        cursor: pointer; transition: all 0.15s;
+    }
+    .btn-secondary:hover { border-color: var(--black); background: var(--black); color: var(--white); }
+
+    /* ---------- Responsive ---------- */
     @@media (min-width: 1440px) {
         .admin-table { font-size: 13.5px; }
-        .admin-table th,
-        .admin-table td { padding: 12px 16px; }
+        .admin-table th, .admin-table td { padding: 12px 16px; }
     }
-
-    /* ============================================================
-       RESPONSIVE — Tablet (<= 900px)
-       ============================================================ */
     @@media (max-width: 900px) {
-        .admin-table th,
-        .admin-table td { padding: 9px 8px; }
+        .admin-table th, .admin-table td { padding: 9px 8px; }
         .admin-table th { font-size: 9px; letter-spacing: 0.8px; }
-        .tbl-thumb,
-        .tbl-thumb-placeholder { width: 36px; height: 44px; }
+        .tbl-thumb, .tbl-thumb-placeholder { width: 36px; height: 44px; }
         .icon-btn { width: 26px; height: 26px; }
         .icon-btn svg { width: 14px; height: 14px; }
     }
-
-    /* ============================================================
-       RESPONSIVE — Card layout (<= 680px)
-       ============================================================ */
     @@media (max-width: 680px) {
-        .admin-table-wrap {
-            border: none;
-            background: transparent;
-            overflow-x: visible;
-        }
-        .admin-table {
-            min-width: 0;
-            display: block;
-            font-size: 13px;
-        }
+        .admin-table-wrap { border: none; background: transparent; overflow-x: visible; }
+        .admin-table { min-width: 0; display: block; font-size: 13px; }
         .admin-table thead { display: none; }
         .admin-table tbody { display: block; }
 
         .admin-table tbody tr {
             display: grid;
             grid-template-columns: 64px 1fr 1fr;
-            grid-auto-rows: auto;
             gap: 8px 10px;
             background: var(--white);
             border: 1px solid var(--gray-200);
@@ -471,184 +576,253 @@
         }
         .admin-table tbody tr:last-child { margin-bottom: 0; }
         .admin-table tbody tr:hover { background: var(--white); }
+        .admin-table td { padding: 0; border: none; display: block; text-align: left; }
+        .admin-table .js-product-data { display: none !important; }
 
-        .admin-table td {
-            padding: 0;
-            border: none;
-            display: block;
-            text-align: left;
-        }
+        .admin-table .col-img { width: auto; grid-column: 1; grid-row: 1 / 3; }
+        .tbl-thumb, .tbl-thumb-placeholder { margin: 0; width: 64px; height: 76px; border-radius: 8px; }
 
-        /* Image: tall left column spanning the header + first stat row */
-        .admin-table .col-img {
-            width: auto;
-            grid-column: 1;
-            grid-row: 1 / 3;
-        }
-        .tbl-thumb, .tbl-thumb-placeholder {
-            margin: 0;
-            width: 64px;
-            height: 76px;
-            border-radius: 8px;
-        }
-
-        /* Name + category: header row, spans both remaining columns */
         .admin-table .col-name {
-            grid-column: 2 / 4;
-            grid-row: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+            grid-column: 2 / 4; grid-row: 1;
+            display: flex; flex-direction: column; justify-content: center;
         }
         .tbl-name { font-size: 14px; }
         .tbl-sub { display: block; margin-top: 2px; }
 
-        /* Stat chips: two per row, 4 compact rows instead of 6 stacked ones */
         .admin-table td:nth-child(3) { grid-column: 2; grid-row: 2; }
         .admin-table td:nth-child(4) { grid-column: 3; grid-row: 2; }
         .admin-table td:nth-child(5) { grid-column: 2; grid-row: 3; }
         .admin-table td:nth-child(6) { grid-column: 3; grid-row: 3; }
         .admin-table td:nth-child(7) { grid-column: 2; grid-row: 4; }
-        .admin-table td:nth-child(8) { grid-column: 3; grid-row: 4; }
 
-        .admin-table .col-hide-sm,
-        .admin-table .col-price {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            justify-content: center;
+        .admin-table .col-hide-sm, .admin-table .col-price {
+            display: flex; flex-direction: column;
+            align-items: flex-start; justify-content: center;
             gap: 3px;
             background: var(--gray-100);
             border-radius: 6px;
             padding: 7px 10px;
         }
-        .admin-table .col-hide-sm:before,
-        .admin-table .col-price:before {
+        .admin-table .col-hide-sm:before, .admin-table .col-price:before {
             content: attr(data-label);
-            font-size: 9px;
-            font-weight: 800;
-            letter-spacing: 0.8px;
-            text-transform: uppercase;
-            color: var(--gray-500, var(--gray-600));
+            font-size: 9px; font-weight: 800;
+            letter-spacing: 0.8px; text-transform: uppercase;
+            color: var(--gray-600);
         }
-        .admin-table .col-price s { font-size: 12px; }
-        .admin-table .tbl-sale { font-size: 13px; }
-
         .admin-table .col-actions {
-            grid-column: 1 / -1;
-            grid-row: 5;
-            width: auto;
-            padding-top: 10px;
+            grid-column: 1 / -1; grid-row: 5;
+            width: auto; padding-top: 10px;
             border-top: 1px solid var(--gray-100);
         }
         .tbl-actions { justify-content: stretch; gap: 8px; }
         .tbl-actions-form { flex: 1; display: flex; }
-        .icon-btn {
-            width: 100%;
-            flex: 1;
-            height: 38px;
-            padding: 0 12px;
-        }
+        .icon-btn { width: 100%; flex: 1; height: 38px; padding: 0 12px; }
         .icon-btn-label { display: inline-block; }
-    }
 
-    /* ============================================================
-       RESPONSIVE — Small mobile (<= 400px)
-       ============================================================ */
+        .pm-images { grid-template-columns: repeat(2, 1fr); }
+        .product-modal-panel { max-height: 92vh; }
+        .product-modal-body { padding: 16px; }
+        .pm-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    }
     @@media (max-width: 400px) {
-        .admin-table tbody tr {
-            grid-template-columns: 52px 1fr 1fr;
-            gap: 6px 8px;
-            padding: 11px;
-        }
+        .admin-table tbody tr { grid-template-columns: 52px 1fr 1fr; gap: 6px 8px; padding: 11px; }
         .tbl-thumb, .tbl-thumb-placeholder { width: 52px; height: 62px; }
         .tbl-name { font-size: 12.5px; }
-        .admin-table .col-hide-sm,
-        .admin-table .col-price { padding: 6px 8px; }
+        .admin-table .col-hide-sm, .admin-table .col-price { padding: 6px 8px; }
         .tbl-actions { gap: 6px; }
         .icon-btn { height: 34px; padding: 0 6px; font-size: 11px; }
         .confirm-box { padding: 20px 16px 16px; }
+        .pm-grid { grid-template-columns: 1fr; }
     }
-    .admin-header-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.btn-secondary {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 9px 14px;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    border: 1.5px solid var(--gray-200);
-    background: var(--white);
-    color: var(--gray-800);
-    border-radius: 4px;
-    text-decoration: none;
-    cursor: pointer;
-    transition: all 0.15s;
-}
-.btn-secondary:hover {
-    border-color: var(--black);
-    background: var(--black);
-    color: var(--white);
-}
-
-@@media (max-width: 480px) {
-    .admin-header-actions {
-        width: 100%;
+    @@media (max-width: 480px) {
+        .admin-header-actions { width: 100%; }
+        .admin-header-actions a { flex: 1; justify-content: center; }
     }
-    .admin-header-actions a {
-        flex: 1;
-        justify-content: center;
-    }
-}
 </style>
 
 <script>
     (function () {
-        var overlay = document.getElementById('deleteConfirmOverlay');
+        // ---------- Delete confirmation ----------
+        var delOverlay = document.getElementById('deleteConfirmOverlay');
         var yesBtn = document.getElementById('deleteYesBtn');
         var cancelBtn = document.getElementById('deleteCancelBtn');
         var formToSubmit = null;
 
-        function openModal(form) {
-            formToSubmit = form;
-            overlay.classList.add('is-open');
-        }
-        function closeModal() {
-            overlay.classList.remove('is-open');
-            formToSubmit = null;
-        }
+        function openDel(form) { formToSubmit = form; delOverlay.classList.add('is-open'); }
+        function closeDel() { delOverlay.classList.remove('is-open'); formToSubmit = null; }
 
         document.querySelectorAll('.js-delete-form').forEach(function (form) {
             form.addEventListener('submit', function (e) {
                 e.preventDefault();
-                openModal(form);
+                openDel(form);
+            });
+        });
+        yesBtn.addEventListener('click', function () {
+            if (formToSubmit) { var f = formToSubmit; closeDel(); f.submit(); }
+        });
+        cancelBtn.addEventListener('click', closeDel);
+        delOverlay.addEventListener('click', function (e) { if (e.target === delOverlay) closeDel(); });
+
+        // ---------- Product details modal ----------
+        var productModal = document.getElementById('productModal');
+        var productModalBody = document.getElementById('productModalBody');
+        var productModalClose = document.getElementById('productModalClose');
+
+        function esc(v) {
+            if (v === null || v === undefined) return '';
+            return String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+        function item(label, value) {
+            if (!value) return '<div class="pm-item"><span class="pm-item-label">' + esc(label) + '</span><span class="pm-item-value muted">—</span></div>';
+            return '<div class="pm-item"><span class="pm-item-label">' + esc(label) + '</span><span class="pm-item-value">' + esc(value) + '</span></div>';
+        }
+
+        function buildModal(data) {
+            var imgs = [data.img1, data.img2, data.img3, data.img4];
+            var imgHtml = '<div class="pm-images">' +
+                imgs.map(function (src) {
+                    if (src && src.trim()) {
+                        return '<div class="pm-image"><img src="' + esc(src) + '" alt=""></div>';
+                    }
+                    return '<div class="pm-image empty">No image</div>';
+                }).join('') +
+                '</div>';
+
+            var priceHtml = '<div class="pm-price-row">' +
+                '<span class="pm-sale">₹' + esc(data.sale) + '</span>' +
+                '<span class="pm-mrp">₹' + esc(data.mrp) + '</span>' +
+                (parseInt(data.save) > 0 ? '<span class="pm-save">SAVE ' + esc(data.save) + '%</span>' : '') +
+                '</div>';
+
+            var basic = '<div class="pm-section"><h4>BASIC</h4><div class="pm-grid">' +
+                item('Category', data.category) +
+                item('SKU', data.sku) +
+                item('Brand', data.brand) +
+                item('Sizes', data.sizes) +
+                item('Colors', data.colors) +
+                item('Stock', data.stock) +
+                '</div></div>';
+
+            var spec = '<div class="pm-section"><h4>SPECIFICATIONS</h4><div class="pm-grid">' +
+                item('Composition', data.composition) +
+                item('GSM', data.gsm) +
+                item('Print Type', data.print) +
+                item('Neckline', data.neckline) +
+                item('Fit Type', data.fit) +
+                item('Country of Production', data.country) +
+                item('Sizing Note', data.sizing) +
+                '</div></div>';
+
+            var shortsHtml = data.short
+                ? '<div class="pm-section"><h4>SHORT DESCRIPTION</h4><div class="pm-full">' + esc(data.short) + '</div></div>'
+                : '';
+            var descHtml = data.desc
+                ? '<div class="pm-section"><h4>FULL DESCRIPTION</h4><div class="pm-full">' + esc(data.desc) + '</div></div>'
+                : '';
+            var washHtml = data.washcare
+                ? '<div class="pm-section"><h4>WASH CARE</h4><div class="pm-full">' + esc(data.washcare) + '</div></div>'
+                : '';
+
+            var tagsHtml = '';
+            if (data.tags && data.tags.trim()) {
+                tagsHtml = '<div class="pm-section"><h4>TAGS</h4><div class="pm-tags">' +
+                    data.tags.split(',').map(function (t) { return t.trim(); }).filter(Boolean)
+                        .map(function (t) { return '<span class="pm-tag">' + esc(t) + '</span>'; }).join('') +
+                    '</div></div>';
+            }
+
+            var benefitsHtml = '';
+            if (data.benefits && data.benefits.trim()) {
+                benefitsHtml = '<div class="pm-section"><h4>BENEFITS</h4><div class="pm-full">' +
+                    esc(data.benefits) + '</div></div>';
+            }
+
+            var notesHtml = '';
+            if (data.mrpnote || data.additional) {
+                notesHtml = '<div class="pm-section"><h4>NOTES</h4>' +
+                    (data.mrpnote ? '<div class="pm-full">' + esc(data.mrpnote) + '</div>' : '') +
+                    (data.additional ? '<div class="pm-full" style="margin-top:8px;">' + esc(data.additional) + '</div>' : '') +
+                    '</div>';
+            }
+
+            var flagsHtml = '<div class="pm-section"><h4>FLAGS</h4>' +
+                '<span class="pm-flag ' + (data.active === '1' ? 'pm-flag-on' : 'pm-flag-off') + '">' + (data.active === '1' ? 'Active' : 'Inactive') + '</span>' +
+                '<span class="pm-flag ' + (data.featured === '1' ? 'pm-flag-on' : 'pm-flag-off') + '">' + (data.featured === '1' ? 'Featured' : 'Not Featured') + '</span>' +
+                '<span class="pm-flag ' + (data.newarrival === '1' ? 'pm-flag-on' : 'pm-flag-off') + '">' + (data.newarrival === '1' ? 'New Arrival' : 'Not New') + '</span>' +
+                '</div>';
+
+            var metaHtml = '<div class="pm-section"><h4>META</h4><div class="pm-grid">' +
+                item('Product ID', data.pid) +
+                item('Created', data.created) +
+                item('Updated', data.updated) +
+                '</div></div>';
+
+            return imgHtml +
+                '<h3 class="pm-title">' + esc(data.name) + '</h3>' +
+                '<div class="pm-cat">' + esc(data.category || '') + '</div>' +
+                priceHtml +
+                basic + spec + shortsHtml + descHtml + washHtml + tagsHtml + benefitsHtml + notesHtml + flagsHtml + metaHtml;
+        }
+
+        document.querySelectorAll('.js-view-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var pid = btn.dataset.pid;
+                var dataCell = document.querySelector('.js-product-data[data-pid="' + pid + '"]');
+                if (!dataCell) return;
+                var data = {
+                    pid: dataCell.dataset.pid,
+                    name: dataCell.dataset.name,
+                    category: dataCell.dataset.category,
+                    short: dataCell.dataset.short,
+                    desc: dataCell.dataset.desc,
+                    mrp: dataCell.dataset.mrp,
+                    sale: dataCell.dataset.sale,
+                    save: dataCell.dataset.save,
+                    sizes: dataCell.dataset.sizes,
+                    colors: dataCell.dataset.colors,
+                    stock: dataCell.dataset.stock,
+                    sku: dataCell.dataset.sku,
+                    brand: dataCell.dataset.brand,
+                    composition: dataCell.dataset.composition,
+                    gsm: dataCell.dataset.gsm,
+                    print: dataCell.dataset.print,
+                    neckline: dataCell.dataset.neckline,
+                    fit: dataCell.dataset.fit,
+                    country: dataCell.dataset.country,
+                    washcare: dataCell.dataset.washcare,
+                    sizing: dataCell.dataset.sizing,
+                    mrpnote: dataCell.dataset.mrpnote,
+                    additional: dataCell.dataset.additional,
+                    tags: dataCell.dataset.tags,
+                    benefits: dataCell.dataset.benefits,
+                    img1: dataCell.dataset.img1,
+                    img2: dataCell.dataset.img2,
+                    img3: dataCell.dataset.img3,
+                    img4: dataCell.dataset.img4,
+                    active: dataCell.dataset.active,
+                    featured: dataCell.dataset.featured,
+                    newarrival: dataCell.dataset.newarrival,
+                    created: dataCell.dataset.created,
+                    updated: dataCell.dataset.updated
+                };
+                productModalBody.innerHTML = buildModal(data);
+                productModal.classList.add('is-open');
+                document.body.style.overflow = 'hidden';
             });
         });
 
-        yesBtn.addEventListener('click', function () {
-            if (formToSubmit) {
-                var f = formToSubmit;
-                closeModal();
-                f.submit();
-            }
-        });
-
-        cancelBtn.addEventListener('click', closeModal);
-
-        overlay.addEventListener('click', function (e) {
-            if (e.target === overlay) closeModal();
-        });
+        function closeProduct() {
+            productModal.classList.remove('is-open');
+            document.body.style.overflow = '';
+        }
+        productModalClose.addEventListener('click', closeProduct);
+        productModal.addEventListener('click', function (e) { if (e.target === productModal) closeProduct(); });
 
         document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && overlay.classList.contains('is-open')) closeModal();
+            if (e.key === 'Escape') {
+                if (productModal.classList.contains('is-open')) closeProduct();
+                if (delOverlay.classList.contains('is-open')) closeDel();
+            }
         });
     })();
 </script>
