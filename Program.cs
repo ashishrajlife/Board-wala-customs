@@ -79,6 +79,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 
 var app = builder.Build();
 
