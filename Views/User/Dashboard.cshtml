@@ -5,8 +5,11 @@
     var activeOrders = Model?.Count(o => o.Status != "Delivered" && o.Status != "Cancelled") ?? 0;
 }
 
-<div class="container dashboard-page">
-    <h1>WELCOME, @User.Identity?.Name</h1>
+    <div class="container dashboard-page">
+        <div class="dashboard-top">
+        <h1>WELCOME, @User.Identity?.Name</h1>
+        <a href="/" class="btn-outline dashboard-back">← BACK</a>
+    </div>
     <p class="dashboard-welcome">This is your personal VALOUSWORLD dashboard.</p>
 
     <!-- ============ QUICK STATS ============ -->
@@ -49,7 +52,7 @@
             </div>
             <div class="user-stat-body">
                 <h3>Addresses</h3>
-                <p class="user-stat-number">Manage</p>
+                <p class="user-stat-number">Manage →</p>
                 <span class="user-stat-link">Add / edit →</span>
             </div>
         </a>
@@ -134,7 +137,7 @@
         padding: 14px 16px;
         min-width: 0;
         background: var(--white);
-        border: 1px solid var(--gray-200);
+        border: 1px solid black;
         border-radius: 4px;
         text-decoration: none;
         color: inherit;
@@ -217,7 +220,7 @@
         align-items: center;
         padding: 12px 16px;
         background: var(--white);
-        border: 1px solid var(--gray-200);
+        border: 1px solid black;
         border-radius: 4px;
         text-decoration: none;
         color: inherit;
@@ -354,9 +357,26 @@
         .user-order-items, .user-order-total { margin: 0; }
     }
 
-    @@media (max-width: 360px) {
-        .user-section-head { flex-wrap: wrap; }
-        .user-stat-card h3 { font-size: 8px; letter-spacing: 0.2px; }
-        .user-stat-number { font-size: 13px; }
+        @@media (max-width: 360px) {
+            .user-section-head { flex-wrap: wrap; }
+            .user-stat-card h3 { font-size: 8px; letter-spacing: 0.2px; }
+            .user-stat-number { font-size: 13px; }
+        }
+        .dashboard-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 4px;
+    }
+    .dashboard-top h1 {
+        margin: 0;          /* the wrapper handles the spacing now */
+        min-width: 0;       /* lets long usernames wrap instead of pushing the button off */
+    }
+    .dashboard-back {
+        flex-shrink: 0;     /* button never gets squished */
+        white-space: nowrap;
+        font-size: 11px;    /* optional: slightly smaller so it fits on mobile */
+        padding: 6px 12px;  /* optional: adjust to match your design */
     }
 </style>
