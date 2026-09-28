@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "E:\\Git-valousworld\\Board-wala-customs\\ValousWorld.Web.csproj": {}
+    "C:\\Git-Ashish\\Board-wala-customs\\ValousWorld.Web.csproj": {}
   },
   "projects": {
-    "E:\\Git-valousworld\\Board-wala-customs\\ValousWorld.Web.csproj": {
+    "C:\\Git-Ashish\\Board-wala-customs\\ValousWorld.Web.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\Git-valousworld\\Board-wala-customs\\ValousWorld.Web.csproj",
+        "projectUniqueName": "C:\\Git-Ashish\\Board-wala-customs\\ValousWorld.Web.csproj",
         "projectName": "ValousWorld.Web",
-        "projectPath": "E:\\Git-valousworld\\Board-wala-customs\\ValousWorld.Web.csproj",
-        "packagesPath": "C:\\Users\\ashis\\.nuget\\packages\\",
-        "outputPath": "E:\\Git-valousworld\\Board-wala-customs\\obj\\",
+        "projectPath": "C:\\Git-Ashish\\Board-wala-customs\\ValousWorld.Web.csproj",
+        "packagesPath": "C:\\Users\\Owner\\.nuget\\packages\\",
+        "outputPath": "C:\\Git-Ashish\\Board-wala-customs\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\ashis\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\Owner\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
@@ -39,7 +39,7 @@
           "auditLevel": "low",
           "auditMode": "all"
         },
-        "SdkAnalysisLevel": "10.0.300"
+        "SdkAnalysisLevel": "10.0.400"
       },
       "frameworks": {
         "net10.0": {
@@ -94,7 +94,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.300/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.401/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.AspNetCore": "(,10.0.32767]",
             "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",

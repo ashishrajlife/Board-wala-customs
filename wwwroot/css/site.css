@@ -279,7 +279,7 @@ main { display: block; min-height: 40vh; }
     padding: 22px 0;
     background: var(--white);
     position: sticky;
-    top: 78px;              /* header height */
+    top: 0px;              /* header height */
     z-index: 90;            /* below header (header is z-index 100) */
     transition: box-shadow 0.2s, padding 0.2s;
 }
@@ -807,7 +807,7 @@ h1 {
 
     .filter-bar {
     padding: 14px 0;
-    top: 68px;              /* mobile header height */
+    top: 0px;              /* mobile header height */
     }
     .filter-bar.is-stuck {
         padding: 10px 0;
@@ -875,7 +875,7 @@ h1 {
     .filter-inner { flex-direction: column; align-items: flex-start; }
     .filter-bar {
         padding: 12px 0;
-        top: 62px;              /* smaller mobile header */
+        top: 0px;              /* smaller mobile header */
     }
     .products-grid { grid-template-columns: repeat(2, 1fr); gap: var(--space-sm); }
 
