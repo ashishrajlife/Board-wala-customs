@@ -4,46 +4,57 @@
 }
 
 <div class="container order-detail-page">
-   <div class="order-detail-head">
-    <h1>ORDER @Model.OrderNumber</h1>
-    <div class="order-detail-actions">
-        <a href="/orders/invoice/@Model.OrderId" class="btn-primary" target="_blank">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            DOWNLOAD INVOICE
-        </a>
-        <a href="/orders" class="btn-outline">← MY ORDERS</a>
+
+    <!-- ============ HEADER ============ -->
+    <div class="order-detail-head">
+        <h1>ORDER @Model.OrderNumber</h1>
+        <div class="order-detail-actions">
+            <a href="/orders/invoice/@Model.OrderId" class="btn-primary" target="_blank" rel="noopener">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                DOWNLOAD INVOICE
+            </a>
+            <a href="/orders" class="btn-outline">← MY ORDERS</a>
+        </div>
     </div>
-</div>
 
     <div class="order-detail-grid">
-        <div>
+
+        <!-- ============ LEFT COLUMN ============ -->
+        <div class="order-detail-col">
             <div class="order-detail-card">
-                <h3>STATUS: @Model.Status.ToUpper()</h3>
-                <p>Placed on @Model.PlacedAt.ToString("dd MMM yyyy, HH:mm")</p>
+                <h3>ORDER STATUS</h3>
+                <div class="order-detail-status-row">
+                    <span class="order-status order-status-@Model.Status.ToLower()">@Model.Status</span>
+                    <span class="order-detail-placed">Placed on @Model.PlacedAt.ToString("dd MMM yyyy, HH:mm")</span>
+                </div>
                 @if (!string.IsNullOrWhiteSpace(Model.TrackingNumber))
                 {
-                    <p><strong>Tracking:</strong> @Model.CourierName — @Model.TrackingNumber</p>
+                    <p class="order-detail-tracking"><strong>Tracking:</strong> @Model.CourierName — @Model.TrackingNumber</p>
                 }
             </div>
 
             <div class="order-detail-card">
-                <h3>ITEMS</h3>
+                <h3>ITEMS (@Model.Items.Count)</h3>
                 @foreach (var i in Model.Items)
                 {
                     <div class="order-detail-item">
                         @if (!string.IsNullOrWhiteSpace(i.ProductImage))
                         {
-                            <img src="@i.ProductImage" alt="@i.ProductName" />
+                            <img src="@i.ProductImage" alt="@i.ProductName" loading="lazy" />
+                        }
+                        else
+                        {
+                            <div class="order-detail-noimg" aria-hidden="true"></div>
                         }
                         <div class="order-detail-item-info">
                             <p class="order-detail-item-name">@i.ProductName</p>
                             <p class="order-detail-item-meta">
-                                @if (!string.IsNullOrWhiteSpace(i.Size)) { <span>Size: @i.Size </span> }
-                                @if (!string.IsNullOrWhiteSpace(i.Color)) { <span>Color: @i.Color </span> }
+                                @if (!string.IsNullOrWhiteSpace(i.Size)) { <span>Size: @i.Size</span> }
+                                @if (!string.IsNullOrWhiteSpace(i.Color)) { <span>Color: @i.Color</span> }
                                 <span>Qty: @i.Quantity</span>
                             </p>
                         </div>
@@ -53,7 +64,8 @@
             </div>
         </div>
 
-        <div>
+        <!-- ============ RIGHT COLUMN ============ -->
+        <div class="order-detail-col">
             <div class="order-detail-card">
                 <h3>SHIPPING ADDRESS</h3>
                 <p><strong>@Model.ShippingFullName</strong></p>
@@ -84,114 +96,194 @@
 </div>
 
 <style>
-    .order-detail-page { padding: 40px 0 80px; }
+    .order-detail-page { padding: 28px var(--container-pad, 20px) 56px; }
+
+    /* ---------- Header ---------- */
     .order-detail-head {
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 16px;
         flex-wrap: wrap;
-        margin-bottom: 24px;
+        margin-bottom: 18px;
     }
     .order-detail-head h1 {
-        font-size: 22px;
-        font-weight: 900;
-        letter-spacing: 2px;
+        font-size: clamp(15px, 2.6vw, 18px);
+        font-weight: 800;
+        letter-spacing: 1px;
         text-transform: uppercase;
         margin: 0;
+        min-width: 0;
+        overflow-wrap: anywhere;
     }
+    .order-detail-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .order-detail-actions .btn-primary,
+    .order-detail-actions .btn-outline {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        white-space: nowrap;
+        font-size: 11px;
+        padding: 9px 14px;
+    }
+
+    /* ---------- Layout ---------- */
     .order-detail-grid {
         display: grid;
-        grid-template-columns: 1fr 340px;
-        gap: 24px;
+        grid-template-columns: minmax(0, 1fr) 320px;
+        gap: 16px;
         align-items: start;
     }
+    .order-detail-col {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-width: 0;
+    }
+
+    /* ---------- Cards ---------- */
     .order-detail-card {
         border: 1px solid var(--gray-200);
         border-radius: 4px;
-        padding: 20px;
-        margin-bottom: 20px;
+        padding: 14px 16px;
         background: var(--white);
     }
     .order-detail-card h3 {
-        font-size: 12px;
-        font-weight: 800;
-        letter-spacing: 1.5px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.8px;
         text-transform: uppercase;
-        margin: 0 0 12px;
-        padding-bottom: 12px;
+        color: var(--gray-600);
+        margin: 0 0 10px;
+        padding-bottom: 10px;
         border-bottom: 1px solid var(--gray-200);
     }
     .order-detail-card p {
-        font-size: 13px;
-        line-height: 1.6;
-        margin: 4px 0;
+        font-size: 12.5px;
+        line-height: 1.55;
+        margin: 3px 0;
         color: var(--gray-800);
+        overflow-wrap: anywhere;
     }
 
+    /* Status */
+    .order-detail-status-row {
+        display: flex;
+        align-items: center;
+        gap: 8px 12px;
+        flex-wrap: wrap;
+    }
+    .order-detail-placed { font-size: 12px; color: var(--gray-600); }
+    .order-detail-tracking {
+        margin-top: 10px !important;
+        padding: 8px 10px;
+        background: var(--gray-100);
+        border-radius: 3px;
+        font-size: 12px !important;
+    }
+    .order-status {
+        display: inline-block;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        padding: 4px 9px;
+        border-radius: 20px;
+        white-space: nowrap;
+    }
+    .order-status-pending   { background: #fff8e1; color: #7c5700; }
+    .order-status-confirmed { background: #e3f2fd; color: #0d47a1; }
+    .order-status-shipped   { background: #f3e5f5; color: #6a1b9a; }
+    .order-status-delivered { background: #e8f5e9; color: #2e7d32; }
+    .order-status-cancelled { background: #fdecea; color: #b71c1c; }
+
+    /* Items */
     .order-detail-item {
         display: grid;
-        grid-template-columns: 60px 1fr auto;
+        grid-template-columns: 48px minmax(0, 1fr) auto;
         gap: 12px;
         align-items: center;
-        padding: 12px 0;
+        padding: 10px 0;
         border-bottom: 1px solid var(--gray-200);
     }
-    .order-detail-item:last-child { border-bottom: none; }
-    .order-detail-item img {
-        width: 60px;
-        height: 76px;
+    .order-detail-item:first-of-type { padding-top: 2px; }
+    .order-detail-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .order-detail-item img,
+    .order-detail-noimg {
+        width: 48px;
+        height: 60px;
         object-fit: cover;
-        border-radius: 2px;
+        border-radius: 3px;
+        background: var(--gray-100);
     }
     .order-detail-item-name {
-        font-size: 12px;
+        font-size: 11.5px;
         font-weight: 700;
         text-transform: uppercase;
-        margin: 0 0 4px;
+        margin: 0 0 3px !important;
+        line-height: 1.35;
     }
     .order-detail-item-meta {
-        font-size: 11px;
-        color: var(--gray-600);
-        margin: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2px 10px;
+        font-size: 10.5px !important;
+        color: var(--gray-600) !important;
+        margin: 0 !important;
         text-transform: uppercase;
-        letter-spacing: 0.3px;
+        letter-spacing: 0.2px;
     }
     .order-detail-item-price {
-        font-size: 13px;
-        font-weight: 800;
+        font-size: 12.5px;
+        font-weight: 700;
         white-space: nowrap;
     }
 
+    /* Payment rows */
     .os-row {
         display: flex;
         justify-content: space-between;
-        padding: 6px 0;
-        font-size: 13px;
+        gap: 16px;
+        padding: 5px 0;
+        font-size: 12.5px;
     }
+    .os-row span:last-child { text-align: right; overflow-wrap: anywhere; }
     .os-row-save { color: #2e7d32; font-weight: 600; }
     .os-row-total {
-        padding-top: 12px;
-        margin-top: 8px;
-        border-top: 2px solid var(--black);
-        font-size: 15px;
-        font-weight: 900;
+        padding-top: 10px;
+        margin-top: 6px;
+        border-top: 1px solid var(--black);
+        font-size: 14px;
+        font-weight: 800;
     }
-    .os-row-meta {
-        font-size: 12px;
-        color: var(--gray-600);
+    .os-row-meta { font-size: 11.5px; color: var(--gray-600); }
+
+    /* ---------- Tablet ---------- */
+    @@media (max-width: 1024px) {
+        .order-detail-grid { grid-template-columns: minmax(0, 1fr) 300px; gap: 14px; }
+    }
+    @@media (max-width: 900px) {
+        .order-detail-page { padding: 22px var(--container-pad, 20px) 44px; }
+        .order-detail-grid { grid-template-columns: minmax(0, 1fr); }
     }
 
-    @@media (max-width: 900px) {
-        .order-detail-grid { grid-template-columns: 1fr; }
+    /* ---------- Mobile ---------- */
+    @@media (max-width: 600px) {
+        .order-detail-page { padding: 18px var(--container-pad, 16px) 36px; }
+        .order-detail-head { flex-direction: column; align-items: stretch; gap: 12px; }
+        .order-detail-actions { flex-direction: column-reverse; }
+        .order-detail-actions .btn-primary,
+        .order-detail-actions .btn-outline { width: 100%; }
+
+        .order-detail-card { padding: 13px 14px; }
+        .order-detail-item { grid-template-columns: 44px minmax(0, 1fr); gap: 10px; }
+        .order-detail-item img,
+        .order-detail-noimg { width: 44px; height: 56px; }
+        .order-detail-item-price { grid-column: 2; }
     }
-    @@media (max-width: 500px) {
-        .order-detail-page { padding: 24px 0 60px; }
-        .order-detail-head h1 { font-size: 18px; }
-    }
-    .order-detail-actions {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
 </style>

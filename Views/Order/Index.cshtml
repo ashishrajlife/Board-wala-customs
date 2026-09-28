@@ -4,7 +4,10 @@
 }
 
 <div class="container orders-page">
-    <h1 class="orders-title">MY ORDERS</h1>
+    <div class="orders-head">
+        <h1 class="orders-title">MY ORDERS</h1>
+        <a href="/User/Dashboard" class="btn-outline">← BACK</a>
+    </div>
 
     @if (!Model.Any())
     {
@@ -47,84 +50,116 @@
 </div>
 
 <style>
-    .orders-page { padding: 40px 0 80px; }
-    .orders-title {
-        font-size: 26px;
-        font-weight: 900;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        margin: 0 0 30px;
+    .orders-page { padding: 28px var(--container-pad, 20px) 56px; }
+
+    .orders-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
     }
+    .orders-title {
+        font-size: clamp(18px, 3.2vw, 22px);
+        font-weight: 800;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        margin: 0;
+    }
+    .orders-head .btn-outline {
+        font-size: 11px;
+        padding: 9px 14px;
+        white-space: nowrap;
+    }
+
     .orders-empty {
         text-align: center;
-        padding: 80px 20px;
+        padding: 48px 20px;
         border: 1px solid var(--gray-200);
         border-radius: 4px;
     }
-    .orders-empty p { font-size: 14px; color: var(--gray-600); margin: 0 0 20px; }
+    .orders-empty p { font-size: 13px; color: var(--gray-600); margin: 0 0 18px; }
 
-    .orders-list { display: flex; flex-direction: column; gap: 14px; }
+    .orders-list { display: flex; flex-direction: column; gap: 8px; }
 
     .order-card {
         display: block;
-        border: 1.5px solid var(--gray-200);
+        border: 1px solid var(--gray-200);
         border-radius: 4px;
-        padding: 20px;
+        padding: 14px 16px;
         background: var(--white);
-        transition: border-color 0.15s;
+        transition: border-color 0.15s, background 0.15s;
         text-decoration: none;
         color: inherit;
     }
-    .order-card:hover { border-color: var(--black); }
+    .order-card:hover,
+    .order-card:focus-visible {
+        border-color: var(--gray-400);
+        background: var(--gray-100);
+        outline: none;
+    }
 
     .order-card-head {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        padding-bottom: 14px;
-        margin-bottom: 14px;
+        gap: 12px;
+        padding-bottom: 10px;
+        margin-bottom: 10px;
         border-bottom: 1px solid var(--gray-200);
     }
     .order-card-label {
-        font-size: 10px;
+        font-size: 9px;
         font-weight: 700;
-        letter-spacing: 1.2px;
+        letter-spacing: 0.8px;
         text-transform: uppercase;
         color: var(--gray-600);
-        margin: 0 0 3px;
+        margin: 0 0 2px;
     }
     .order-card-num {
-        font-size: 14px;
-        font-weight: 800;
+        font-size: 12.5px;
+        font-weight: 700;
         margin: 0;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.3px;
+        overflow-wrap: anywhere;
     }
     .order-card-body {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 20px;
+        gap: 12px;
     }
-    .order-card-value { font-size: 13px; font-weight: 600; margin: 0; }
-    .order-card-total { color: var(--red); font-weight: 800; }
+    .order-card-value { font-size: 12px; font-weight: 600; margin: 0; }
+    .order-card-total { color: var(--black); font-weight: 700; }
 
     .order-status {
-        font-size: 10px;
-        font-weight: 800;
-        letter-spacing: 1px;
+        display: inline-block;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.6px;
         text-transform: uppercase;
-        padding: 4px 10px;
-        border-radius: 2px;
+        padding: 4px 9px;
+        border-radius: 20px;
+        white-space: nowrap;
     }
-    .order-status-pending { background: #fff8e1; color: #7c5700; }
+    .order-status-pending   { background: #fff8e1; color: #7c5700; }
     .order-status-confirmed { background: #e3f2fd; color: #0d47a1; }
-    .order-status-shipped { background: #f3e5f5; color: #6a1b9a; }
+    .order-status-shipped   { background: #f3e5f5; color: #6a1b9a; }
     .order-status-delivered { background: #e8f5e9; color: #2e7d32; }
     .order-status-cancelled { background: #fdecea; color: #b71c1c; }
 
+    /* ---------- Tablet ---------- */
+    @@media (max-width: 900px) {
+        .orders-page { padding: 22px var(--container-pad, 20px) 44px; }
+    }
+
+    /* ---------- Mobile ---------- */
     @@media (max-width: 500px) {
-        .orders-page { padding: 24px 0 60px; }
-        .orders-title { font-size: 20px; }
-        .order-card-body { grid-template-columns: 1fr; gap: 10px; }
+        .orders-page { padding: 18px var(--container-pad, 16px) 36px; }
+        .orders-head .btn-outline { width: 100%; text-align: center; }
+        .order-card { padding: 12px 14px; }
+        .order-card-body { grid-template-columns: 1fr; gap: 6px; }
         .order-card-body > div { display: flex; justify-content: space-between; align-items: center; }
+        .order-card-label { margin: 0; }
     }
 </style>
