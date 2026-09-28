@@ -29,6 +29,109 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
+    
+    /* ============================================================
+   DESKTOP HEADER — LOGO IMAGE + CENTERED BRAND
+   ============================================================ */
+
+@@media (min-width: 901px) {
+
+    .site-header .header-inner {
+        position: relative;
+        min-height: 82px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    /* LEFT LOGO IMAGE */
+    .header-logo-image {
+        position: absolute;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        align-items: center;
+        z-index: 5;
+    }
+
+    .header-logo-image img {
+        width: 58px;
+        height: 58px;
+        object-fit: contain;
+        display: block;
+    }
+
+    /* CENTER TEXT LOGO */
+    .site-header .brand-logo {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        margin: 0;
+        z-index: 4;
+    }
+
+    /* RIGHT SIDE */
+    .site-header .nav-right {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 18px;
+        position: relative;
+        z-index: 5;
+    }
+
+    /* DESKTOP SEARCH */
+    .site-header .search-box {
+        position: absolute;
+        right: 100%;
+        margin-right: 28px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 240px;
+        z-index: 5;
+    }
+
+    .site-header .search-box input {
+        width: 100%;
+    }
+
+    /* Keep mobile search hidden on desktop */
+    .site-header .mobile-search-btn {
+        display: none;
+    }
+}
+
+
+/* ============================================================
+   MOBILE HEADER
+   Keep existing mobile behaviour
+   ============================================================ */
+
+@@media (max-width: 900px) {
+
+    .header-logo-image {
+        display: none;
+    }
+
+    .site-header .brand-logo {
+        position: static;
+        transform: none;
+    }
+
+    .site-header .search-box {
+        display: none;
+    }
+
+    .site-header .mobile-search-btn {
+        display: inline-flex;
+    }
+}
 
         /* ============================================================
    MOBILE SEARCH — Icon + Overlay
@@ -225,7 +328,7 @@
                 </svg>
             </button>
 
-            <!-- LEFT NAV -->
+            <!--- 
             <nav class="nav-left">
 
                 <div class="nav-item">
@@ -288,13 +391,19 @@
                     </div>
                 </div>
 
-            </nav>
+            </nav>  --->
 
             <!-- CENTER LOGO -->
-            <a href="/" class="brand-logo">
-                <span class="logo-line-1">VALOUS</span>
-                <span class="logo-line-2">WORLD</span>
-            </a>
+           <!-- LEFT LOGO IMAGE -->
+                <a href="/" class="header-logo-image" aria-label="VALOUSWORLD">
+                     <img src="~/images/logo.gif" alt="VALOUSWORLD Logo" />
+                </a>
+
+                <!-- CENTER TEXT LOGO -->
+                <a href="/" class="brand-logo">
+                    <span class="logo-line-1">VALOUS</span>
+                    <span class="logo-line-2">WORLD</span>
+                </a>
 
             <!-- RIGHT SIDE -->
             <div class="nav-right">

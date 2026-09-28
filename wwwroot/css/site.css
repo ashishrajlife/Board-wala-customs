@@ -328,7 +328,7 @@ main { display: block; min-height: 40vh; }
 .products-section { padding: var(--space-lg) 0 var(--space-xl); }
 .products-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: var(--space-md);
 }
 .product-card { cursor: pointer; display: block; }
@@ -708,8 +708,11 @@ h1 {
 /* ---- Large desktop (≥1440px) ---- */
 @media (min-width: 1440px) {
     :root {
-        --container-max: 1400px;
-        --container-pad: 32px;
+        --container-max: 99%;
+        --container-pad: 40px;
+    }
+    .products-grid {
+        grid-template-columns: repeat(6, 1fr);
     }
 }
 

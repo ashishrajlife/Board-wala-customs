@@ -3290,11 +3290,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Git-Ashish\\Board-wala-customs\\ValousWorld.Web.csproj",
+      "projectUniqueName": "C:\\git-board-wale-main\\Board-wala-customs\\ValousWorld.Web.csproj",
       "projectName": "ValousWorld.Web",
-      "projectPath": "C:\\Git-Ashish\\Board-wala-customs\\ValousWorld.Web.csproj",
+      "projectPath": "C:\\git-board-wale-main\\Board-wala-customs\\ValousWorld.Web.csproj",
       "packagesPath": "C:\\Users\\Owner\\.nuget\\packages\\",
-      "outputPath": "C:\\Git-Ashish\\Board-wala-customs\\obj\\",
+      "outputPath": "C:\\git-board-wale-main\\Board-wala-customs\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Owner\\AppData\\Roaming\\NuGet\\NuGet.Config"
