@@ -98,25 +98,28 @@
         if (!sel || !form) return;
         sel.addEventListener('change', () => form.submit());
     })();
- (function () {
-        const filterBar = document.querySelector('.filter-bar');
-        if (!filterBar) return;
 
-        const headerHeight = window.innerWidth <= 500 ? 62
-                           : window.innerWidth <= 768 ? 68
-                           : 78;
+    (function () {
+    const filterBar = document.querySelector('.filter-bar');
+    const header = document.querySelector('.site-header');
+    if (!filterBar) return;
 
-        function checkStuck() {
-            const rect = filterBar.getBoundingClientRect();
-            if (rect.top <= headerHeight + 1) {
-                filterBar.classList.add('is-stuck');
-            } else {
-                filterBar.classList.remove('is-stuck');
-            }
-        }
+    let headerHeight = 0;
 
-        window.addEventListener('scroll', checkStuck, { passive: true });
-        window.addEventListener('resize', checkStuck);
+    function updateOffsets() {
+        headerHeight = header ? header.getBoundingClientRect().height : 0;
+        document.documentElement.style.setProperty('--header-h', headerHeight + 'px');
         checkStuck();
-    })();    
+    }
+
+    function checkStuck() {
+        const rect = filterBar.getBoundingClientRect();
+        filterBar.classList.toggle('is-stuck', rect.top <= headerHeight + 1);
+    }
+
+    window.addEventListener('scroll', checkStuck, { passive: true });
+    window.addEventListener('resize', updateOffsets);
+    window.addEventListener('load', updateOffsets);   // logo/fonts can change header height
+    updateOffsets();
+})();  
 </script>

@@ -5,7 +5,11 @@
 
 <div class="container address-page">
     <div class="address-header">
-        <h1>MY ADDRESSES</h1>
+    <h1>MY ADDRESSES</h1>
+
+    <div class="address-header-actions">
+        <a href="/" class="btn-outline">← CONTINUE SHOPPING</a>
+
         <a href="/address/add" class="btn-primary">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                 <line x1="12" y1="5" x2="12" y2="19"/>
@@ -14,6 +18,7 @@
             ADD NEW ADDRESS
         </a>
     </div>
+</div>
 
     @if (TempData["AddressSuccess"] != null)
     {
@@ -80,7 +85,7 @@
 </div>
 
 <style>
-    .address-page { padding: 40px 0 80px; }
+    .address-page { padding: 40px 40px 80px; }
     .address-header {
         display: flex;
         justify-content: space-between;
@@ -95,6 +100,21 @@
         letter-spacing: 2px;
         text-transform: uppercase;
         margin: 0;
+    }
+
+    .address-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    }
+    .address-header-actions .btn-outline,
+    .address-header-actions .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        white-space: nowrap;
     }
 
     .address-empty {
@@ -181,9 +201,13 @@
     .address-link-danger { color: var(--red); }
 
     @@media (max-width: 500px) {
-        .address-page { padding: 24px 0 60px; }
+        .address-page { padding: 25px 25px 25px; }
         .address-header h1 { font-size: 20px; }
         .address-header .btn-primary { width: 100%; justify-content: center; }
         .address-grid { grid-template-columns: 1fr; }
+    }
+    /* Tablet / small laptop: tighten spacing */
+    @@media (max-width: 768px) {
+        .address-page { padding: 30px 24px 60px; }
     }
 </style>
