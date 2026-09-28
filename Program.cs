@@ -9,6 +9,12 @@ using ValousWorld.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.Configure<ValousWorld.Web.Helpers.IntegrationSettings>(
+    builder.Configuration.GetSection("Integrations"));
+
+// Read integrations config
+var integrations = builder.Configuration.GetSection("Integrations").Get<ValousWorld.Web.Helpers.IntegrationSettings>() ?? new();
+
 // DB
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -48,11 +54,31 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+// Razorpay
+if (integrations.Razorpay.Mode == "Live")
+    builder.Services.AddScoped<IRazorpayService, RealRazorpayService>();
+else
+    builder.Services.AddScoped<IRazorpayService, MockRazorpayService>();
+
+// WhatsApp
+if (integrations.WhatsApp.Mode == "Live")
+    builder.Services.AddScoped<IWhatsAppService, MockWhatsAppService>();  // replace with real
+else
+    builder.Services.AddScoped<IWhatsAppService, MockWhatsAppService>();
+
+// Delivery
+if (integrations.Delivery.Mode == "Live")
+    builder.Services.AddScoped<IDeliveryService, MockDeliveryService>();  // replace with real
+else
+    builder.Services.AddScoped<IDeliveryService, MockDeliveryService>();
+
+
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 
 var app = builder.Build();
 

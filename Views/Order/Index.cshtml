@@ -1,0 +1,130 @@
+@model List<ValousWorld.Web.Models.Entities.Order>
+@{
+    ViewData["Title"] = "My Orders";
+}
+
+<div class="container orders-page">
+    <h1 class="orders-title">MY ORDERS</h1>
+
+    @if (!Model.Any())
+    {
+        <div class="orders-empty">
+            <p>You haven't placed any orders yet.</p>
+            <a href="/shop" class="btn-primary">START SHOPPING</a>
+        </div>
+    }
+    else
+    {
+        <div class="orders-list">
+            @foreach (var o in Model)
+            {
+                <a href="/orders/@o.OrderId" class="order-card">
+                    <div class="order-card-head">
+                        <div>
+                            <p class="order-card-label">Order</p>
+                            <p class="order-card-num">@o.OrderNumber</p>
+                        </div>
+                        <span class="order-status order-status-@o.Status.ToLower()">@o.Status</span>
+                    </div>
+                    <div class="order-card-body">
+                        <div>
+                            <p class="order-card-label">Placed</p>
+                            <p class="order-card-value">@o.PlacedAt.ToString("dd MMM yyyy")</p>
+                        </div>
+                        <div>
+                            <p class="order-card-label">Items</p>
+                            <p class="order-card-value">@(o.Items?.Count ?? 0)</p>
+                        </div>
+                        <div>
+                            <p class="order-card-label">Total</p>
+                            <p class="order-card-value order-card-total">₹@o.Total.ToString("0.00")</p>
+                        </div>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .orders-page { padding: 40px 0 80px; }
+    .orders-title {
+        font-size: 26px;
+        font-weight: 900;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin: 0 0 30px;
+    }
+    .orders-empty {
+        text-align: center;
+        padding: 80px 20px;
+        border: 1px solid var(--gray-200);
+        border-radius: 4px;
+    }
+    .orders-empty p { font-size: 14px; color: var(--gray-600); margin: 0 0 20px; }
+
+    .orders-list { display: flex; flex-direction: column; gap: 14px; }
+
+    .order-card {
+        display: block;
+        border: 1.5px solid var(--gray-200);
+        border-radius: 4px;
+        padding: 20px;
+        background: var(--white);
+        transition: border-color 0.15s;
+        text-decoration: none;
+        color: inherit;
+    }
+    .order-card:hover { border-color: var(--black); }
+
+    .order-card-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding-bottom: 14px;
+        margin-bottom: 14px;
+        border-bottom: 1px solid var(--gray-200);
+    }
+    .order-card-label {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        color: var(--gray-600);
+        margin: 0 0 3px;
+    }
+    .order-card-num {
+        font-size: 14px;
+        font-weight: 800;
+        margin: 0;
+        letter-spacing: 0.5px;
+    }
+    .order-card-body {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+    }
+    .order-card-value { font-size: 13px; font-weight: 600; margin: 0; }
+    .order-card-total { color: var(--red); font-weight: 800; }
+
+    .order-status {
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        padding: 4px 10px;
+        border-radius: 2px;
+    }
+    .order-status-pending { background: #fff8e1; color: #7c5700; }
+    .order-status-confirmed { background: #e3f2fd; color: #0d47a1; }
+    .order-status-shipped { background: #f3e5f5; color: #6a1b9a; }
+    .order-status-delivered { background: #e8f5e9; color: #2e7d32; }
+    .order-status-cancelled { background: #fdecea; color: #b71c1c; }
+
+    @@media (max-width: 500px) {
+        .orders-page { padding: 24px 0 60px; }
+        .orders-title { font-size: 20px; }
+        .order-card-body { grid-template-columns: 1fr; gap: 10px; }
+        .order-card-body > div { display: flex; justify-content: space-between; align-items: center; }
+    }
+</style>

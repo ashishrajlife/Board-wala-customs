@@ -15,6 +15,8 @@ public class AppDbContext : DbContext
     public DbSet<Cart> Carts => Set<Cart>();
     public DbSet<CartItem> CartItems => Set<CartItem>();
     public DbSet<Address> Addresses => Set<Address>();
+    public DbSet<Order> Orders => Set<Order>();
+    public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Role>().HasIndex(r => r.RoleName).IsUnique();
@@ -92,5 +94,27 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.Cascade);
             e.HasIndex(a => new { a.UserId, a.IsDefault });
         });   
+        modelBuilder.Entity<Order>(e =>
+        {
+            e.HasKey(o => o.OrderId);
+            e.HasIndex(o => o.OrderNumber).IsUnique();
+            e.HasOne(o => o.User)
+            .WithMany(u => u.Orders)
+            .HasForeignKey(o => o.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<OrderItem>(e =>
+        {
+            e.HasKey(oi => oi.OrderItemId);
+            e.HasOne(oi => oi.Order)
+            .WithMany(o => o.Items)
+            .HasForeignKey(oi => oi.OrderId)
+            .OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(oi => oi.Product)
+            .WithMany()
+            .HasForeignKey(oi => oi.ProductId)
+            .OnDelete(DeleteBehavior.Restrict);
+        });
     }
 }

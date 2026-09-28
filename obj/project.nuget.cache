@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "e9xOO6rBjeo=",
+  "dgSpecHash": "tO7Me1UR+9E=",
   "success": true,
   "projectFilePath": "E:\\valousworld-main\\Board-wala-customs\\ValousWorld.Web.csproj",
   "expectedPackageFiles": [
@@ -42,6 +42,8 @@
     "C:\\Users\\ashis\\.nuget\\packages\\microsoft.visualstudio.solutionpersistence\\1.0.52\\microsoft.visualstudio.solutionpersistence.1.0.52.nupkg.sha512",
     "C:\\Users\\ashis\\.nuget\\packages\\mono.texttemplating\\3.0.0\\mono.texttemplating.3.0.0.nupkg.sha512",
     "C:\\Users\\ashis\\.nuget\\packages\\newtonsoft.json\\13.0.4\\newtonsoft.json.13.0.4.nupkg.sha512",
+    "C:\\Users\\ashis\\.nuget\\packages\\portable.bouncycastle\\1.9.0\\portable.bouncycastle.1.9.0.nupkg.sha512",
+    "C:\\Users\\ashis\\.nuget\\packages\\razorpay\\3.3.2\\razorpay.3.3.2.nupkg.sha512",
     "C:\\Users\\ashis\\.nuget\\packages\\system.clientmodel\\1.8.0\\system.clientmodel.1.8.0.nupkg.sha512",
     "C:\\Users\\ashis\\.nuget\\packages\\system.codedom\\6.0.0\\system.codedom.6.0.0.nupkg.sha512",
     "C:\\Users\\ashis\\.nuget\\packages\\system.composition\\9.0.0\\system.composition.9.0.0.nupkg.sha512",

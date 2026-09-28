@@ -703,3 +703,5 @@ E:\valousworld-main\Board-wala-customs\obj\Debug\net10.0\ValousWorld.Web.pdb
 E:\valousworld-main\Board-wala-customs\obj\Debug\net10.0\ValousWorld.Web.genruntimeconfig.cache
 E:\valousworld-main\Board-wala-customs\obj\Debug\net10.0\ref\ValousWorld.Web.dll
 E:\valousworld-main\Board-wala-customs\obj\Debug\net10.0\compressed\ebp4crdk20-{0}-10t40a539o-10t40a539o.gz
+E:\valousworld-main\Board-wala-customs\bin\Debug\net10.0\BouncyCastle.Crypto.dll
+E:\valousworld-main\Board-wala-customs\bin\Debug\net10.0\Razorpay.dll

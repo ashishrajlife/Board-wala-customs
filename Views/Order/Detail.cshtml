@@ -1,0 +1,182 @@
+@model ValousWorld.Web.Models.Entities.Order
+@{
+    ViewData["Title"] = "Order " + Model.OrderNumber;
+}
+
+<div class="container order-detail-page">
+    <div class="order-detail-head">
+        <h1>ORDER @Model.OrderNumber</h1>
+        <a href="/orders" class="btn-outline">← MY ORDERS</a>
+    </div>
+
+    <div class="order-detail-grid">
+        <div>
+            <div class="order-detail-card">
+                <h3>STATUS: @Model.Status.ToUpper()</h3>
+                <p>Placed on @Model.PlacedAt.ToString("dd MMM yyyy, HH:mm")</p>
+                @if (!string.IsNullOrWhiteSpace(Model.TrackingNumber))
+                {
+                    <p><strong>Tracking:</strong> @Model.CourierName — @Model.TrackingNumber</p>
+                }
+            </div>
+
+            <div class="order-detail-card">
+                <h3>ITEMS</h3>
+                @foreach (var i in Model.Items)
+                {
+                    <div class="order-detail-item">
+                        @if (!string.IsNullOrWhiteSpace(i.ProductImage))
+                        {
+                            <img src="@i.ProductImage" alt="@i.ProductName" />
+                        }
+                        <div class="order-detail-item-info">
+                            <p class="order-detail-item-name">@i.ProductName</p>
+                            <p class="order-detail-item-meta">
+                                @if (!string.IsNullOrWhiteSpace(i.Size)) { <span>Size: @i.Size </span> }
+                                @if (!string.IsNullOrWhiteSpace(i.Color)) { <span>Color: @i.Color </span> }
+                                <span>Qty: @i.Quantity</span>
+                            </p>
+                        </div>
+                        <div class="order-detail-item-price">₹@i.LineTotal.ToString("0.00")</div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div>
+            <div class="order-detail-card">
+                <h3>SHIPPING ADDRESS</h3>
+                <p><strong>@Model.ShippingFullName</strong></p>
+                <p>📞 @Model.ShippingPhone</p>
+                <p>@Model.ShippingLine1</p>
+                @if (!string.IsNullOrWhiteSpace(Model.ShippingLine2))
+                {
+                    <p>@Model.ShippingLine2</p>
+                }
+                <p>@Model.ShippingCity, @Model.ShippingState — @Model.ShippingPincode</p>
+                <p>@Model.ShippingCountry</p>
+            </div>
+
+            <div class="order-detail-card">
+                <h3>PAYMENT SUMMARY</h3>
+                <div class="os-row"><span>Subtotal</span><span>₹@Model.Subtotal.ToString("0.00")</span></div>
+                @if (Model.Discount > 0)
+                {
+                    <div class="os-row os-row-save"><span>Savings</span><span>−₹@Model.Discount.ToString("0.00")</span></div>
+                }
+                <div class="os-row"><span>Shipping</span><span>₹@Model.Shipping.ToString("0.00")</span></div>
+                <div class="os-row os-row-total"><span>TOTAL</span><span>₹@Model.Total.ToString("0.00")</span></div>
+                <div class="os-row os-row-meta"><span>Method</span><span>@Model.PaymentMethod</span></div>
+                <div class="os-row os-row-meta"><span>Status</span><span>@Model.PaymentStatus</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .order-detail-page { padding: 40px 0 80px; }
+    .order-detail-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+    }
+    .order-detail-head h1 {
+        font-size: 22px;
+        font-weight: 900;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin: 0;
+    }
+    .order-detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 24px;
+        align-items: start;
+    }
+    .order-detail-card {
+        border: 1px solid var(--gray-200);
+        border-radius: 4px;
+        padding: 20px;
+        margin-bottom: 20px;
+        background: var(--white);
+    }
+    .order-detail-card h3 {
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin: 0 0 12px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--gray-200);
+    }
+    .order-detail-card p {
+        font-size: 13px;
+        line-height: 1.6;
+        margin: 4px 0;
+        color: var(--gray-800);
+    }
+
+    .order-detail-item {
+        display: grid;
+        grid-template-columns: 60px 1fr auto;
+        gap: 12px;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--gray-200);
+    }
+    .order-detail-item:last-child { border-bottom: none; }
+    .order-detail-item img {
+        width: 60px;
+        height: 76px;
+        object-fit: cover;
+        border-radius: 2px;
+    }
+    .order-detail-item-name {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin: 0 0 4px;
+    }
+    .order-detail-item-meta {
+        font-size: 11px;
+        color: var(--gray-600);
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    .order-detail-item-price {
+        font-size: 13px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .os-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        font-size: 13px;
+    }
+    .os-row-save { color: #2e7d32; font-weight: 600; }
+    .os-row-total {
+        padding-top: 12px;
+        margin-top: 8px;
+        border-top: 2px solid var(--black);
+        font-size: 15px;
+        font-weight: 900;
+    }
+    .os-row-meta {
+        font-size: 12px;
+        color: var(--gray-600);
+    }
+
+    @@media (max-width: 900px) {
+        .order-detail-grid { grid-template-columns: 1fr; }
+    }
+    @@media (max-width: 500px) {
+        .order-detail-page { padding: 24px 0 60px; }
+        .order-detail-head h1 { font-size: 18px; }
+    }
+</style>
