@@ -102,7 +102,13 @@
                 }
 
                 <div class="cart-actions">
-                    <a href="/shop" class="btn-outline">← CONTINUE SHOPPING</a>
+                    <a href="/shop" class="btn-outline">
+                        ← CONTINUE SHOPPING
+                    </a>
+
+                    <a href="/address" class="btn-outline">
+                        MANAGE ADDRESSES
+                    </a>
                 </div>
             </div>
 
@@ -360,4 +366,19 @@
         .summary-total { font-size: 13px; }
         .checkout-btn { padding: 14px; font-size: 11px; }
     }
+
+    .cart-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.cart-actions .btn-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
 </style>
