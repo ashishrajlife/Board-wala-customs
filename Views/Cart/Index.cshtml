@@ -1,0 +1,363 @@
+@model ValousWorld.Web.Models.Entities.Cart
+@{
+    ViewData["Title"] = "Cart";
+    var items = Model?.Items?.ToList() ?? new();
+    var subtotal = (decimal)(ViewBag.Subtotal ?? 0m);
+    var savings = (decimal)(ViewBag.Savings ?? 0m);
+}
+
+<div class="container cart-page">
+    <h1 class="cart-title">YOUR CART</h1>
+
+    @if (TempData["CartSuccess"] != null)
+    {
+        <div class="alert-success">@TempData["CartSuccess"]</div>
+    }
+    @if (TempData["CartError"] != null)
+    {
+        <div class="alert-error">@TempData["CartError"]</div>
+    }
+
+    @if (!items.Any())
+    {
+        <div class="cart-empty">
+            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <path d="M16 10a4 4 0 0 1-8 0"/>
+            </svg>
+            <h2>Your cart is empty</h2>
+            <p>Browse our latest drops and add something you love.</p>
+            <a href="/shop" class="btn-primary">START SHOPPING</a>
+        </div>
+    }
+    else
+    {
+        <div class="cart-layout">
+
+            <!-- CART ITEMS -->
+            <div class="cart-items">
+                @foreach (var item in items)
+                {
+                    <div class="cart-row">
+                        <div class="cart-thumb">
+                            @if (!string.IsNullOrWhiteSpace(item.Product?.Image1))
+                            {
+                                <img src="@item.Product!.Image1" alt="@item.Product.Name" />
+                            }
+                        </div>
+
+                        <div class="cart-info">
+                            <h3>@item.Product?.Name</h3>
+
+                            <div class="cart-meta">
+                                @if (!string.IsNullOrWhiteSpace(item.Size))
+                                {
+                                    <span><strong>Size:</strong> @item.Size</span>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(item.Color))
+                                {
+                                    <span><strong>Color:</strong> @item.Color</span>
+                                }
+                            </div>
+
+                            <div class="cart-price">
+                                <span class="cart-unit">₹@item.UnitPrice.ToString("0.00")</span>
+                                @if (item.OriginalMRP > item.UnitPrice)
+                                {
+                                    <span class="cart-mrp">₹@item.OriginalMRP.ToString("0")</span>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="cart-qty">
+                            <form method="post" action="/cart/update">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="cartItemId" value="@item.CartItemId" />
+                                <div class="qty-control">
+                                    <button type="submit" name="quantity" value="@(item.Quantity - 1)" @(item.Quantity <= 1 ? "disabled" : "")>−</button>
+                                    <span>@item.Quantity</span>
+                                    <button type="submit" name="quantity" value="@(item.Quantity + 1)" @(item.Quantity >= 10 ? "disabled" : "")>+</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="cart-linetotal">
+                            ₹@((item.UnitPrice * item.Quantity).ToString("0.00"))
+                        </div>
+
+                        <div class="cart-remove">
+                            <form method="post" action="/cart/remove" onsubmit="return confirm('Remove this item?');">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="cartItemId" value="@item.CartItemId" />
+                                <button type="submit" class="remove-btn" title="Remove">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="18" y1="6" x2="6" y2="18"/>
+                                        <line x1="6" y1="6" x2="18" y2="18"/>
+                                    </svg>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                }
+
+                <div class="cart-actions">
+                    <a href="/shop" class="btn-outline">← CONTINUE SHOPPING</a>
+                </div>
+            </div>
+
+            <!-- SUMMARY -->
+            <aside class="cart-summary">
+                <h3>ORDER SUMMARY</h3>
+
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span>₹@subtotal.ToString("0.00")</span>
+                </div>
+
+                @if (savings > 0)
+                {
+                    <div class="summary-row summary-row-save">
+                        <span>You Save</span>
+                        <span>−₹@savings.ToString("0.00")</span>
+                    </div>
+                }
+
+                <div class="summary-row">
+                    <span>Shipping</span>
+                    <span class="summary-muted">Calculated at checkout</span>
+                </div>
+
+                <div class="summary-total">
+                    <span>TOTAL</span>
+                    <span>₹@subtotal.ToString("0.00")</span>
+                </div>
+
+                <a href="/checkout" class="btn-primary checkout-btn">
+                    PROCEED TO CHECKOUT
+                </a>
+
+                <p class="summary-note">Checkout with Razorpay coming soon.</p>
+            </aside>
+        </div>
+    }
+</div>
+
+<style>
+    .cart-page { padding: 40px 0 80px; }
+    .cart-title {
+        font-size: 28px;
+        font-weight: 900;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin: 0 0 30px;
+    }
+
+    .cart-empty {
+        text-align: center;
+        padding: 80px 20px;
+        border: 1px solid var(--gray-200);
+        border-radius: 4px;
+    }
+    .cart-empty svg { color: var(--gray-400); margin-bottom: 20px; }
+    .cart-empty h2 {
+        font-size: 20px;
+        font-weight: 800;
+        text-transform: uppercase;
+        margin: 0 0 8px;
+    }
+    .cart-empty p { color: var(--gray-600); margin: 0 0 24px; font-size: 14px; }
+
+    .cart-layout {
+        display: grid;
+        grid-template-columns: 1fr 360px;
+        gap: 40px;
+        align-items: start;
+    }
+
+    .cart-items { border: 1px solid var(--gray-200); border-radius: 4px; }
+    .cart-row {
+        display: grid;
+        grid-template-columns: 90px 1fr auto auto auto;
+        gap: 20px;
+        align-items: center;
+        padding: 20px;
+        border-bottom: 1px solid var(--gray-200);
+    }
+    .cart-row:last-child { border-bottom: none; }
+
+    .cart-thumb {
+        width: 90px;
+        height: 110px;
+        background: var(--gray-100);
+        border-radius: 2px;
+        overflow: hidden;
+    }
+    .cart-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+    .cart-info h3 {
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 0 0 6px;
+    }
+    .cart-meta {
+        display: flex;
+        gap: 14px;
+        font-size: 11px;
+        color: var(--gray-600);
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .cart-price { display: flex; gap: 10px; align-items: center; }
+    .cart-unit { font-size: 14px; font-weight: 800; color: var(--red); }
+    .cart-mrp { font-size: 12px; color: var(--gray-400); text-decoration: line-through; }
+
+    .qty-control {
+        display: inline-flex;
+        align-items: center;
+        border: 1.5px solid var(--gray-200);
+        border-radius: 2px;
+    }
+    .qty-control button {
+        background: none;
+        border: none;
+        width: 32px;
+        height: 34px;
+        font-size: 16px;
+        cursor: pointer;
+        color: var(--black);
+    }
+    .qty-control button:hover:not(:disabled) { background: var(--gray-100); }
+    .qty-control button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .qty-control span {
+        width: 36px;
+        text-align: center;
+        font-size: 13px;
+        font-weight: 700;
+        border-left: 1.5px solid var(--gray-200);
+        border-right: 1.5px solid var(--gray-200);
+        height: 34px;
+        line-height: 34px;
+    }
+
+    .cart-linetotal {
+        font-size: 14px;
+        font-weight: 800;
+        white-space: nowrap;
+        min-width: 80px;
+        text-align: right;
+    }
+
+    .remove-btn {
+        background: none;
+        border: 1.5px solid var(--gray-200);
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--gray-600);
+        transition: all 0.15s;
+    }
+    .remove-btn:hover { border-color: var(--red); color: var(--red); }
+
+    .cart-actions { padding: 20px; border-top: 1px solid var(--gray-200); }
+
+    .cart-summary {
+        background: var(--gray-100);
+        padding: 26px;
+        border-radius: 4px;
+        border: 1px solid var(--gray-200);
+        position: sticky;
+        top: 100px;
+    }
+    .cart-summary h3 {
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin: 0 0 18px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        font-size: 13px;
+        color: var(--gray-800);
+    }
+    .summary-row-save { color: #2e7d32; font-weight: 600; }
+    .summary-muted { font-size: 11px; color: var(--gray-600); letter-spacing: 0.5px; }
+
+    .summary-total {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 0;
+        margin-top: 10px;
+        border-top: 2px solid var(--black);
+        font-size: 15px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .checkout-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 16px;
+        margin-top: 10px;
+        font-size: 13px;
+    }
+
+    .summary-note {
+        font-size: 11px;
+        color: var(--gray-600);
+        text-align: center;
+        margin: 12px 0 0;
+        letter-spacing: 0.5px;
+    }
+
+    /* ---------- Responsive ---------- */
+    @@media (max-width: 1024px) {
+        .cart-layout { grid-template-columns: 1fr; gap: 24px; }
+        .cart-summary { position: static; }
+    }
+
+    @@media (max-width: 768px) {
+        .cart-page { padding: 24px 0 60px; }
+        .cart-title { font-size: 22px; margin-bottom: 20px; }
+
+        .cart-row {
+            grid-template-columns: 70px 1fr auto;
+            grid-template-areas:
+                "thumb info remove"
+                "thumb qty total";
+            gap: 12px;
+            padding: 14px;
+        }
+        .cart-thumb { grid-area: thumb; width: 70px; height: 88px; }
+        .cart-info { grid-area: info; }
+        .cart-qty { grid-area: qty; }
+        .cart-linetotal { grid-area: total; text-align: left; }
+        .cart-remove { grid-area: remove; }
+
+        .cart-info h3 { font-size: 12px; }
+        .cart-meta { flex-direction: column; gap: 2px; }
+        .cart-unit { font-size: 13px; }
+    }
+
+    @@media (max-width: 500px) {
+        .cart-summary { padding: 18px; }
+        .summary-total { font-size: 13px; }
+        .checkout-btn { padding: 14px; font-size: 11px; }
+    }
+</style>

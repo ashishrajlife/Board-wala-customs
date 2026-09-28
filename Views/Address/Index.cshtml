@@ -1,0 +1,189 @@
+@model List<ValousWorld.Web.Models.Entities.Address>
+@{
+    ViewData["Title"] = "My Addresses";
+}
+
+<div class="container address-page">
+    <div class="address-header">
+        <h1>MY ADDRESSES</h1>
+        <a href="/address/add" class="btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            ADD NEW ADDRESS
+        </a>
+    </div>
+
+    @if (TempData["AddressSuccess"] != null)
+    {
+        <div class="alert-success">@TempData["AddressSuccess"]</div>
+    }
+    @if (TempData["AddressError"] != null)
+    {
+        <div class="alert-error">@TempData["AddressError"]</div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="address-empty">
+            <p>No addresses saved yet.</p>
+            <a href="/address/add">Add your first address →</a>
+        </div>
+    }
+    else
+    {
+        <div class="address-grid">
+            @foreach (var a in Model)
+            {
+                <div class="address-card @(a.IsDefault ? "address-default" : "")">
+                    @if (a.IsDefault)
+                    {
+                        <span class="address-badge">DEFAULT</span>
+                    }
+
+                    <h3>@a.FullName</h3>
+                    <p class="address-phone">📞 @a.Phone</p>
+                    <p class="address-line">
+                        @a.Line1
+                        @if (!string.IsNullOrWhiteSpace(a.Line2))
+                        {
+                            <span>, @a.Line2</span>
+                        }
+                    </p>
+                    <p class="address-line">
+                        @a.City, @a.State — <strong>@a.Pincode</strong>
+                    </p>
+                    <p class="address-line">@a.Country</p>
+
+                    <div class="address-actions">
+                        <a href="/address/edit/@a.AddressId" class="address-link">Edit</a>
+
+                        @if (!a.IsDefault)
+                        {
+                            <form method="post" action="/address/set-default/@a.AddressId" style="display:inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="address-link">Set Default</button>
+                            </form>
+                        }
+
+                        <form method="post" action="/address/delete/@a.AddressId" style="display:inline"
+                              onsubmit="return confirm('Delete this address?');">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="address-link address-link-danger">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .address-page { padding: 40px 0 80px; }
+    .address-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 28px;
+    }
+    .address-header h1 {
+        font-size: 26px;
+        font-weight: 900;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin: 0;
+    }
+
+    .address-empty {
+        text-align: center;
+        padding: 80px 20px;
+        border: 1px solid var(--gray-200);
+        border-radius: 4px;
+        color: var(--gray-600);
+    }
+    .address-empty p { font-size: 14px; margin-bottom: 12px; }
+    .address-empty a { color: var(--black); text-decoration: underline; font-weight: 600; }
+
+    .address-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+
+    .address-card {
+        position: relative;
+        border: 1.5px solid var(--gray-200);
+        border-radius: 4px;
+        padding: 20px;
+        background: var(--white);
+        transition: border-color 0.2s;
+    }
+    .address-card:hover { border-color: var(--gray-400); }
+    .address-card.address-default { border-color: var(--black); }
+
+    .address-badge {
+        position: absolute;
+        top: -10px;
+        left: 16px;
+        background: var(--black);
+        color: var(--white);
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        padding: 4px 10px;
+        border-radius: 2px;
+    }
+
+    .address-card h3 {
+        font-size: 14px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 0 0 10px;
+    }
+    .address-phone {
+        font-size: 13px;
+        color: var(--gray-600);
+        margin: 0 0 12px;
+    }
+    .address-line {
+        font-size: 13px;
+        color: var(--gray-800);
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .address-actions {
+        margin-top: 18px;
+        padding-top: 14px;
+        border-top: 1px solid var(--gray-200);
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+    .address-link {
+        background: none;
+        border: none;
+        padding: 0;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--black);
+        text-decoration: underline;
+        cursor: pointer;
+        font-family: inherit;
+    }
+    .address-link:hover { opacity: 0.7; }
+    .address-link-danger { color: var(--red); }
+
+    @@media (max-width: 500px) {
+        .address-page { padding: 24px 0 60px; }
+        .address-header h1 { font-size: 20px; }
+        .address-header .btn-primary { width: 100%; justify-content: center; }
+        .address-grid { grid-template-columns: 1fr; }
+    }
+</style>

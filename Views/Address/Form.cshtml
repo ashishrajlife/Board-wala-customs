@@ -1,0 +1,158 @@
+@model ValousWorld.Web.Models.Entities.Address
+@{
+    var isEdit = Model.AddressId > 0;
+    ViewData["Title"] = isEdit ? "Edit Address" : "Add Address";
+}
+
+<div class="container address-form-page">
+    <div class="address-form-header">
+        <h1>@(isEdit ? "EDIT ADDRESS" : "ADD ADDRESS")</h1>
+        <a href="/address" class="btn-outline">← BACK</a>
+    </div>
+
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <form method="post" action="@(isEdit ? $"/address/edit/{Model.AddressId}" : "/address/add")"
+          class="address-form">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="AddressId" />
+
+        <div class="form-row">
+            <div>
+                <label>Full Name *</label>
+                <input asp-for="FullName" required placeholder="Enter full name" />
+            </div>
+            <div>
+                <label>Phone *</label>
+                <input asp-for="Phone" required placeholder="10-digit mobile number" />
+            </div>
+        </div>
+
+        <label>Address Line 1 *</label>
+        <input asp-for="Line1" required placeholder="House no., Building, Street" />
+
+        <label>Address Line 2</label>
+        <input asp-for="Line2" placeholder="Landmark, Area (optional)" />
+
+        <div class="form-row">
+            <div>
+                <label>City *</label>
+                <input asp-for="City" required placeholder="City" />
+            </div>
+            <div>
+                <label>State *</label>
+                <input asp-for="State" required placeholder="State" />
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div>
+                <label>Pincode *</label>
+                <input asp-for="Pincode" required placeholder="6-digit pincode" maxlength="6" />
+            </div>
+            <div>
+                <label>Country</label>
+                <input asp-for="Country" placeholder="India" value="India" />
+            </div>
+        </div>
+
+        <label class="checkbox-row">
+            <input asp-for="IsDefault" type="checkbox" />
+            <span>Set as default address</span>
+        </label>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">
+                @(isEdit ? "UPDATE ADDRESS" : "SAVE ADDRESS")
+            </button>
+            <a href="/address" class="btn-outline">CANCEL</a>
+        </div>
+    </form>
+</div>
+
+<style>
+    .address-form-page { padding: 40px 0 80px; max-width: 720px; margin: 0 auto; }
+    .address-form-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 28px;
+    }
+    .address-form-header h1 {
+        font-size: 24px;
+        font-weight: 900;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin: 0;
+    }
+
+    .address-form label {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin: 16px 0 6px;
+        color: var(--black);
+    }
+    .address-form label:first-of-type { margin-top: 0; }
+
+    .address-form input[type=text],
+    .address-form input[type=email],
+    .address-form input:not([type]):not([type=checkbox]) {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1.5px solid var(--gray-200);
+        font-size: 14px;
+        outline: none;
+        border-radius: 2px;
+        background: var(--white);
+        font-family: inherit;
+    }
+    .address-form input:focus { border-color: var(--black); }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .checkbox-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-transform: none;
+        letter-spacing: 0;
+        font-weight: 500;
+        font-size: 13px;
+        margin-top: 20px;
+        cursor: pointer;
+    }
+    .checkbox-row input[type=checkbox] {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--black);
+    }
+
+    .form-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 30px;
+        padding-top: 24px;
+        border-top: 1px solid var(--gray-200);
+    }
+    .form-actions .btn-primary,
+    .form-actions .btn-outline {
+        justify-content: center;
+        padding: 14px;
+    }
+
+    @@media (max-width: 500px) {
+        .address-form-page { padding: 24px 0 60px; }
+        .address-form-header h1 { font-size: 20px; }
+        .form-row { grid-template-columns: 1fr; gap: 0; }
+    }
+</style>

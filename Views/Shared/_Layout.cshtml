@@ -5,6 +5,18 @@
                      && (string.Equals(currentAction, "Login", StringComparison.OrdinalIgnoreCase)
                          || string.Equals(currentAction, "Register", StringComparison.OrdinalIgnoreCase));
 }
+@inject ValousWorld.Web.Services.ICartService CartService
+@{
+    int cartCount = 0;
+    if (User.Identity?.IsAuthenticated == true && !User.IsInRole("Admin"))
+    {
+        var idStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (int.TryParse(idStr, out var uid))
+        {
+            cartCount = await CartService.GetItemCountAsync(uid);
+        }
+    }
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -381,8 +393,7 @@
                             <line x1="3" y1="6" x2="21" y2="6"/>
                             <path d="M16 10a4 4 0 0 1-8 0"/>
                         </svg>
-
-                        <span class="cart-count">0</span>
+                        <span class="cart-count">@cartCount</span>
                     </a>
                 }
 

@@ -52,6 +52,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IFileService, FileService>();
+builder.Services.AddScoped<ICartService, CartService>();
 
 var app = builder.Build();
 
