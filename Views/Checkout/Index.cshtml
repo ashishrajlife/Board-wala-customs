@@ -1,0 +1,503 @@
+@model ValousWorld.Web.Models.Entities.Cart
+@{
+    ViewData["Title"] = "Checkout";
+
+    var items = Model?.Items?.ToList() ?? new();
+    var addresses = ViewBag.Addresses as List<ValousWorld.Web.Models.Entities.Address> ?? new();
+    var subtotal = (decimal)(ViewBag.Subtotal ?? 0m);
+    var savings = (decimal)(ViewBag.Savings ?? 0m);
+    var itemCount = (int)(ViewBag.ItemCount ?? 0);
+
+    // Simple shipping logic — free above 999
+    decimal shipping = subtotal >= 999m ? 0m : 79m;
+    decimal grandTotal = subtotal + shipping;
+
+    var defaultAddress = addresses.FirstOrDefault(a => a.IsDefault) ?? addresses.FirstOrDefault();
+}
+
+<div class="container checkout-page">
+    <h1 class="checkout-title">CHECKOUT</h1>
+
+    @if (TempData["CheckoutError"] != null)
+    {
+        <div class="alert-error">@TempData["CheckoutError"]</div>
+    }
+
+    <form method="post" action="/checkout/place" id="checkoutForm">
+        @Html.AntiForgeryToken()
+
+        <div class="checkout-layout">
+
+            <!-- ================= LEFT ================= -->
+            <div class="checkout-main">
+
+                <!-- ---------- STEP 1: ADDRESS ---------- -->
+                <section class="checkout-step">
+                    <div class="step-header">
+                        <span class="step-num">1</span>
+                        <h2>Delivery Address</h2>
+                    </div>
+
+                    @if (!addresses.Any())
+                    {
+                        <div class="step-empty">
+                            <p>You have no saved addresses.</p>
+                            <a href="/address/add?returnUrl=/checkout" class="btn-primary">
+                                + ADD NEW ADDRESS
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="address-list" id="addressList">
+                            @foreach (var a in addresses)
+                            {
+                                var isChecked = defaultAddress != null && a.AddressId == defaultAddress.AddressId;
+                                <label class="address-option @(isChecked ? "selected" : "")">
+                                    <input type="radio" name="selectedAddressId" value="@a.AddressId"
+                                           @(isChecked ? "checked" : "") required />
+
+                                    <div class="address-option-body">
+                                        @if (a.IsDefault)
+                                        {
+                                            <span class="address-tag">DEFAULT</span>
+                                        }
+                                        <h3>@a.FullName</h3>
+                                        <p class="address-phone">📞 @a.Phone</p>
+                                        <p class="address-line">
+                                            @a.Line1
+                                            @if (!string.IsNullOrWhiteSpace(a.Line2))
+                                            {
+                                                <span>, @a.Line2</span>
+                                            }
+                                        </p>
+                                        <p class="address-line">
+                                            @a.City, @a.State — <strong>@a.Pincode</strong>
+                                        </p>
+                                        <p class="address-line">@a.Country</p>
+                                    </div>
+                                </label>
+                            }
+                        </div>
+
+                        <div class="address-actions">
+                            <a href="/address/add?returnUrl=/checkout" class="btn-outline">
+                                + ADD NEW ADDRESS
+                            </a>
+                            <a href="/address" class="btn-outline">MANAGE ADDRESSES</a>
+                        </div>
+                    }
+                </section>
+
+                <!-- ---------- STEP 2: ORDER ITEMS ---------- -->
+                <section class="checkout-step">
+                    <div class="step-header">
+                        <span class="step-num">2</span>
+                        <h2>Order Items (@itemCount)</h2>
+                    </div>
+
+                    <div class="order-items">
+                        @foreach (var item in items)
+                        {
+                            <div class="order-row">
+                                <div class="order-thumb">
+                                    @if (!string.IsNullOrWhiteSpace(item.Product?.Image1))
+                                    {
+                                        <img src="@item.Product!.Image1" alt="@item.Product.Name" />
+                                    }
+                                </div>
+
+                                <div class="order-info">
+                                    <h3>@item.Product?.Name</h3>
+                                    <div class="order-meta">
+                                        @if (!string.IsNullOrWhiteSpace(item.Size))
+                                        {
+                                            <span>Size: <strong>@item.Size</strong></span>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(item.Color))
+                                        {
+                                            <span>Color: <strong>@item.Color</strong></span>
+                                        }
+                                        <span>Qty: <strong>@item.Quantity</strong></span>
+                                    </div>
+                                </div>
+
+                                <div class="order-price">
+                                    ₹@((item.UnitPrice * item.Quantity).ToString("0.00"))
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <a href="/cart" class="edit-cart-link">← Edit cart</a>
+                </section>
+
+            </div>
+
+            <!-- ================= RIGHT: SUMMARY ================= -->
+            <aside class="checkout-summary">
+                <h3>ORDER SUMMARY</h3>
+
+                <div class="summary-row">
+                    <span>Subtotal (@itemCount item@(itemCount == 1 ? "" : "s"))</span>
+                    <span>₹@subtotal.ToString("0.00")</span>
+                </div>
+
+                @if (savings > 0)
+                {
+                    <div class="summary-row summary-row-save">
+                        <span>You Save</span>
+                        <span>−₹@savings.ToString("0.00")</span>
+                    </div>
+                }
+
+                <div class="summary-row">
+                    <span>Shipping</span>
+                    <span>
+                        @if (shipping == 0)
+                        {
+                            <span class="summary-free">FREE</span>
+                        }
+                        else
+                        {
+                            <span>₹@shipping.ToString("0.00")</span>
+                        }
+                    </span>
+                </div>
+
+                @if (subtotal < 999 && subtotal > 0)
+                {
+                    <p class="summary-hint">
+                        Add ₹@((999m - subtotal).ToString("0")) more for FREE shipping
+                    </p>
+                }
+
+                <div class="summary-total">
+                    <span>TOTAL</span>
+                    <span>₹@grandTotal.ToString("0.00")</span>
+                </div>
+
+                <input type="hidden" name="shippingAmount" value="@shipping" />
+                <input type="hidden" name="grandTotal" value="@grandTotal" />
+
+                <button type="submit" class="btn-primary place-order-btn" id="placeOrderBtn">
+                    PLACE ORDER
+                </button>
+
+                <p class="summary-note">
+                    Payment integration (Razorpay) coming soon.
+                    Order will be created in pending state.
+                </p>
+            </aside>
+        </div>
+    </form>
+</div>
+
+<style>
+    .checkout-page { padding: 40px 0 80px; }
+    .checkout-title {
+        font-size: 28px;
+        font-weight: 900;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin: 0 0 30px;
+    }
+
+    .checkout-layout {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 40px;
+        align-items: start;
+    }
+
+    /* ---------- Steps ---------- */
+    .checkout-step {
+        border: 1px solid var(--gray-200);
+        border-radius: 4px;
+        padding: 24px;
+        margin-bottom: 24px;
+        background: var(--white);
+    }
+
+    .step-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 22px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--gray-200);
+    }
+    .step-num {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--black);
+        color: var(--white);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 800;
+    }
+    .step-header h2 {
+        font-size: 15px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin: 0;
+    }
+
+    .step-empty {
+        text-align: center;
+        padding: 30px 20px;
+        color: var(--gray-600);
+    }
+    .step-empty p { margin: 0 0 16px; font-size: 14px; }
+
+    /* ---------- Address options ---------- */
+    .address-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .address-option {
+        position: relative;
+        cursor: pointer;
+        display: block;
+    }
+    .address-option input[type=radio] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .address-option-body {
+        position: relative;
+        border: 1.5px solid var(--gray-200);
+        border-radius: 4px;
+        padding: 16px;
+        height: 100%;
+        transition: border-color 0.15s, background 0.15s;
+        background: var(--white);
+    }
+    .address-option:hover .address-option-body { border-color: var(--gray-400); }
+    .address-option.selected .address-option-body {
+        border-color: var(--black);
+        background: #fafafa;
+    }
+    .address-option.selected .address-option-body::before {
+        content: "";
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--black);
+    }
+
+    .address-tag {
+        display: inline-block;
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 1.2px;
+        background: var(--black);
+        color: var(--white);
+        padding: 2px 6px;
+        border-radius: 2px;
+        margin-bottom: 8px;
+    }
+
+    .address-option-body h3 {
+        font-size: 13px;
+        font-weight: 800;
+        text-transform: uppercase;
+        margin: 0 0 6px;
+        letter-spacing: 0.5px;
+    }
+    .address-phone { font-size: 12px; color: var(--gray-600); margin: 0 0 8px; }
+    .address-line {
+        font-size: 12px;
+        color: var(--gray-800);
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    .address-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 18px;
+    }
+    .address-actions .btn-outline {
+        padding: 10px 16px;
+        font-size: 11px;
+    }
+
+    /* ---------- Order rows ---------- */
+    .order-items { display: flex; flex-direction: column; }
+
+    .order-row {
+        display: grid;
+        grid-template-columns: 70px 1fr auto;
+        gap: 14px;
+        align-items: center;
+        padding: 14px 0;
+        border-bottom: 1px solid var(--gray-200);
+    }
+    .order-row:last-child { border-bottom: none; }
+
+    .order-thumb {
+        width: 70px;
+        height: 88px;
+        border-radius: 2px;
+        overflow: hidden;
+        background: var(--gray-100);
+    }
+    .order-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+    .order-info h3 {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        margin: 0 0 6px;
+    }
+    .order-meta {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        font-size: 11px;
+        color: var(--gray-600);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    .order-meta strong { color: var(--black); font-weight: 700; }
+
+    .order-price {
+        font-size: 14px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .edit-cart-link {
+        display: inline-block;
+        margin-top: 14px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-decoration: underline;
+        color: var(--gray-600);
+    }
+    .edit-cart-link:hover { color: var(--black); }
+
+    /* ---------- Summary ---------- */
+    .checkout-summary {
+        background: var(--gray-100);
+        border: 1px solid var(--gray-200);
+        border-radius: 4px;
+        padding: 24px;
+        position: sticky;
+        top: 100px;
+    }
+    .checkout-summary h3 {
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin: 0 0 18px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        font-size: 13px;
+        color: var(--gray-800);
+    }
+    .summary-row-save { color: #2e7d32; font-weight: 600; }
+    .summary-free { color: #2e7d32; font-weight: 800; letter-spacing: 1px; }
+
+    .summary-hint {
+        font-size: 11px;
+        color: var(--red);
+        font-weight: 600;
+        text-align: center;
+        margin: 6px 0 0;
+        padding: 6px 10px;
+        background: #fdecea;
+        border-radius: 2px;
+        letter-spacing: 0.3px;
+    }
+
+    .summary-total {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 0;
+        margin-top: 10px;
+        border-top: 2px solid var(--black);
+        font-size: 15px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .place-order-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 16px;
+        margin-top: 10px;
+        font-size: 13px;
+    }
+
+    .summary-note {
+        font-size: 11px;
+        color: var(--gray-600);
+        text-align: center;
+        margin: 12px 0 0;
+        letter-spacing: 0.3px;
+        line-height: 1.5;
+    }
+
+    /* ---------- Responsive ---------- */
+    @@media (max-width: 1024px) {
+        .checkout-layout { grid-template-columns: 1fr; gap: 20px; }
+        .checkout-summary { position: static; }
+    }
+
+    @@media (max-width: 500px) {
+        .checkout-page { padding: 24px 0 60px; }
+        .checkout-title { font-size: 22px; margin-bottom: 20px; }
+        .checkout-step { padding: 16px; }
+
+        .address-list { grid-template-columns: 1fr; }
+
+        .order-row { grid-template-columns: 60px 1fr; gap: 10px; }
+        .order-thumb { width: 60px; height: 76px; }
+        .order-price { grid-column: 2; font-size: 13px; }
+    }
+</style>
+
+<script>
+    // Highlight selected address
+    (function () {
+        const radios = document.querySelectorAll('input[name="selectedAddressId"]');
+        const labels = document.querySelectorAll('.address-option');
+
+        function sync() {
+            labels.forEach(label => {
+                const input = label.querySelector('input');
+                label.classList.toggle('selected', input && input.checked);
+            });
+        }
+
+        radios.forEach(r => r.addEventListener('change', sync));
+        sync();
+    })();
+</script>
