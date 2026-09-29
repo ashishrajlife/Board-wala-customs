@@ -224,8 +224,16 @@
                 </div>
             </div>
 
-            <div class="pdp-actions">
-                <button type="button" class="pdp-btn pdp-btn-primary" disabled title="Coming soon">
+           <div class="pdp-actions">
+            <form method="post" action="/cart/add" id="addToCartForm" style="display: contents;">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="productId" value="@Model.ProductId" />
+                <input type="hidden" name="size" id="selectedSize" value="" />
+                <input type="hidden" name="color" id="selectedColor" value="" />
+                <input type="hidden" name="quantity" id="selectedQty" value="1" />
+                <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+
+                <button type="submit" class="pdp-btn pdp-btn-primary" id="addToCartBtn">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
                         <line x1="3" y1="6" x2="21" y2="6"/>
@@ -233,10 +241,12 @@
                     </svg>
                     ADD TO CART
                 </button>
-                <button type="button" class="pdp-btn pdp-btn-outline" disabled title="Coming soon">
+
+                <button type="submit" class="pdp-btn pdp-btn-outline" id="buyNowBtn">
                     BUY NOW
                 </button>
-            </div>
+            </form>
+        </div>
 
           <div class="pdp-meta">
             <p>
@@ -496,6 +506,44 @@
             if (e.key === 'Escape' && modal.classList.contains('open')) close();
         });
     })();
+
+    // ---- Cart button sync (size / color / qty → hidden inputs) ----
+(function () {
+    const sizeInput = document.getElementById('selectedSize');
+    const colorInput = document.getElementById('selectedColor');
+    const qtyInput = document.getElementById('selectedQty');
+
+    // Size chips
+    document.querySelectorAll('.pdp-size-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            if (sizeInput) sizeInput.value = chip.dataset.size || '';
+        });
+    });
+
+    // Color chips
+    document.querySelectorAll('.pdp-color-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            if (colorInput) colorInput.value = chip.dataset.color || '';
+        });
+    });
+
+    // Quantity
+    const qtyVisible = document.getElementById('qtyInput');
+    if (qtyVisible && qtyInput) {
+        const syncQty = () => { qtyInput.value = qtyVisible.value; };
+        document.querySelectorAll('.qty-btn').forEach(b => b.addEventListener('click', syncQty));
+    }
+
+    // Buy Now: mark intent (for future — currently same as Add)
+    const buyNow = document.getElementById('buyNowBtn');
+    if (buyNow) {
+        buyNow.addEventListener('click', () => {
+            // Future: add ?buyNow=1 param; server will skip cart page and go straight to checkout
+        });
+    }
+})();
+
+
 </script>
 
 <style>

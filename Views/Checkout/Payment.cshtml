@@ -1,0 +1,165 @@
+@model ValousWorld.Web.Models.Entities.Order
+@{
+    ViewData["Title"] = "Payment";
+    var keyId = ViewBag.RazorpayKeyId as string ?? "";
+}
+
+<div class="container payment-page">
+    <h1 class="payment-title">COMPLETE PAYMENT</h1>
+
+    @if (TempData["CheckoutError"] != null)
+    {
+        <div class="alert-error">@TempData["CheckoutError"]</div>
+    }
+
+    <div class="payment-card">
+        <div class="payment-info">
+            <p class="payment-label">Order Number</p>
+            <p class="payment-value">@Model.OrderNumber</p>
+        </div>
+
+        <div class="payment-info">
+            <p class="payment-label">Amount Payable</p>
+            <p class="payment-amount">₹@Model.Total.ToString("0.00")</p>
+        </div>
+
+        <div class="payment-info payment-info-shipping">
+            <p class="payment-label">Shipping To</p>
+            <p class="payment-value">@Model.ShippingFullName · @Model.ShippingCity</p>
+        </div>
+
+        <div class="payment-secure">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            Secure payment powered by Razorpay
+        </div>
+
+        <button type="button" class="btn-primary payment-btn" id="payNowBtn">
+            PAY ₹@Model.Total.ToString("0.00") NOW
+        </button>
+
+        <form method="post" action="/checkout/fail" id="failForm" style="display:none">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="orderId" value="@Model.OrderId" />
+        </form>
+
+        <button type="button" class="btn-outline payment-cancel"
+                onclick="document.getElementById('failForm').submit();">
+            CANCEL
+        </button>
+    </div>
+</div>
+
+<form method="post" action="/checkout/verify" id="verifyForm" style="display:none">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="orderId" value="@Model.OrderId" />
+    <input type="hidden" name="razorpay_payment_id" id="razorpay_payment_id" />
+    <input type="hidden" name="razorpay_order_id" id="razorpay_order_id" />
+    <input type="hidden" name="razorpay_signature" id="razorpay_signature" />
+</form>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    (function () {
+        const payBtn = document.getElementById('payNowBtn');
+        if (!payBtn) return;
+
+        const options = {
+            "key": "@keyId",
+            "amount": "@((int)Math.Round(Model.Total * 100))",
+            "currency": "INR",
+            "name": "VALOUSWORLD",
+            "description": "Order @Model.OrderNumber",
+            "order_id": "@Model.RazorpayOrderId",
+            "handler": function (response) {
+                 console.log("RAZORPAY RESPONSE:", response);
+                document.getElementById('razorpay_payment_id').value = response.razorpay_payment_id;
+                document.getElementById('razorpay_order_id').value = response.razorpay_order_id;
+                document.getElementById('razorpay_signature').value = response.razorpay_signature;
+                document.getElementById('verifyForm').submit();
+            },
+            "prefill": {
+                "name": "@Model.ShippingFullName",
+                "contact": "@Model.ShippingPhone"
+            },
+            "theme": { "color": "#000000" },
+            "modal": {
+                "ondismiss": function () {
+                    document.getElementById('failForm').submit();
+                }
+            }
+        };
+
+        payBtn.addEventListener('click', function () {
+    const rzp = new Razorpay(options);
+
+    rzp.on('payment.failed', function (response) {
+        // 👇 Ye sabse important hai — exact error console me dikhega
+        console.log("========== RAZORPAY FAILED ==========");
+        console.log("Code        :", response.error.code);
+        console.log("Description :", response.error.description);
+        console.log("Reason      :", response.error.reason);
+        console.log("Step        :", response.error.step);
+        console.log("Source      :", response.error.source);
+        console.log("Full object :", response);
+
+        alert(
+            'Payment Failed\n\n' +
+            'Code: ' + response.error.code + '\n' +
+            'Description: ' + response.error.description + '\n' +
+            'Reason: ' + (response.error.reason || 'N/A')
+        );
+
+        document.getElementById('failForm').submit();
+    });
+
+    rzp.open();
+});
+    })();
+</script>
+
+<style>
+    .payment-page { padding: 60px 0 80px; max-width: 500px; margin: 0 auto; }
+    .payment-title {
+        font-size: 24px; font-weight: 900;
+        letter-spacing: 2px; text-transform: uppercase;
+        text-align: center; margin: 0 0 30px;
+    }
+    .payment-card {
+        border: 1.5px solid var(--gray-200);
+        border-radius: 6px;
+        padding: 30px;
+        background: var(--white);
+    }
+    .payment-info { padding: 14px 0; border-bottom: 1px solid var(--gray-200); }
+    .payment-info:first-child { padding-top: 0; }
+    .payment-label {
+        font-size: 11px; letter-spacing: 1.5px;
+        text-transform: uppercase; color: var(--gray-600);
+        margin: 0 0 4px;
+    }
+    .payment-value { font-size: 15px; font-weight: 700; margin: 0; }
+    .payment-amount { font-size: 26px; font-weight: 900; color: var(--red); margin: 0; }
+    .payment-info-shipping .payment-value { font-size: 13px; }
+
+    .payment-secure {
+        display: flex; align-items: center; justify-content: center;
+        gap: 6px; font-size: 12px; color: var(--gray-600);
+        padding: 16px 0; margin: 12px 0;
+        border-top: 1px solid var(--gray-200);
+        border-bottom: 1px solid var(--gray-200);
+    }
+    .payment-secure svg { color: #2e7d32; }
+
+    .payment-btn {
+        width: 100%; justify-content: center;
+        padding: 16px; font-size: 14px;
+        margin-bottom: 10px;
+    }
+    .payment-cancel {
+        width: 100%; justify-content: center;
+        padding: 12px; font-size: 12px;
+    }
+</style>

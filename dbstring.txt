@@ -1,0 +1,4 @@
+
+  "DefaultConnection": "Server=ASHISH-PC;Database=valousworlddatabase;User Id=sa;Password=1234;TrustServerCertificate=True;Encrypt=False;"
+
+  "DefaultConnection": "Server=COMPUTER\\MSSQLSERVER02;Database=valousworlddatabase;Trusted_Connection=True;TrustServerCertificate=True;Encrypt=False;"

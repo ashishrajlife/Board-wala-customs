@@ -1,0 +1,116 @@
+@model ValousWorld.Web.Models.Entities.Order
+@{
+    ViewData["Title"] = "Order Confirmed";
+}
+
+<div class="container success-page">
+    <div class="success-card">
+        <div class="success-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+            </svg>
+        </div>
+
+        <h1>ORDER CONFIRMED</h1>
+        <p class="success-sub">Thank you for your purchase!</p>
+
+        <div class="success-details">
+            <div class="detail-row">
+                <span>Order Number</span>
+                <strong>@Model.OrderNumber</strong>
+            </div>
+            <div class="detail-row">
+                <span>Total Paid</span>
+                <strong class="detail-amount">₹@Model.Total.ToString("0.00")</strong>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(Model.TrackingNumber))
+            {
+                <div class="detail-row">
+                    <span>Tracking</span>
+                    <strong>@Model.CourierName — @Model.TrackingNumber</strong>
+                </div>
+            }
+            <div class="detail-row">
+                <span>Payment Status</span>
+                <strong class="payment-paid">@Model.PaymentStatus</strong>
+            </div>
+        </div>
+
+        <p class="success-note">
+            A confirmation has been sent to your WhatsApp (@Model.ShippingPhone).
+        </p>
+
+        <div class="success-actions">
+            <a href="/orders" class="btn-primary">VIEW MY ORDERS</a>
+            <a href="/shop" class="btn-outline">CONTINUE SHOPPING</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .success-page { padding: 60px 0 80px; max-width: 520px; margin: 0 auto; }
+    .success-card {
+        border: 1.5px solid var(--gray-200);
+        border-radius: 6px;
+        padding: 40px 30px;
+        text-align: center;
+        background: var(--white);
+    }
+    .success-icon {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: #e8f5e9;
+        color: #2e7d32;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+    .success-card h1 {
+        font-size: 22px;
+        font-weight: 900;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin: 0 0 6px;
+    }
+    .success-sub {
+        font-size: 14px;
+        color: var(--gray-600);
+        margin: 0 0 30px;
+    }
+    .success-details {
+        text-align: left;
+        border-top: 1px solid var(--gray-200);
+        border-bottom: 1px solid var(--gray-200);
+        padding: 16px 0;
+        margin-bottom: 20px;
+    }
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        font-size: 13px;
+    }
+    .detail-row span { color: var(--gray-600); }
+    .detail-row strong { color: var(--black); font-weight: 700; }
+    .detail-amount { font-size: 16px; color: var(--red) !important; }
+    .payment-paid { color: #2e7d32 !important; }
+    .success-note {
+        font-size: 12px;
+        color: var(--gray-600);
+        margin: 0 0 24px;
+        line-height: 1.5;
+    }
+    .success-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .success-actions .btn-primary,
+    .success-actions .btn-outline {
+        justify-content: center;
+        padding: 14px;
+    }
+</style>

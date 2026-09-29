@@ -1,0 +1,308 @@
+@model List<ValousWorld.Web.Models.Entities.Address>
+@{
+    ViewData["Title"] = "My Addresses";
+}
+
+<div class="container address-page">
+    <div class="address-header">
+    <h1>MY ADDRESSES</h1>
+
+    <div class="address-header-actions">
+        <a href="/User/Dashboard" class="btn-outline">← Back</a>
+
+        <a href="/address/add" class="btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            ADD NEW ADDRESS
+        </a>
+    </div>
+</div>
+
+    @if (TempData["AddressSuccess"] != null)
+    {
+        <div class="alert-success">@TempData["AddressSuccess"]</div>
+    }
+    @if (TempData["AddressError"] != null)
+    {
+        <div class="alert-error">@TempData["AddressError"]</div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="address-empty">
+            <p>No addresses saved yet.</p>
+            <a href="/address/add">Add your first address →</a>
+        </div>
+    }
+    else
+    {
+        <div class="address-grid">
+            @foreach (var a in Model)
+            {
+                <div class="address-card @(a.IsDefault ? "address-default" : "")">
+                    @if (a.IsDefault)
+                    {
+                        <span class="address-badge">DEFAULT</span>
+                    }
+
+                    <h3>@a.FullName</h3>
+                    <p class="address-phone">📞 @a.Phone</p>
+                    <p class="address-line">
+                        @a.Line1
+                        @if (!string.IsNullOrWhiteSpace(a.Line2))
+                        {
+                            <span>, @a.Line2</span>
+                        }
+                    </p>
+                    <p class="address-line">
+                        @a.City, @a.State — <strong>@a.Pincode</strong>
+                    </p>
+                    <p class="address-line">@a.Country</p>
+
+                   <div class="address-actions">
+                        <a href="/address/edit/@a.AddressId" class="addr-btn addr-btn-edit">Edit</a>
+
+                        @if (!a.IsDefault)
+                        {
+                            <form method="post" action="/address/set-default/@a.AddressId">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="addr-btn addr-btn-ghost">Set Default</button>
+                            </form>
+                        }
+
+                        <form method="post" action="/address/delete/@a.AddressId"
+                            class="js-delete-form addr-delete-form" data-name="@a.FullName">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="addr-btn addr-btn-danger">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<div class="confirm-overlay" id="deleteModal" aria-hidden="true">
+    <div class="confirm-box" role="dialog" aria-modal="true" aria-labelledby="deleteTitle">
+        <h4 id="deleteTitle">Delete address?</h4>
+        <p id="deleteText">This action cannot be undone.</p>
+        <div class="confirm-actions">
+            <button type="button" class="addr-btn addr-btn-ghost" id="deleteCancel">Cancel</button>
+            <button type="button" class="addr-btn addr-btn-danger" id="deleteConfirm">Yes, Delete</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .address-page { padding: 40px 40px 80px; }
+    .address-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 28px;
+    }
+    .address-header h1 {
+        font-size: 26px;
+        font-weight: 900;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin: 0;
+    }
+
+    .address-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    }
+    .address-header-actions .btn-outline,
+    .address-header-actions .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        white-space: nowrap;
+    }
+
+    .address-empty {
+        text-align: center;
+        padding: 80px 20px;
+        border: 1px solid var(--gray-200);
+        border-radius: 4px;
+        color: var(--gray-600);
+    }
+    .address-empty p { font-size: 14px; margin-bottom: 12px; }
+    .address-empty a { color: var(--black); text-decoration: underline; font-weight: 600; }
+
+    .address-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+
+    .address-card {
+        position: relative;
+        border: 1.5px solid var(--gray-200);
+        border-radius: 4px;
+        padding: 20px;
+        background: var(--white);
+        transition: border-color 0.2s;
+    }
+    .address-card:hover { border-color: var(--gray-400); }
+    .address-card.address-default { border-color: var(--black); }
+
+    .address-badge {
+        position: absolute;
+        top: -10px;
+        left: 16px;
+        background: var(--black);
+        color: var(--white);
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        padding: 4px 10px;
+        border-radius: 2px;
+    }
+
+    .address-card h3 {
+        font-size: 14px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 0 0 10px;
+    }
+    .address-phone {
+        font-size: 13px;
+        color: var(--gray-600);
+        margin: 0 0 12px;
+    }
+    .address-line {
+        font-size: 13px;
+        color: var(--gray-800);
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .address-actions {
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.address-actions form { margin: 0; }
+.addr-delete-form { margin-left: auto !important; }
+
+.addr-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 34px;
+    padding: 0 14px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-decoration: none;
+    border-radius: 3px;
+    border: 1.5px solid var(--black);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.addr-btn-edit { background: var(--black); color: var(--white); }
+.addr-btn-edit:hover { background: transparent; color: var(--black); }
+
+.addr-btn-ghost { background: transparent; color: var(--black); }
+.addr-btn-ghost:hover { background: var(--black); color: var(--white); }
+
+.addr-btn-danger { background: transparent; color: var(--red); border-color: var(--red); }
+.addr-btn-danger:hover { background: var(--red); color: var(--white); }
+
+/* Delete confirmation modal */
+.confirm-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        z-index: 9999;
+    }
+    .confirm-overlay.open { display: flex; }
+    .confirm-box {
+        background: var(--white);
+        border-radius: 6px;
+        padding: 28px 24px 22px;
+        width: 100%;
+        max-width: 380px;
+        text-align: center;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    }
+    .confirm-box h4 {
+        margin: 0 0 8px;
+        font-size: 16px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+    .confirm-box p { margin: 0 0 22px; font-size: 13px; color: var(--gray-600); line-height: 1.5; }
+    .confirm-actions { display: flex; gap: 10px; justify-content: center; }
+    .confirm-actions .addr-btn { min-width: 110px; height: 38px; }
+    .confirm-actions .addr-btn-danger { background: var(--red); color: var(--white); }
+    .confirm-actions .addr-btn-danger:hover { opacity: 0.85; }
+
+    @@media (max-width: 500px) {
+        .address-page { padding: 25px 25px 25px; }
+        .address-header h1 { font-size: 20px; }
+        .address-header .btn-primary { width: 100%; justify-content: center; }
+        .address-grid { grid-template-columns: 1fr; }
+    }
+    /* Tablet / small laptop: tighten spacing */
+    @@media (max-width: 768px) {
+        .address-page { padding: 30px 24px 60px; }
+    }
+</style>
+<script>
+(function () {
+    var modal = document.getElementById('deleteModal');
+    var text = document.getElementById('deleteText');
+    var pendingForm = null;
+
+    function openModal(form) {
+        pendingForm = form;
+        var name = form.getAttribute('data-name');
+        text.textContent = name
+            ? 'The address for "' + name + '" will be permanently removed.'
+            : 'This action cannot be undone.';
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+    }
+    function closeModal() {
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+        pendingForm = null;
+    }
+
+    document.querySelectorAll('.js-delete-form').forEach(function (form) {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            openModal(form);
+        });
+    });
+
+    document.getElementById('deleteConfirm').addEventListener('click', function () {
+        if (pendingForm) pendingForm.submit();   // submit() skips the submit event, so no loop
+    });
+    document.getElementById('deleteCancel').addEventListener('click', closeModal);
+    modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+})();
+</script>

@@ -1,0 +1,165 @@
+@model List<ValousWorld.Web.Models.Entities.Order>
+@{
+    ViewData["Title"] = "My Orders";
+}
+
+<div class="container orders-page">
+    <div class="orders-head">
+        <h1 class="orders-title">MY ORDERS</h1>
+        <a href="/User/Dashboard" class="btn-outline">← BACK</a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="orders-empty">
+            <p>You haven't placed any orders yet.</p>
+            <a href="/shop" class="btn-primary">START SHOPPING</a>
+        </div>
+    }
+    else
+    {
+        <div class="orders-list">
+            @foreach (var o in Model)
+            {
+                <a href="/orders/@o.OrderId" class="order-card">
+                    <div class="order-card-head">
+                        <div>
+                            <p class="order-card-label">Order</p>
+                            <p class="order-card-num">@o.OrderNumber</p>
+                        </div>
+                        <span class="order-status order-status-@o.Status.ToLower()">@o.Status</span>
+                    </div>
+                    <div class="order-card-body">
+                        <div>
+                            <p class="order-card-label">Placed</p>
+                            <p class="order-card-value">@o.PlacedAt.ToString("dd MMM yyyy")</p>
+                        </div>
+                        <div>
+                            <p class="order-card-label">Items</p>
+                            <p class="order-card-value">@(o.Items?.Count ?? 0)</p>
+                        </div>
+                        <div>
+                            <p class="order-card-label">Total</p>
+                            <p class="order-card-value order-card-total">₹@o.Total.ToString("0.00")</p>
+                        </div>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .orders-page { padding: 28px var(--container-pad, 20px) 56px; }
+
+    .orders-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+    }
+    .orders-title {
+        font-size: clamp(18px, 3.2vw, 22px);
+        font-weight: 800;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        margin: 0;
+    }
+    .orders-head .btn-outline {
+        font-size: 11px;
+        padding: 9px 14px;
+        white-space: nowrap;
+    }
+
+    .orders-empty {
+        text-align: center;
+        padding: 48px 20px;
+        border: 1px solid var(--gray-200);
+        border-radius: 4px;
+    }
+    .orders-empty p { font-size: 13px; color: var(--gray-600); margin: 0 0 18px; }
+
+    .orders-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .order-card {
+        display: block;
+        border: 1px solid black;
+        border-radius: 4px;
+        padding: 14px 16px;
+        background: var(--white);
+        transition: border-color 0.15s, background 0.15s;
+        text-decoration: none;
+        color: inherit;
+    }
+    .order-card:hover,
+    .order-card:focus-visible {
+        border-color: var(--gray-400);
+        background: var(--gray-100);
+        outline: none;
+    }
+
+    .order-card-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+        border-bottom: 1px solid black;
+    }
+    .order-card-label {
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        color: var(--gray-600);
+        margin: 0 0 2px;
+    }
+    .order-card-num {
+        font-size: 12.5px;
+        font-weight: 700;
+        margin: 0;
+        letter-spacing: 0.3px;
+        overflow-wrap: anywhere;
+    }
+    .order-card-body {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+    }
+    .order-card-value { font-size: 12px; font-weight: 600; margin: 0; }
+    .order-card-total { color: var(--black); font-weight: 700; }
+
+    .order-status {
+        display: inline-block;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        padding: 4px 9px;
+        border-radius: 20px;
+        white-space: nowrap;
+    }
+    .order-status-pending   { background: #fff8e1; color: #7c5700; }
+    .order-status-confirmed { background: #e3f2fd; color: #0d47a1; }
+    .order-status-shipped   { background: #f3e5f5; color: #6a1b9a; }
+    .order-status-delivered { background: #e8f5e9; color: #2e7d32; }
+    .order-status-cancelled { background: #fdecea; color: #b71c1c; }
+
+    /* ---------- Tablet ---------- */
+    @@media (max-width: 900px) {
+        .orders-page { padding: 22px var(--container-pad, 20px) 44px; }
+    }
+
+    /* ---------- Mobile ---------- */
+    @@media (max-width: 500px) {
+        .orders-page { padding: 18px var(--container-pad, 16px) 36px; }
+        .orders-head .btn-outline { width: 25%; text-align: center; }
+        .order-card { padding: 12px 14px; }
+        .order-card-body { grid-template-columns: 1fr; gap: 6px; }
+        .order-card-body > div { display: flex; justify-content: space-between; align-items: center; }
+        .order-card-label { margin: 0; }
+    }
+</style>

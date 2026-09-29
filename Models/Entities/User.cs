@@ -15,5 +15,8 @@ public class User
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
+    public Cart? Cart { get; set; }
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+    public ICollection<Address> Addresses { get; set; } = new List<Address>();
+    public ICollection<Order> Orders { get; set; } = new List<Order>();
 }
