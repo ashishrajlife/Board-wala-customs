@@ -513,18 +513,6 @@ main { display: block; min-height: 40vh; }
     letter-spacing: 2px;
     margin-bottom: 20px;
 }
-.socials { display: flex; gap: 12px; margin-bottom: 26px; flex-wrap: wrap; }
-.socials a {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    border: 1px solid #333;
-    border-radius: 50%;
-    transition: all 0.2s;
-}
-.socials a:hover { border-color: var(--white); background: rgba(255,255,255,0.08); }
 
 .footer-col h4 {
     font-size: 12px;
