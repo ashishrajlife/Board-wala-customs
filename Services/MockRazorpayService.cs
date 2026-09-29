@@ -21,4 +21,20 @@ public class MockRazorpayService : IRazorpayService
             razorpayOrderId, mockPaymentId);
         return Task.FromResult<(bool, string?, string?)>((true, mockPaymentId, null));
     }
+    // Ye 2 methods add karo MockRazorpayService me:
+
+    public Task<(bool success, string? status, decimal? amount, string? error)> FetchPaymentStatusAsync(
+        string razorpayPaymentId)
+    {
+        _logger.LogInformation("[RAZORPAY MOCK] Fetch status: {PaymentId}", razorpayPaymentId);
+        return Task.FromResult<(bool, string?, decimal?, string?)>((true, "captured", null, null));
+    }
+
+    public Task<(bool success, string? refundId, string? error)> CreateRefundAsync(
+        string razorpayPaymentId, decimal amount, string? notes = null)
+    {
+        var mockRefundId = $"mock_refund_{Guid.NewGuid():N}";
+        _logger.LogInformation("[RAZORPAY MOCK] Refund: {PaymentId} → {RefundId}", razorpayPaymentId, mockRefundId);
+        return Task.FromResult<(bool, string?, string?)>((true, mockRefundId, null));
+    }
 }

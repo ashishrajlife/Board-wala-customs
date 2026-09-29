@@ -2,3 +2,16 @@
   "DefaultConnection": "Server=ASHISH-PC;Database=valousworlddatabase;User Id=sa;Password=1234;TrustServerCertificate=True;Encrypt=False;"
 
   "DefaultConnection": "Server=COMPUTER\\MSSQLSERVER02;Database=valousworlddatabase;Trusted_Connection=True;TrustServerCertificate=True;Encrypt=False;"
+
+// if db have some issue then you can use these things : 
+RESTORE DATABASE [valousworlddatabase]
+FROM DISK = 'C:\SQLBackups\db-updates-29-09-2026.bak'
+WITH
+    MOVE 'valousworlddatabase'
+        TO 'C:\SQLData\valousworlddatabase.mdf',
+    MOVE 'valousworlddatabase_log'
+        TO 'C:\SQLData\valousworlddatabase_log.ldf',
+    REPLACE,
+    RECOVERY,
+    STATS = 10;
+    

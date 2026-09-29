@@ -80,6 +80,7 @@ builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IInvoiceService, InvoiceService>();
+builder.Services.AddHostedService<OrderExpiryBackgroundService>();
 
 var app = builder.Build();
 

@@ -26,9 +26,11 @@ public class RealRazorpayService : IRazorpayService
         {
             var client = new RazorpayClient(_settings.Razorpay.KeyId, _settings.Razorpay.KeySecret);
 
+            var amountInPaise = (int)Math.Round(order.Total * 100, MidpointRounding.AwayFromZero);
+
             var options = new Dictionary<string, object>
             {
-                { "amount", Convert.ToInt32(Math.Ceiling(order.Total * 100)) },
+                { "amount", amountInPaise },
                 { "currency", "INR" },
                 { "receipt", order.OrderNumber },
                 { "notes", new Dictionary<string, string>
@@ -41,6 +43,9 @@ public class RealRazorpayService : IRazorpayService
 
             Razorpay.Api.Order rzpOrder = client.Order.Create(options);
             var orderId = rzpOrder["id"].ToString();
+
+            // _logger.LogInformation("[RAZORPAY] Order created: {OrderNumber} → {RzpOrderId} (₹{Total} = {Paise}p)",
+            //     order.OrderNumber, orderId, order.Total, amountInPaise);
 
             return Task.FromResult<(bool, string?, string?)>((true, orderId, null));
         }
@@ -60,20 +65,16 @@ public class RealRazorpayService : IRazorpayService
                 string.IsNullOrWhiteSpace(razorpayPaymentId) ||
                 string.IsNullOrWhiteSpace(signature))
             {
-                _logger.LogWarning("[RAZORPAY] Verify called with missing params");
                 return Task.FromResult<(bool, string?, string?)>(
                     (false, null, "Payment parameters missing."));
             }
 
-            // Razorpay official algorithm:
-            //   HMAC-SHA256( order_id + "|" + payment_id , key_secret )
             var payload = $"{razorpayOrderId}|{razorpayPaymentId}";
-            var secret = _settings.Razorpay.KeySecret;
-            var expectedSignature = ComputeHmacSha256(payload, secret);
+            var expectedSignature = ComputeHmacSha256(payload, _settings.Razorpay.KeySecret);
 
             var isValid = CryptographicOperations.FixedTimeEquals(
                 Encoding.UTF8.GetBytes(expectedSignature),
-                Encoding.UTF8.GetBytes(signature)
+                Encoding.UTF8.GetBytes(signature.ToLower())
             );
 
             if (!isValid)
@@ -90,6 +91,58 @@ public class RealRazorpayService : IRazorpayService
         catch (Exception ex)
         {
             _logger.LogError(ex, "[RAZORPAY] Signature verification failed");
+            return Task.FromResult<(bool, string?, string?)>((false, null, ex.Message));
+        }
+    }
+
+    public Task<(bool success, string? status, decimal? amount, string? error)> FetchPaymentStatusAsync(
+        string razorpayPaymentId)
+    {
+        try
+        {
+            var client = new RazorpayClient(_settings.Razorpay.KeyId, _settings.Razorpay.KeySecret);
+            var payment = client.Payment.Fetch(razorpayPaymentId);
+
+            var status = payment["status"]?.ToString();
+            var amount = payment["amount"] != null ? Convert.ToDecimal(payment["amount"]) / 100m : 0m;
+
+            return Task.FromResult<(bool, string?, decimal?, string?)>((true, status, amount, null));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[RAZORPAY] FetchPaymentStatus failed for {PaymentId}", razorpayPaymentId);
+            return Task.FromResult<(bool, string?, decimal?, string?)>((false, null, null, ex.Message));
+        }
+    }
+
+    public Task<(bool success, string? refundId, string? error)> CreateRefundAsync(
+        string razorpayPaymentId, decimal amount, string? notes = null)
+    {
+        try
+        {
+            var client = new RazorpayClient(_settings.Razorpay.KeyId, _settings.Razorpay.KeySecret);
+
+            var options = new Dictionary<string, object>
+            {
+                { "amount", (int)Math.Round(amount * 100, MidpointRounding.AwayFromZero) },
+                { "notes", new Dictionary<string, string>
+                    {
+                        { "reason", notes ?? "Admin initiated refund" }
+                    }
+                }
+            };
+
+            var refund = client.Payment.Fetch(razorpayPaymentId).Refund(options);
+            var refundId = refund["id"].ToString();
+
+            // _logger.LogInformation("[RAZORPAY] Refund created for {PaymentId}: {RefundId}",
+            //     razorpayPaymentId, refundId);
+
+            return Task.FromResult<(bool, string?, string?)>((true, refundId, null));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[RAZORPAY] Refund failed for {PaymentId}", razorpayPaymentId);
             return Task.FromResult<(bool, string?, string?)>((false, null, ex.Message));
         }
     }

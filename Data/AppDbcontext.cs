@@ -17,6 +17,7 @@ public class AppDbContext : DbContext
     public DbSet<Address> Addresses => Set<Address>();
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
+    public DbSet<PaymentAttempt> PaymentAttempts => Set<PaymentAttempt>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Role>().HasIndex(r => r.RoleName).IsUnique();
@@ -115,6 +116,17 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(oi => oi.ProductId)
             .OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<PaymentAttempt>(e =>
+        {
+            e.HasKey(pa => pa.PaymentAttemptId);
+            e.HasOne(pa => pa.Order)
+            .WithMany(o => o.PaymentAttemptLog)
+            .HasForeignKey(pa => pa.OrderId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasIndex(pa => pa.OrderId);
+            e.HasIndex(pa => pa.RazorpayPaymentId);
         });
     }
 }
