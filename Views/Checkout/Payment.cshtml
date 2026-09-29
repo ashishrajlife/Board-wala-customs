@@ -2,6 +2,8 @@
 @{
     ViewData["Title"] = "Payment";
     var keyId = ViewBag.RazorpayKeyId as string ?? "";
+    var isFailed = Model.PaymentStatus == "Failed";
+    var isExpired = Model.Status == "Expired";
 }
 
 <div class="container payment-page">
@@ -10,6 +12,34 @@
     @if (TempData["CheckoutError"] != null)
     {
         <div class="alert-error">@TempData["CheckoutError"]</div>
+    }
+
+    @if (isFailed || isExpired)
+    {
+        <div class="payment-failed-box">
+            <div class="payment-failed-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+            </div>
+            <h3>@(isExpired ? "Order Expired" : "Payment Failed")</h3>
+            <p>
+                @if (!string.IsNullOrWhiteSpace(Model.FailureReason))
+                {
+                    @Model.FailureReason
+                }
+                else
+                {
+                    <text>Your previous payment did not complete.</text>
+                }
+            </p>
+            @if (Model.PaymentAttempts > 0)
+            {
+                <p class="payment-attempts">Previous attempts: @Model.PaymentAttempts</p>
+            }
+        </div>
     }
 
     <div class="payment-card">
@@ -36,13 +66,29 @@
             Secure payment powered by Razorpay
         </div>
 
-        <button type="button" class="btn-primary payment-btn" id="payNowBtn">
-            PAY ₹@Model.Total.ToString("0.00") NOW
-        </button>
+        @if (isFailed || isExpired)
+        {
+            <form method="post" action="/checkout/retry/@Model.OrderId">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn-primary payment-btn">
+                    RETRY PAYMENT
+                </button>
+            </form>
+        }
+        else
+        {
+            <button type="button" class="btn-primary payment-btn" id="payNowBtn">
+                PAY ₹@Model.Total.ToString("0.00") NOW
+            </button>
+        }
 
         <form method="post" action="/checkout/fail" id="failForm" style="display:none">
             @Html.AntiForgeryToken()
             <input type="hidden" name="orderId" value="@Model.OrderId" />
+            <input type="hidden" name="errorCode" id="errorCode" />
+            <input type="hidden" name="errorDesc" id="errorDesc" />
+            <input type="hidden" name="errorReason" id="errorReason" />
+            <input type="hidden" name="errorStep" id="errorStep" />
         </form>
 
         <button type="button" class="btn-outline payment-cancel"
@@ -74,7 +120,6 @@
             "description": "Order @Model.OrderNumber",
             "order_id": "@Model.RazorpayOrderId",
             "handler": function (response) {
-                 console.log("RAZORPAY RESPONSE:", response);
                 document.getElementById('razorpay_payment_id').value = response.razorpay_payment_id;
                 document.getElementById('razorpay_order_id').value = response.razorpay_order_id;
                 document.getElementById('razorpay_signature').value = response.razorpay_signature;
@@ -93,30 +138,21 @@
         };
 
         payBtn.addEventListener('click', function () {
-    const rzp = new Razorpay(options);
+            const rzp = new Razorpay(options);
 
-    rzp.on('payment.failed', function (response) {
-        // 👇 Ye sabse important hai — exact error console me dikhega
-        console.log("========== RAZORPAY FAILED ==========");
-        console.log("Code        :", response.error.code);
-        console.log("Description :", response.error.description);
-        console.log("Reason      :", response.error.reason);
-        console.log("Step        :", response.error.step);
-        console.log("Source      :", response.error.source);
-        console.log("Full object :", response);
+            rzp.on('payment.failed', function (response) {
+                console.log("RAZORPAY FAILED:", response.error);
 
-        alert(
-            'Payment Failed\n\n' +
-            'Code: ' + response.error.code + '\n' +
-            'Description: ' + response.error.description + '\n' +
-            'Reason: ' + (response.error.reason || 'N/A')
-        );
+                document.getElementById('errorCode').value = response.error.code || '';
+                document.getElementById('errorDesc').value = response.error.description || '';
+                document.getElementById('errorReason').value = response.error.reason || '';
+                document.getElementById('errorStep').value = response.error.step || '';
 
-        document.getElementById('failForm').submit();
-    });
+                document.getElementById('failForm').submit();
+            });
 
-    rzp.open();
-});
+            rzp.open();
+        });
     })();
 </script>
 
@@ -161,5 +197,41 @@
     .payment-cancel {
         width: 100%; justify-content: center;
         padding: 12px; font-size: 12px;
+    }
+
+    .payment-failed-box {
+        background: #fdecea;
+        border-left: 4px solid var(--red);
+        padding: 18px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    .payment-failed-icon {
+        width: 44px; height: 44px;
+        border-radius: 50%;
+        background: #fff;
+        color: var(--red);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+    .payment-failed-box h3 {
+        font-size: 14px; font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin: 0 0 6px;
+        color: #b71c1c;
+    }
+    .payment-failed-box p {
+        font-size: 12px; color: #7a1f1f;
+        margin: 4px 0;
+        line-height: 1.5;
+    }
+    .payment-attempts {
+        font-size: 11px !important;
+        color: #999 !important;
+        margin-top: 8px !important;
     }
 </style>
