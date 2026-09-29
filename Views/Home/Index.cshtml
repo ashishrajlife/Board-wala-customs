@@ -215,26 +215,28 @@
     })();
 
     (function () {
-    const filterBar = document.querySelector('.filter-bar');
-    const header = document.querySelector('.site-header');
-    if (!filterBar) return;
+        const filterBar = document.querySelector('.filter-bar');
+        const header = document.querySelector('.site-header');
+        if (!filterBar) return;
 
-    let headerHeight = 0;
+        // Height of the header that is CURRENTLY visible on screen.
+        // - Header fully visible (sticky)  -> its full height
+        // - Header scrolled away           -> 0, so the filter bar sits at the very top
+        // - Header partly scrolled away    -> the remaining visible part
+        function update() {
+            const visibleHeader = header
+                ? Math.max(0, header.getBoundingClientRect().bottom)
+                : 0;
 
-    function updateOffsets() {
-        headerHeight = header ? header.getBoundingClientRect().height : 0;
-        document.documentElement.style.setProperty('--header-h', headerHeight + 'px');
-        checkStuck();
-    }
+            document.documentElement.style.setProperty('--header-h', visibleHeader + 'px');
 
-    function checkStuck() {
-        const rect = filterBar.getBoundingClientRect();
-        filterBar.classList.toggle('is-stuck', rect.top <= headerHeight + 1);
-    }
+            const rect = filterBar.getBoundingClientRect();
+            filterBar.classList.toggle('is-stuck', rect.top <= visibleHeader + 1);
+        }
 
-    window.addEventListener('scroll', checkStuck, { passive: true });
-    window.addEventListener('resize', updateOffsets);
-    window.addEventListener('load', updateOffsets);   // logo/fonts can change header height
-    updateOffsets();
-})();  
+        window.addEventListener('scroll', update, { passive: true });
+        window.addEventListener('resize', update);
+        window.addEventListener('load', update);   // logo/fonts can change header height
+        update();
+    })();
 </script>
