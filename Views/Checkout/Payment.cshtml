@@ -108,6 +108,7 @@
 
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
+    let paymentDone = false;
     (function () {
         const payBtn = document.getElementById('payNowBtn');
         if (!payBtn) return;
@@ -120,6 +121,7 @@
             "description": "Order @Model.OrderNumber",
             "order_id": "@Model.RazorpayOrderId",
             "handler": function (response) {
+                paymentDone = true;
                 document.getElementById('razorpay_payment_id').value = response.razorpay_payment_id;
                 document.getElementById('razorpay_order_id').value = response.razorpay_order_id;
                 document.getElementById('razorpay_signature').value = response.razorpay_signature;
@@ -132,6 +134,7 @@
             "theme": { "color": "#000000" },
             "modal": {
                 "ondismiss": function () {
+                     if (paymentDone) return;
                     document.getElementById('failForm').submit();
                 }
             }
@@ -147,8 +150,6 @@
                 document.getElementById('errorDesc').value = response.error.description || '';
                 document.getElementById('errorReason').value = response.error.reason || '';
                 document.getElementById('errorStep').value = response.error.step || '';
-
-                document.getElementById('failForm').submit();
             });
 
             rzp.open();
