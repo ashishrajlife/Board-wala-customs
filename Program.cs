@@ -72,6 +72,11 @@ if (integrations.Delivery.Mode == "Live")
 else
     builder.Services.AddScoped<IDeliveryService, MockDeliveryService>();
 
+// OTP Service
+if (integrations.Otp.Mode == "Live")
+    builder.Services.AddScoped<IOtpService, RealOtpService>();
+else
+    builder.Services.AddScoped<IOtpService, MockOtpService>();
 
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<ITokenService, TokenService>();

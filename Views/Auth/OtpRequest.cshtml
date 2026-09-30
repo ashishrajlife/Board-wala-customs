@@ -1,0 +1,28 @@
+@model ValousWorld.Web.Models.ViewModels.OtpLoginViewModel
+@{ ViewData["Title"] = "Login with OTP"; }
+
+<div class="container">
+    <div class="auth-card">
+        <h2>Login with Mobile</h2>
+
+        @if (TempData["OtpMessage"] != null)
+        {
+            <div class="alert-success">@TempData["OtpMessage"]</div>
+        }
+
+        <form asp-action="Send" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <label>Mobile Number</label>
+            <input asp-for="Phone" type="tel" placeholder="10-digit mobile number" maxlength="10" />
+            <span asp-validation-for="Phone" class="text-danger"></span>
+
+            <input type="hidden" asp-for="ReturnUrl" />
+
+            <button type="submit" class="btn-primary">SEND OTP</button>
+        </form>
+
+        <p class="muted">Back to <a href="/Auth/Login">Password login</a></p>
+    </div>
+</div>

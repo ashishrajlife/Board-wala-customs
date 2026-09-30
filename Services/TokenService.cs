@@ -23,11 +23,23 @@ public class TokenService : ITokenService
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
-            new(JwtRegisteredClaimNames.Email, user.Email),
-            new(ClaimTypes.Name, user.FullName),
+            new(ClaimTypes.Name, user.FullName ?? ""),
             new(ClaimTypes.Role, user.Role?.RoleName ?? "User"),
             new("userId", user.UserId.ToString())
         };
+
+        // Email sirf add karo agar null na ho (OTP users ka email nahi hota)
+        if (!string.IsNullOrWhiteSpace(user.Email))
+        {
+            claims.Add(new Claim(JwtRegisteredClaimNames.Email, user.Email));
+            claims.Add(new Claim(ClaimTypes.Email, user.Email));
+        }
+
+        // Phone bhi add karo (agar hai)
+        if (!string.IsNullOrWhiteSpace(user.Phone))
+        {
+            claims.Add(new Claim("phone", user.Phone));
+        }
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.Key));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

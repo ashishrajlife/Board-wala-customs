@@ -1,0 +1,106 @@
+using Microsoft.EntityFrameworkCore;
+using ValousWorld.Web.Data;
+using ValousWorld.Web.Helpers;
+using Microsoft.Extensions.Options;
+using ValousWorld.Web.Models.Entities;
+
+
+namespace ValousWorld.Web.Services;
+
+public class MockOtpService : IOtpService
+{
+    private readonly AppDbContext _db;
+    private readonly OtpSettings _settings;
+    private readonly ILogger<MockOtpService> _logger;
+
+    public MockOtpService(
+        AppDbContext db,
+        IOptions<IntegrationSettings> settings,
+        ILogger<MockOtpService> logger)
+    {
+        _db = db;
+        _settings = settings.Value.Otp;
+        _logger = logger;
+    }
+
+    public async Task<(bool success, string? error)> SendOtpAsync(string phone)
+    {
+        // Rate limit check
+        if (await IsRateLimitedAsync(phone))
+        {
+            return (false, "Too many OTP requests. Please try again after 10 minutes.");
+        }
+
+        // Invalidate old OTPs
+        var oldOtps = await _db.OtpLogs
+            .Where(o => o.Phone == phone && !o.IsUsed && o.ExpiresAt > DateTime.UtcNow)
+            .ToListAsync();
+
+        foreach (var o in oldOtps)
+            o.IsUsed = true;
+
+        // Create new OTP (FIXED = 1234 in mock mode)
+        var otp = new OtpLog
+        {
+            Phone = phone,
+            OtpCode = _settings.FixedOtp,
+            Purpose = "Login",
+            ExpiresAt = DateTime.UtcNow.AddMinutes(_settings.ExpiryMinutes),
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _db.OtpLogs.Add(otp);
+        await _db.SaveChangesAsync();
+
+        // Console me print karo (dev me dekhne ke liye)
+        _logger.LogInformation("==================================================");
+        _logger.LogInformation("[MOCK OTP] Phone: {Phone}", phone);
+        _logger.LogInformation("[MOCK OTP] OTP Code: {Otp}", _settings.FixedOtp);
+        _logger.LogInformation("[MOCK OTP] Expires in: {Min} minutes", _settings.ExpiryMinutes);
+        _logger.LogInformation("==================================================");
+
+        return (true, null);
+    }
+
+    public async Task<(bool success, string? error)> VerifyOtpAsync(string phone, string code)
+    {
+        var otp = await _db.OtpLogs
+            .Where(o => o.Phone == phone
+                     && !o.IsUsed
+                     && o.ExpiresAt > DateTime.UtcNow)
+            .OrderByDescending(o => o.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        if (otp == null)
+            return (false, "OTP expired or not found. Please request a new one.");
+
+        if (otp.AttemptCount >= _settings.MaxAttempts)
+        {
+            otp.IsUsed = true;
+            await _db.SaveChangesAsync();
+            return (false, "Too many attempts. Please request a new OTP.");
+        }
+
+        otp.AttemptCount++;
+
+        if (otp.OtpCode != code)
+        {
+            await _db.SaveChangesAsync();
+            return (false, "Invalid OTP.");
+        }
+
+        otp.IsUsed = true;
+        await _db.SaveChangesAsync();
+
+        return (true, null);
+    }
+
+    public async Task<bool> IsRateLimitedAsync(string phone)
+    {
+        var cutoff = DateTime.UtcNow.AddMinutes(-10);
+        var count = await _db.OtpLogs
+            .CountAsync(o => o.Phone == phone && o.CreatedAt > cutoff);
+
+        return count >= _settings.MaxRequestsPer10Min;
+    }
+}

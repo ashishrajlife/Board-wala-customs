@@ -18,6 +18,7 @@ public class AppDbContext : DbContext
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<PaymentAttempt> PaymentAttempts => Set<PaymentAttempt>();
+    public DbSet<OtpLog> OtpLogs => Set<OtpLog>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Role>().HasIndex(r => r.RoleName).IsUnique();
@@ -127,6 +128,26 @@ public class AppDbContext : DbContext
 
             e.HasIndex(pa => pa.OrderId);
             e.HasIndex(pa => pa.RazorpayPaymentId);
+        });
+        modelBuilder.Entity<User>(e =>
+        {
+            e.HasIndex(u => u.Email)
+            .IsUnique()
+            .HasFilter("[Email] IS NOT NULL");   // ← unique only when not null
+
+            e.HasIndex(u => u.Phone)
+            .IsUnique()
+            .HasFilter("[Phone] IS NOT NULL");   // ← phone unique
+
+            e.HasOne(u => u.Role)
+            .WithMany(r => r.Users)
+            .HasForeignKey(u => u.RoleId);
+        });
+        modelBuilder.Entity<OtpLog>(e =>
+        {
+            e.HasKey(o => o.OtpLogId);
+            e.HasIndex(o => o.Phone);
+            e.HasIndex(o => o.ExpiresAt);
         });
     }
 }
