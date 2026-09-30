@@ -4,7 +4,6 @@ using ValousWorld.Web.Helpers;
 using Microsoft.Extensions.Options;
 using ValousWorld.Web.Models.Entities;
 
-
 namespace ValousWorld.Web.Services;
 
 public class MockOtpService : IOtpService
@@ -23,28 +22,22 @@ public class MockOtpService : IOtpService
         _logger = logger;
     }
 
-    public async Task<(bool success, string? error)> SendOtpAsync(string phone)
+    public async Task<(bool success, string? error)> SendOtpAsync(string phone, string purpose = "Login")
     {
-        // Rate limit check
         if (await IsRateLimitedAsync(phone))
-        {
             return (false, "Too many OTP requests. Please try again after 10 minutes.");
-        }
 
-        // Invalidate old OTPs
         var oldOtps = await _db.OtpLogs
-            .Where(o => o.Phone == phone && !o.IsUsed && o.ExpiresAt > DateTime.UtcNow)
+            .Where(o => o.Phone == phone && o.Purpose == purpose && !o.IsUsed)
             .ToListAsync();
 
-        foreach (var o in oldOtps)
-            o.IsUsed = true;
+        foreach (var o in oldOtps) o.IsUsed = true;
 
-        // Create new OTP (FIXED = 1234 in mock mode)
         var otp = new OtpLog
         {
             Phone = phone,
             OtpCode = _settings.FixedOtp,
-            Purpose = "Login",
+            Purpose = purpose,
             ExpiresAt = DateTime.UtcNow.AddMinutes(_settings.ExpiryMinutes),
             CreatedAt = DateTime.UtcNow
         };
@@ -52,9 +45,9 @@ public class MockOtpService : IOtpService
         _db.OtpLogs.Add(otp);
         await _db.SaveChangesAsync();
 
-        // Console me print karo (dev me dekhne ke liye)
         _logger.LogInformation("==================================================");
         _logger.LogInformation("[MOCK OTP] Phone: {Phone}", phone);
+        _logger.LogInformation("[MOCK OTP] Purpose: {Purpose}", purpose);
         _logger.LogInformation("[MOCK OTP] OTP Code: {Otp}", _settings.FixedOtp);
         _logger.LogInformation("[MOCK OTP] Expires in: {Min} minutes", _settings.ExpiryMinutes);
         _logger.LogInformation("==================================================");
@@ -62,10 +55,11 @@ public class MockOtpService : IOtpService
         return (true, null);
     }
 
-    public async Task<(bool success, string? error)> VerifyOtpAsync(string phone, string code)
+    public async Task<(bool success, string? error)> VerifyOtpAsync(string phone, string code, string purpose = "Login")
     {
         var otp = await _db.OtpLogs
             .Where(o => o.Phone == phone
+                     && o.Purpose == purpose
                      && !o.IsUsed
                      && o.ExpiresAt > DateTime.UtcNow)
             .OrderByDescending(o => o.CreatedAt)

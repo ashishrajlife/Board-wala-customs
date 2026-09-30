@@ -20,7 +20,7 @@ public class TokenService : ITokenService
 
     public string GenerateAccessToken(User user)
     {
-        var claims = new List<Claim>
+       var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
             new(ClaimTypes.Name, user.FullName ?? ""),
@@ -28,7 +28,6 @@ public class TokenService : ITokenService
             new("userId", user.UserId.ToString())
         };
 
-        // Email sirf add karo agar null na ho (OTP users ka email nahi hota)
         if (!string.IsNullOrWhiteSpace(user.Email))
         {
             claims.Add(new Claim(JwtRegisteredClaimNames.Email, user.Email));
