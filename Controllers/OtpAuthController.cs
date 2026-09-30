@@ -46,17 +46,25 @@ public class OtpAuthController : Controller
         if (!ModelState.IsValid)
             return View("~/Views/Auth/OtpRequest.cshtml", model);
 
-        var (success, error) = await _otp.SendOtpAsync(model.Phone);
+        var (success, error) = await _otp.SendOtpAsync(model.Phone, "Login");
 
         if (!success)
         {
+            // Case 1: Phone number registered nahi hai
+            if (error == "PHONE_NOT_REGISTERED")
+            {
+                // Register page pe redirect with pre-filled phone
+                TempData["RegisterMessage"] = "Ye number registered nahi hai. Pehle register karo.";
+                return RedirectToAction("Register", "Auth", new { phone = model.Phone });
+            }
+
+            // Case 2: Koi aur error (rate limit, etc.)
             ModelState.AddModelError("", error ?? "Failed to send OTP.");
             return View("~/Views/Auth/OtpRequest.cshtml", model);
         }
 
         TempData["Phone"] = model.Phone;
         TempData["ReturnUrl"] = model.ReturnUrl;
-
         return RedirectToAction(nameof(Verify));
     }
 

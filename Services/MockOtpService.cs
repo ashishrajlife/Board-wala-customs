@@ -24,8 +24,33 @@ public class MockOtpService : IOtpService
 
     public async Task<(bool success, string? error)> SendOtpAsync(string phone, string purpose = "Login")
     {
+        // ============================================================
+        // Check 1: Agar Login purpose hai, toh user registered hona chahiye
+        // ============================================================
+        if (purpose == "Login")
+        {
+            var userExists = await _db.Users.AnyAsync(u => u.Phone == phone);
+            if (!userExists)
+            {
+                return (false, "PHONE_NOT_REGISTERED");
+            }
+        }
+
+        // Agar Register purpose hai, toh user already exist nahi hona chahiye
+        if (purpose == "Register")
+        {
+            var userExists = await _db.Users.AnyAsync(u => u.Phone == phone);
+            if (userExists)
+            {
+                return (false, "PHONE_ALREADY_REGISTERED");
+            }
+        }
+
+        // Baaki existing rate-limit + OTP create logic yahan
         if (await IsRateLimitedAsync(phone))
+        {
             return (false, "Too many OTP requests. Please try again after 10 minutes.");
+        }
 
         var oldOtps = await _db.OtpLogs
             .Where(o => o.Phone == phone && o.Purpose == purpose && !o.IsUsed)
