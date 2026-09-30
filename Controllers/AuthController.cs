@@ -14,13 +14,18 @@ public class AuthController : Controller
 {
     private readonly AppDbContext _db;
     private readonly ITokenService _tokenService;
+    private readonly IOtpService _otp;
 
-    public AuthController(AppDbContext db, ITokenService tokenService)
+    public AuthController(AppDbContext db, ITokenService tokenService, IOtpService otp)
     {
         _db = db;
         _tokenService = tokenService;
+        _otp = otp;
     }
 
+    // ============================================================
+    // LOGIN (Password) — UNCHANGED
+    // ============================================================
     [HttpGet]
     public IActionResult Login() => View();
 
@@ -33,13 +38,166 @@ public class AuthController : Controller
         var user = await _db.Users.Include(u => u.Role)
             .FirstOrDefaultAsync(u => u.Email == model.Email);
 
-        if (user == null || !user.IsActive || user.Password != model.Password)   // ⚠️ PLAIN COMPARE
+        if (user == null || !user.IsActive || user.Password != model.Password)
         {
             ModelState.AddModelError("", "Invalid email or password.");
             return View(model);
         }
 
-        // Generate JWT for API + issue cookie for MVC session
+        await SignInUserAsync(user);
+
+        return user.Role!.RoleName == "Admin"
+            ? RedirectToAction("Dashboard", "Admin")
+            : RedirectToAction("Index", "Home");
+    }
+
+    // ============================================================
+    // REGISTER — Step 1: Form (with Send OTP button)
+    // ============================================================
+    [HttpGet]
+    public IActionResult Register() => View();
+
+    // Called by register form — sends OTP for phone verification
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SendRegisterOtp(RegisterViewModel model)
+    {
+        // Validate name/email/phone/password all present
+        if (string.IsNullOrWhiteSpace(model.FullName) ||
+            string.IsNullOrWhiteSpace(model.Email) ||
+            string.IsNullOrWhiteSpace(model.Phone) ||
+            string.IsNullOrWhiteSpace(model.Password))
+        {
+            ModelState.AddModelError("", "All fields are required.");
+            return View("Register", model);
+        }
+
+        if (model.Password != model.ConfirmPassword)
+        {
+            ModelState.AddModelError("", "Passwords do not match.");
+            return View("Register", model);
+        }
+
+        // Check duplicates
+        if (await _db.Users.AnyAsync(u => u.Email == model.Email))
+        {
+            ModelState.AddModelError("", "Email already registered.");
+            return View("Register", model);
+        }
+
+        if (await _db.Users.AnyAsync(u => u.Phone == model.Phone))
+        {
+            ModelState.AddModelError("", "Phone number already registered.");
+            return View("Register", model);
+        }
+
+        // Send OTP
+        var (success, error) = await _otp.SendOtpAsync(model.Phone, "Register");
+
+        if (!success)
+        {
+            ModelState.AddModelError("", error ?? "Failed to send OTP.");
+            return View("Register", model);
+        }
+
+        // Save form data in TempData (so OTP page can use it)
+        TempData["Reg_FullName"] = model.FullName;
+        TempData["Reg_Email"] = model.Email;
+        TempData["Reg_Phone"] = model.Phone;
+        TempData["Reg_Password"] = model.Password;
+
+        return RedirectToAction(nameof(VerifyRegisterOtp));
+    }
+
+    // ============================================================
+    // REGISTER — Step 2: OTP verification
+    // ============================================================
+    [HttpGet]
+    public IActionResult VerifyRegisterOtp()
+    {
+        var phone = TempData["Reg_Phone"] as string;
+        if (string.IsNullOrEmpty(phone))
+            return RedirectToAction(nameof(Register));
+
+        TempData.Keep("Reg_FullName");
+        TempData.Keep("Reg_Email");
+        TempData.Keep("Reg_Phone");
+        TempData.Keep("Reg_Password");
+
+        ViewBag.Phone = phone;
+        return View();
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> VerifyRegisterOtp(string otp)
+    {
+        var phone = TempData["Reg_Phone"] as string;
+        var fullName = TempData["Reg_FullName"] as string;
+        var email = TempData["Reg_Email"] as string;
+        var password = TempData["Reg_Password"] as string;
+
+        if (string.IsNullOrEmpty(phone) || string.IsNullOrEmpty(email))
+            return RedirectToAction(nameof(Register));
+
+        TempData.Keep("Reg_FullName");
+        TempData.Keep("Reg_Email");
+        TempData.Keep("Reg_Phone");
+        TempData.Keep("Reg_Password");
+
+        var (success, error) = await _otp.VerifyOtpAsync(phone, otp, "Register");
+
+        if (!success)
+        {
+            ModelState.AddModelError("", error ?? "Invalid OTP.");
+            ViewBag.Phone = phone;
+            return View();
+        }
+
+        // Create user
+        var userRole = await _db.Roles.FirstAsync(r => r.RoleName == "User");
+
+        var user = new User
+        {
+            FullName = fullName!,
+            Email = email,
+            Phone = phone,
+            Password = password,     // plain text as per your choice
+            RoleId = userRole.RoleId,
+            IsActive = true
+        };
+
+        _db.Users.Add(user);
+        await _db.SaveChangesAsync();
+
+        // Reload with Role
+        user = await _db.Users.Include(u => u.Role)
+            .FirstAsync(u => u.UserId == user.UserId);
+
+        // Auto-login
+        await SignInUserAsync(user);
+
+        TempData["Success"] = "Account created successfully!";
+        return RedirectToAction("Index", "Home");
+    }
+
+    // ============================================================
+    // LOGOUT
+    // ============================================================
+    [HttpPost]
+    public async Task<IActionResult> Logout()
+    {
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        Response.Cookies.Delete("access_token");
+        Response.Cookies.Delete("refresh_token");
+        return RedirectToAction("Login", "Auth");
+    }
+
+    // ============================================================
+    // HELPER — Sign in user (cookie + JWT + refresh token)
+    // ============================================================
+    private async Task SignInUserAsync(User user)
+    {
         var accessToken = _tokenService.GenerateAccessToken(user);
         var refreshToken = _tokenService.GenerateRefreshToken();
 
@@ -66,60 +224,18 @@ public class AuthController : Controller
             Expires = DateTime.UtcNow.AddDays(7)
         });
 
-        // Sign in cookie principal for MVC views
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, user.UserId.ToString()),
-            new(ClaimTypes.Name, user.FullName),
-            new(ClaimTypes.Email, user.Email),
-            new(ClaimTypes.Role, user.Role!.RoleName)
+            new(ClaimTypes.Name, user.FullName ?? ""),
+            new(ClaimTypes.Role, user.Role?.RoleName ?? "User")
         };
+
+        if (!string.IsNullOrWhiteSpace(user.Email))
+            claims.Add(new Claim(ClaimTypes.Email, user.Email));
+
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
             new ClaimsPrincipal(identity));
-
-        return user.Role.RoleName == "Admin"
-        ? RedirectToAction("Dashboard", "Admin")
-        : RedirectToAction("Index", "Home");
-    }
-
-    [HttpGet]
-    public IActionResult Register() => View();
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Register(RegisterViewModel model)
-    {
-        if (!ModelState.IsValid) return View(model);
-
-        if (await _db.Users.AnyAsync(u => u.Email == model.Email))
-        {
-            ModelState.AddModelError("", "Email already registered.");
-            return View(model);
-        }
-
-        var userRole = await _db.Roles.FirstAsync(r => r.RoleName == "User");
-
-        _db.Users.Add(new User
-        {
-            FullName = model.FullName,
-            Email = model.Email,
-            Phone = model.Phone,
-            Password = model.Password,
-            RoleId = userRole.RoleId
-        });
-        await _db.SaveChangesAsync();
-
-        TempData["Success"] = "Registration successful. Please log in.";
-        return RedirectToAction(nameof(Login));
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> Logout()
-    {
-        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        Response.Cookies.Delete("access_token");
-        Response.Cookies.Delete("refresh_token");
-        return RedirectToAction("Login", "Auth");
     }
 }

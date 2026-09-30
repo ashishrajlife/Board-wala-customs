@@ -1,0 +1,31 @@
+@{
+    ViewData["Title"] = "Verify Phone";
+}
+
+<div class="auth-card">
+    <h2>Verify Phone</h2>
+
+    <p style="text-align:center; color:#666; margin-bottom:16px; font-size:13px;">
+        OTP sent to <strong>@ViewBag.Phone</strong>
+    </p>
+
+    <div style="background:#e3f2fd; color:#0d47a1; padding:12px; border-radius:4px; margin-bottom:16px; font-size:13px; text-align:center; border-left:3px solid #1976d2;">
+        <strong>Demo Mode:</strong> OTP is <strong>1234</strong>
+    </div>
+
+    <form asp-action="VerifyRegisterOtp" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <label>Enter OTP</label>
+        <input type="text" name="otp" placeholder="Enter 4-digit OTP" maxlength="6" autocomplete="off" required />
+
+        <button type="submit" class="btn-primary" style="width:100%; margin-top:20px; padding:14px;">
+            VERIFY & CREATE ACCOUNT
+        </button>
+    </form>
+
+    <p class="muted">
+        <a href="/Auth/Register">Change details</a>
+    </p>
+</div>

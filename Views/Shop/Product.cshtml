@@ -53,7 +53,7 @@
                          data-current="0"
                          data-total="@galleryImgs.Count" />
 
-                    @if (Model.SavePercent >= 1)
+                    @if (Model.SavePercent > 0 && Model.SalePrice.HasValue && Model.SalePrice.Value > 0 && Model.SalePrice.Value < Model.MRP)
                     {
                         <span class="pdp-save-badge">SAVE @Model.SavePercent%</span>
                     }
@@ -292,6 +292,23 @@
     </div>
 </section>
 
+<!-- ================= Validation Popup Modal ================= -->
+<div class="pdp-toast-modal" id="pdpToastModal">
+    <div class="pdp-toast-backdrop" id="pdpToastBackdrop"></div>
+    <div class="pdp-toast-panel">
+        <div class="pdp-toast-icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+        </div>
+        <h3 class="pdp-toast-title" id="pdpToastTitle">Hold on!</h3>
+        <p class="pdp-toast-message" id="pdpToastMessage">Please select a size first.</p>
+        <button type="button" class="pdp-toast-btn" id="pdpToastClose">OK, GOT IT</button>
+    </div>
+</div>
+
 <!-- ================= Size Chart Modal ================= -->
 <div class="size-chart-modal" id="sizeChartModal">
     <div class="size-chart-backdrop" id="sizeChartBackdrop"></div>
@@ -507,38 +524,108 @@
         });
     })();
 
-    // ---- Cart button sync (size / color / qty → hidden inputs) ----
+       // ---- Cart button sync + validation ----
 (function () {
     const sizeInput = document.getElementById('selectedSize');
     const colorInput = document.getElementById('selectedColor');
     const qtyInput = document.getElementById('selectedQty');
+    const addForm = document.getElementById('addToCartForm');
 
-    // Size chips
+    // Toast modal elements
+    const toastModal = document.getElementById('pdpToastModal');
+    const toastBackdrop = document.getElementById('pdpToastBackdrop');
+    const toastClose = document.getElementById('pdpToastClose');
+    const toastTitle = document.getElementById('pdpToastTitle');
+    const toastMessage = document.getElementById('pdpToastMessage');
+
+    let pendingSubmit = null;
+
+    // ---- Show toast ----
+    function showToast(title, message, onSubmit) {
+        if (!toastModal) return;
+        toastTitle.textContent = title || 'Hold on!';
+        toastMessage.textContent = message || '';
+        pendingSubmit = onSubmit || null;
+        toastModal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeToast() {
+        if (!toastModal) return;
+        toastModal.classList.remove('open');
+        document.body.style.overflow = '';
+        pendingSubmit = null;
+    }
+
+    if (toastClose) toastClose.addEventListener('click', closeToast);
+    if (toastBackdrop) toastBackdrop.addEventListener('click', closeToast);
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && toastModal && toastModal.classList.contains('open')) {
+            closeToast();
+        }
+    });
+
+    // ---- Size chips ----
     document.querySelectorAll('.pdp-size-chip').forEach(chip => {
         chip.addEventListener('click', () => {
             if (sizeInput) sizeInput.value = chip.dataset.size || '';
         });
     });
 
-    // Color chips
+    // ---- Color chips ----
     document.querySelectorAll('.pdp-color-chip').forEach(chip => {
         chip.addEventListener('click', () => {
             if (colorInput) colorInput.value = chip.dataset.color || '';
         });
     });
 
-    // Quantity
+    // ---- Quantity sync ----
     const qtyVisible = document.getElementById('qtyInput');
     if (qtyVisible && qtyInput) {
         const syncQty = () => { qtyInput.value = qtyVisible.value; };
         document.querySelectorAll('.qty-btn').forEach(b => b.addEventListener('click', syncQty));
     }
 
-    // Buy Now: mark intent (for future — currently same as Add)
+    // ---- Validation on submit ----
+    const sizesExist = document.querySelectorAll('.pdp-size-chip').length > 0;
+    const colorsExist = document.querySelectorAll('.pdp-color-chip').length > 0;
+
+    if (addForm) {
+        addForm.addEventListener('submit', (e) => {
+            // Size check
+            if (sizesExist && (!sizeInput || !sizeInput.value)) {
+                e.preventDefault();
+                showToast('Size Required', 'Please select a size before adding to cart.');
+                // Scroll to sizes + highlight
+                const sizeBlock = document.querySelector('.pdp-sizes');
+                if (sizeBlock) {
+                    sizeBlock.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    sizeBlock.classList.add('pdp-required-flash');
+                    setTimeout(() => sizeBlock.classList.remove('pdp-required-flash'), 1200);
+                }
+                return;
+            }
+
+            // Color check
+            if (colorsExist && (!colorInput || !colorInput.value)) {
+                e.preventDefault();
+                showToast('Color Required', 'Please select a color before adding to cart.');
+                const colorBlock = document.querySelector('.pdp-colors');
+                if (colorBlock) {
+                    colorBlock.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    colorBlock.classList.add('pdp-required-flash');
+                    setTimeout(() => colorBlock.classList.remove('pdp-required-flash'), 1200);
+                }
+                return;
+            }
+        });
+    }
+
+    // ---- Buy Now: mark intent (future) ----
     const buyNow = document.getElementById('buyNowBtn');
     if (buyNow) {
         buyNow.addEventListener('click', () => {
-            // Future: add ?buyNow=1 param; server will skip cart page and go straight to checkout
+            // Future: add ?buyNow=1 param
         });
     }
 })();
@@ -922,7 +1009,7 @@
 }
 
 .size-chart-table tbody tr:hover {
-    background: black);
+    background: var(--gray-100);
 }
 
     /* Accordions */
@@ -1074,6 +1161,133 @@
         font-size: 9.5px;
         letter-spacing: 0.8px;
     }
+}
+
+/* ============================================================
+   PDP TOAST / VALIDATION MODAL
+   ============================================================ */
+.pdp-toast-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+}
+
+.pdp-toast-modal.open {
+    display: block;
+}
+
+.pdp-toast-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    animation: pdpToastFade 0.2s ease;
+}
+
+.pdp-toast-panel {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #ffffff;
+    width: calc(100% - 40px);
+    max-width: 380px;
+    padding: 32px 28px 24px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    animation: pdpToastPop 0.25s ease;
+}
+
+.pdp-toast-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #fff4e5;
+    color: #d97706;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+
+.pdp-toast-title {
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    margin: 0 0 8px;
+    color: #000000;
+}
+
+.pdp-toast-message {
+    font-size: 13px;
+    color: #666666;
+    line-height: 1.5;
+    margin: 0 0 22px;
+}
+
+.pdp-toast-btn {
+    display: inline-block;
+    width: 100%;
+    padding: 14px 20px;
+    background: #000000;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.pdp-toast-btn:hover {
+    background: #222222;
+}
+
+@@keyframes pdpToastFade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@@keyframes pdpToastPop {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -46%) scale(0.94);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+/* Highlight animation on missing selection */
+.pdp-required-flash {
+    animation: pdpFlashBorder 1.2s ease;
+}
+
+@@keyframes pdpFlashBorder {
+    0%, 100% { outline: none; }
+    20%, 60% { outline: 2px solid #e63946; outline-offset: 4px; border-radius: 4px; }
+}
+
+/* Mobile */
+@@media (max-width: 500px) {
+    .pdp-toast-panel {
+        padding: 24px 20px 20px;
+        max-width: 320px;
+    }
+    .pdp-toast-icon {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 12px;
+    }
+    .pdp-toast-icon svg { width: 22px; height: 22px; }
+    .pdp-toast-title { font-size: 14px; }
+    .pdp-toast-message { font-size: 12px; margin-bottom: 18px; }
+    .pdp-toast-btn { padding: 12px; font-size: 11px; }
 }
 
 </style>

@@ -1,0 +1,49 @@
+@model ValousWorld.Web.Models.ViewModels.OtpVerifyViewModel
+@{ ViewData["Title"] = "Verify OTP"; }
+
+<div class="container">
+    <div class="auth-card">
+        <h2>Enter OTP</h2>
+
+        <p style="text-align:center; color:#666; margin-bottom:16px; font-size:13px;">
+            OTP sent to <strong>@Model.Phone</strong>
+        </p>
+
+        <div class="alert-info">
+            <strong>Demo Mode:</strong> Use OTP <strong>1234</strong>
+        </div>
+
+        <form asp-action="Verify" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <label>OTP Code</label>
+            <input asp-for="Otp" type="text" placeholder="Enter OTP" maxlength="6" autocomplete="off" />
+            <span asp-validation-for="Otp" class="text-danger"></span>
+
+            <input type="hidden" asp-for="Phone" />
+            <input type="hidden" asp-for="ReturnUrl" />
+
+            <button type="submit" class="btn-primary">VERIFY & LOGIN</button>
+        </form>
+
+        <p class="muted">
+            <a href="/auth/otp-login">Change number</a>
+            &nbsp;·&nbsp;
+            <a href="/Auth/Login">Password login</a>
+        </p>
+    </div>
+</div>
+
+<style>
+    .alert-info {
+        background: #e3f2fd;
+        color: #0d47a1;
+        padding: 12px;
+        border-radius: 4px;
+        margin-bottom: 16px;
+        font-size: 13px;
+        text-align: center;
+        border-left: 3px solid #1976d2;
+    }
+</style>
