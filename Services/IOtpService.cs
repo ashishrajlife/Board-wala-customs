@@ -1,5 +1,3 @@
-namespace ValousWorld.Web.Services;
-
 public interface IOtpService
 {
     Task<(bool success, string? error)> SendOtpAsync(string phone, string purpose = "Login");

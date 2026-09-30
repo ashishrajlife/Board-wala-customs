@@ -55,7 +55,12 @@ public class AuthController : Controller
     // REGISTER — Step 1: Form (with Send OTP button)
     // ============================================================
     [HttpGet]
-    public IActionResult Register() => View();
+    public IActionResult Register(string? phone = null, string? returnUrl = null)
+    {
+        ViewBag.PrefilledPhone = phone;
+        ViewBag.ReturnUrl = returnUrl;
+        return View(new RegisterViewModel { Phone = phone ?? "" });
+    }
 
     // Called by register form — sends OTP for phone verification
     [HttpPost]

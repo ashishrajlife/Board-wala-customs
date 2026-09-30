@@ -569,6 +569,7 @@ main { display: block; min-height: 40vh; }
 }
 .auth-card h2 {
     margin-bottom: 26px;
+    text-align: center;
     font-size: 22px;
     font-weight: 800;
     letter-spacing: 1px;
