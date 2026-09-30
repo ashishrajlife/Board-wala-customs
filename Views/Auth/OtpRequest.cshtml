@@ -14,10 +14,12 @@
             @Html.AntiForgeryToken()
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-            <label>Mobile Number</label>
-            <input asp-for="Phone" type="tel" placeholder="10-digit mobile number" maxlength="10" />
+           <label>Mobile Number</label>
+            <input asp-for="Phone"
+                type="tel"
+                placeholder="10-digit mobile number"
+                maxlength="10" />
             <span asp-validation-for="Phone" class="text-danger"></span>
-
             <input type="hidden" asp-for="ReturnUrl" />
 
             <button type="submit" class="btn-primary">SEND OTP</button>
@@ -26,3 +28,29 @@
         <p class="muted">Back to <a href="/Auth/Login">Password login</a></p>
     </div>
 </div>
+<style>
+    .auth-card input[type="tel"] {
+        width: 100%;
+        height: 48px;
+        padding: 0 14px;
+        margin-top: 8px;
+        margin-bottom: 6px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        background: #fff;
+        color: #111827;
+        font-size: 15px;
+        outline: none;
+        box-sizing: border-box;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .auth-card input[type="tel"]::placeholder {
+        color: #9ca3af;
+    }
+
+    .auth-card input[type="tel"]:focus {
+        border-color: #111827;
+        box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.08);
+    }
+</style>
