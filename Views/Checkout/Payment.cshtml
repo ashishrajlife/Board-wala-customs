@@ -108,10 +108,36 @@
 
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
-    let paymentDone = false;
     (function () {
         const payBtn = document.getElementById('payNowBtn');
         if (!payBtn) return;
+
+        let paymentDone = false;
+        let pollTimer = null;
+
+        function startPolling() {
+            if (pollTimer) return;
+            const started = Date.now();
+            pollTimer = setInterval(async function () {
+                if (Date.now() - started > 5 * 60 * 1000) {
+                    clearInterval(pollTimer);
+                    pollTimer = null;
+                    return;
+                }
+                try {
+                    const r = await fetch('/checkout/status/@Model.OrderId', {
+                        credentials: 'same-origin', cache: 'no-store'
+                    });
+                    if (!r.ok) return;
+                    const d = await r.json();
+                    if (d.paid) {
+                        clearInterval(pollTimer);
+                        paymentDone = true;
+                        window.location.href = d.successUrl;
+                    }
+                } catch (e) { /* ignore, try again */ }
+            }, 3000);
+        }
 
         const options = {
             "key": "@keyId",
@@ -134,7 +160,7 @@
             "theme": { "color": "#000000" },
             "modal": {
                 "ondismiss": function () {
-                     if (paymentDone) return;
+                    if (paymentDone) return;
                     document.getElementById('failForm').submit();
                 }
             }
@@ -145,13 +171,14 @@
 
             rzp.on('payment.failed', function (response) {
                 console.log("RAZORPAY FAILED:", response.error);
-
+                // Only store details. The user may retry inside the popup.
                 document.getElementById('errorCode').value = response.error.code || '';
                 document.getElementById('errorDesc').value = response.error.description || '';
                 document.getElementById('errorReason').value = response.error.reason || '';
                 document.getElementById('errorStep').value = response.error.step || '';
             });
 
+            startPolling();
             rzp.open();
         });
     })();

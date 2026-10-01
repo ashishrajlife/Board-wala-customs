@@ -153,4 +153,30 @@ public class RealRazorpayService : IRazorpayService
         var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(data));
         return BitConverter.ToString(hash).Replace("-", "").ToLower();
     }
+
+    public Task<(bool success, string? paymentId, decimal? amount, string? error)> FetchCapturedPaymentForOrderAsync(
+    string razorpayOrderId)
+    {
+        try
+        {
+            var client = new RazorpayClient(_settings.Razorpay.KeyId, _settings.Razorpay.KeySecret);
+            var payments = client.Order.Fetch(razorpayOrderId).Payments();
+
+            foreach (var p in payments)
+            {
+                if (p["status"]?.ToString() == "captured")
+                {
+                    var amt = Convert.ToDecimal(p["amount"]) / 100m;
+                    return Task.FromResult<(bool, string?, decimal?, string?)>((true, p["id"].ToString(), amt, null));
+                }
+            }
+            return Task.FromResult<(bool, string?, decimal?, string?)>((true, null, null, null));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[RAZORPAY] Fetch order payments failed for {RzpOrderId}", razorpayOrderId);
+            return Task.FromResult<(bool, string?, decimal?, string?)>((false, null, null, ex.Message));
+        }
+    }
+
 }

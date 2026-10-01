@@ -2,11 +2,11 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
 using ValousWorld.Web.Data;
 using ValousWorld.Web.Models.Entities;
 using ValousWorld.Web.Services;
-using Microsoft.EntityFrameworkCore;
 
 namespace ValousWorld.Web.Controllers;
 
@@ -17,172 +17,164 @@ public class WebhookController : Controller
     private readonly IConfiguration _config;
     private readonly ILogger<WebhookController> _logger;
     private readonly IOrderService _orders;
-    private readonly IWhatsAppService _whatsapp;
-    private readonly IDeliveryService _delivery;
+    private readonly IPaymentFinalizer _finalizer;
     private readonly AppDbContext _db;
 
-    public WebhookController(
-        IConfiguration config,
-        ILogger<WebhookController> logger,
-        IOrderService orders,
-        IWhatsAppService whatsapp,
-        IDeliveryService delivery,
-        Data.AppDbContext db)
+    public WebhookController(IConfiguration config, ILogger<WebhookController> logger,
+        IOrderService orders, IPaymentFinalizer finalizer, AppDbContext db)
     {
-        _config = config;
-        _logger = logger;
-        _orders = orders;
-        _whatsapp = whatsapp;
-        _delivery = delivery;
-        _db = db;
+        _config = config; _logger = logger; _orders = orders; _finalizer = finalizer; _db = db;
     }
 
     [HttpPost, Route("razorpay")]
     [IgnoreAntiforgeryToken]
     public async Task<IActionResult> Razorpay()
     {
-        using var reader = new StreamReader(Request.Body);
+        using var reader = new StreamReader(Request.Body, Encoding.UTF8);
         var body = await reader.ReadToEndAsync();
         var signature = Request.Headers["X-Razorpay-Signature"].ToString();
-        var webhookSecret = _config["Integrations:Razorpay:WebhookSecret"];
+        var secret = _config["Integrations:Razorpay:WebhookSecret"];
 
-        _logger.LogInformation("[WEBHOOK] Received. Sig present: {HasSig}", !string.IsNullOrEmpty(signature));
-
-        if (string.IsNullOrWhiteSpace(webhookSecret))
+        // Fail closed: never accept unsigned webhooks
+        if (string.IsNullOrWhiteSpace(secret) || secret.StartsWith("SET_THIS"))
         {
-            _logger.LogWarning("[WEBHOOK] Secret not configured — accepting in dev mode");
-            return Ok();
+            _logger.LogError("[WEBHOOK] WebhookSecret not configured");
+            return StatusCode(500);
         }
 
-        if (!VerifySignature(body, signature, webhookSecret))
+        if (string.IsNullOrEmpty(signature) || !VerifySignature(body, signature, secret))
         {
-            _logger.LogWarning("[WEBHOOK] Invalid signature — rejected");
+            _logger.LogWarning("[WEBHOOK] Invalid signature - rejected");
             return Unauthorized();
         }
 
-        var json = JObject.Parse(body);
-        var eventType = json["event"]?.ToString();
-        _logger.LogInformation("[WEBHOOK] Event: {Event}", eventType);
+        var eventId = Request.Headers["X-Razorpay-Event-Id"].ToString();
+        if (string.IsNullOrEmpty(eventId))
+            eventId = "body-" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(body)));
+
+        // Deduplicate
+        var evt = await _db.WebhookEvents.FirstOrDefaultAsync(e => e.EventId == eventId);
+        if (evt != null && (evt.Status == "Processed" || evt.Status == "Unmatched" || evt.Status == "Flagged"))
+            return Ok();
+
+        if (evt == null)
+        {
+            evt = new WebhookEvent { EventId = eventId, Payload = body, Status = "Received" };
+            _db.WebhookEvents.Add(evt);
+            try { await _db.SaveChangesAsync(); }
+            catch (DbUpdateException) { return Ok(); } // concurrent duplicate
+        }
+
+        var evtId = evt.Id;
 
         try
         {
-            switch (eventType)
+            var json = JObject.Parse(body);
+            var eventType = json["event"]?.ToString() ?? "";
+            var payment = json["payload"]?["payment"]?["entity"];
+
+            evt.EventType = eventType;
+            evt.RazorpayOrderId = payment?["order_id"]?.ToString();
+            evt.RazorpayPaymentId = payment?["id"]?.ToString();
+            evt.Attempts++;
+
+            var outcome = eventType switch
             {
-                case "payment.captured":
-                case "order.paid":
-                    await HandlePaymentSuccess(json);
-                    break;
+                "payment.captured" => await HandleCaptured(payment),
+                "payment.failed" => await HandleFailed(payment),
+                "refund.processed" => await HandleRefund(json),
+                _ => "Ignored"
+            };
 
-                case "payment.failed":
-                    await HandlePaymentFailed(json);
-                    break;
+            evt.Status = outcome == "Ignored" ? "Processed" : outcome;
+            evt.Error = (outcome == "Unmatched" || outcome == "Flagged") ? outcome : null;
+            evt.ProcessedAt = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
 
-                case "refund.processed":
-                    await HandleRefundProcessed(json);
-                    break;
-
-                default:
-                    _logger.LogInformation("[WEBHOOK] Unhandled event: {Event}", eventType);
-                    break;
-            }
+            return Ok();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "[WEBHOOK] Error processing {Event}", eventType);
-        }
+            _logger.LogError(ex, "[WEBHOOK] Processing failed for event {EventId}", eventId);
 
-        return Ok();
+            _db.ChangeTracker.Clear();
+            var e2 = await _db.WebhookEvents.FirstAsync(x => x.Id == evtId);
+            e2.Status = "Failed";
+            e2.Attempts++;
+            e2.Error = ex.Message.Length > 900 ? ex.Message[..900] : ex.Message;
+            await _db.SaveChangesAsync();
+
+            return StatusCode(500); // Razorpay will retry
+        }
     }
 
-    // ============================================================
-    // HANDLERS
-    // ============================================================
-    private async Task HandlePaymentSuccess(JObject json)
+    // ---------------- HANDLERS ----------------
+
+    private async Task<string> HandleCaptured(JToken? payment)
     {
-        var payment = json["payload"]?["payment"]?["entity"];
-        if (payment == null) return;
+        if (payment == null) return "Ignored";
 
-        var razorpayOrderId = payment["order_id"]?.ToString();
-        var razorpayPaymentId = payment["id"]?.ToString();
+        var rzpOrderId = payment["order_id"]?.ToString();
+        var rzpPaymentId = payment["id"]?.ToString();
+        if (string.IsNullOrEmpty(rzpPaymentId)) return "Ignored";
+
         var amount = (payment["amount"]?.Value<decimal>() ?? 0) / 100m;
+        var currency = payment["currency"]?.ToString();
 
-        if (string.IsNullOrEmpty(razorpayOrderId)) return;
-
-        var order = await _orders.GetOrderByRazorpayIdAsync(razorpayOrderId);
+        var order = await FindOrderAsync(payment, rzpOrderId);
         if (order == null)
         {
-            _logger.LogWarning("[WEBHOOK] Order not found for {RzpOrderId}", razorpayOrderId);
-            return;
+            _logger.LogError("[WEBHOOK] UNMATCHED captured payment {PayId} (rzp order {RzpOrderId}) - customer charged, no order!",
+                rzpPaymentId, rzpOrderId);
+            return "Unmatched";
         }
 
-        // Idempotency
-        if (order.PaymentStatus == PaymentStatus.Paid)
+        if (currency != "INR")
         {
-            _logger.LogInformation("[WEBHOOK] {OrderNumber} already paid — skip", order.OrderNumber);
-            return;
+            _logger.LogError("[WEBHOOK] Non-INR payment {PayId} for {Order}", rzpPaymentId, order.OrderNumber);
+            return "Flagged";
         }
 
-        // Amount sanity check
-        if (Math.Abs(order.Total - amount) > 0.01m)
+        var result = await _finalizer.FinalizeAsync(order.OrderId, rzpPaymentId, "", amount, "webhook");
+
+        if (result == FinalizeResult.AmountMismatch) return "Flagged";
+
+        if (result == FinalizeResult.AlreadyPaid && order.RazorpayPaymentId != rzpPaymentId)
         {
-            _logger.LogWarning("[WEBHOOK] Amount mismatch for {OrderNumber}: expected {Expected}, got {Got}",
-                order.OrderNumber, order.Total, amount);
+            _logger.LogError("[WEBHOOK] DUPLICATE PAYMENT {PayId} for already-paid {Order} - refund it from dashboard",
+                rzpPaymentId, order.OrderNumber);
+            return "Flagged";
         }
 
-        await _orders.MarkPaymentPaidAsync(order, razorpayPaymentId ?? "", "");
-        await _orders.LogPaymentAttemptAsync(order, "Success");
-
-        // Shipment
-        var (shipSuccess, courier, tracking, _) = await _delivery.CreateShipmentAsync(order);
-        if (shipSuccess)
-        {
-            order.CourierName = courier;
-            order.TrackingNumber = tracking;
-            order.ShippedAt = DateTime.UtcNow;
-            order.Status = OrderStatus.Shipped;
-            await _db.SaveChangesAsync();
-        }
-
-        await _whatsapp.SendOrderConfirmationAsync(order);
-
-        _logger.LogInformation("[WEBHOOK] ✅ {OrderNumber} paid via webhook", order.OrderNumber);
+        return "Processed";
     }
 
-    private async Task HandlePaymentFailed(JObject json)
+    private async Task<string> HandleFailed(JToken? payment)
     {
-        var payment = json["payload"]?["payment"]?["entity"];
-        if (payment == null) return;
+        if (payment == null) return "Ignored";
 
-        var razorpayOrderId = payment["order_id"]?.ToString();
-        var errorCode = payment["error_code"]?.ToString();
-        var errorDesc = payment["error_description"]?.ToString();
+        var order = await FindOrderAsync(payment, payment["order_id"]?.ToString());
+        if (order == null || order.PaymentStatus == PaymentStatus.Paid) return "Ignored";
 
-        if (string.IsNullOrEmpty(razorpayOrderId)) return;
+        // Only log. The user may still retry inside the popup, so do not mark the order Failed here.
+        await _orders.LogPaymentAttemptAsync(order, "Failed",
+            payment["error_code"]?.ToString(), payment["error_description"]?.ToString());
 
-        var order = await _orders.GetOrderByRazorpayIdAsync(razorpayOrderId);
-        if (order == null) return;
-
-        if (order.PaymentStatus == PaymentStatus.Paid) return;
-
-        await _orders.MarkPaymentFailedAsync(order, errorCode, errorDesc);
-        await _orders.LogPaymentAttemptAsync(order, "Failed", errorCode, errorDesc);
-
-        _logger.LogWarning("[WEBHOOK] ❌ {OrderNumber} failed: [{Code}] {Desc}",
-            order.OrderNumber, errorCode, errorDesc);
+        return "Processed";
     }
 
-    private async Task HandleRefundProcessed(JObject json)
+    private async Task<string> HandleRefund(JObject json)
     {
         var refund = json["payload"]?["refund"]?["entity"];
-        if (refund == null) return;
+        if (refund == null) return "Ignored";
 
         var paymentId = refund["payment_id"]?.ToString();
         var refundId = refund["id"]?.ToString();
         var amount = (refund["amount"]?.Value<decimal>() ?? 0) / 100m;
 
-        var order = await _db.Orders
-            .FirstOrDefaultAsync(o => o.RazorpayPaymentId == paymentId);
-        if (order == null) return;
+        var order = await _db.Orders.FirstOrDefaultAsync(o => o.RazorpayPaymentId == paymentId);
+        if (order == null) return "Unmatched";
+        if (order.RefundId == refundId) return "Processed"; // already applied
 
         order.RefundId = refundId;
         order.RefundedAmount = amount;
@@ -190,15 +182,28 @@ public class WebhookController : Controller
         order.PaymentStatus = amount >= order.Total
             ? PaymentStatus.Refunded
             : PaymentStatus.PartiallyRefunded;
-
         if (order.PaymentStatus == PaymentStatus.Refunded)
             order.Status = OrderStatus.Refunded;
-
         order.UpdatedAt = DateTime.UtcNow;
-        await _db.SaveChangesAsync();
 
-        _logger.LogInformation("[WEBHOOK] 💰 Refund {Amount} for {OrderNumber}",
-            amount, order.OrderNumber);
+        await _db.SaveChangesAsync();
+        return "Processed";
+    }
+
+    // Finds by the current Razorpay order id, then falls back to notes.internal_order_id
+    // (covers payments made on an older Razorpay order after a Retry)
+    private async Task<Order?> FindOrderAsync(JToken payment, string? rzpOrderId)
+    {
+        Order? order = null;
+        if (!string.IsNullOrEmpty(rzpOrderId))
+            order = await _orders.GetOrderByRazorpayIdAsync(rzpOrderId);
+
+        if (order == null && payment["notes"] is JObject notes &&
+            int.TryParse(notes["internal_order_id"]?.ToString(), out var internalId))
+        {
+            order = await _db.Orders.FirstOrDefaultAsync(o => o.OrderId == internalId);
+        }
+        return order;
     }
 
     private static bool VerifySignature(string body, string signature, string secret)
@@ -209,7 +214,6 @@ public class WebhookController : Controller
 
         return CryptographicOperations.FixedTimeEquals(
             Encoding.UTF8.GetBytes(expected),
-            Encoding.UTF8.GetBytes(signature.ToLower())
-        );
+            Encoding.UTF8.GetBytes(signature.ToLower()));
     }
 }

@@ -20,6 +20,7 @@ public class CheckoutController : Controller
     private readonly IWhatsAppService _whatsapp;
     private readonly IDeliveryService _delivery;
     private readonly IConfiguration _configuration;
+    private readonly IPaymentFinalizer _finalizer;
     private readonly ILogger<CheckoutController> _logger;
 
     public CheckoutController(
@@ -30,6 +31,7 @@ public class CheckoutController : Controller
         IWhatsAppService whatsapp,
         IDeliveryService delivery,
         IConfiguration configuration,
+        IPaymentFinalizer finalizer,
         ILogger<CheckoutController> logger)
     {
         _db = db;
@@ -39,6 +41,7 @@ public class CheckoutController : Controller
         _whatsapp = whatsapp;
         _delivery = delivery;
         _configuration = configuration;
+        _finalizer = finalizer;
         _logger = logger;
     }
 
@@ -227,25 +230,14 @@ public class CheckoutController : Controller
         }
 
         // Mark paid
-        await _orders.MarkPaymentPaidAsync(order, razorpay_payment_id, razorpay_signature);
-        await _orders.LogPaymentAttemptAsync(order, "Success");
+        var result = await _finalizer.FinalizeAsync(
+        order.OrderId, razorpay_payment_id, razorpay_signature, null, "callback");
 
-        // Create shipment
-        var (shipSuccess, courier, tracking, _) = await _delivery.CreateShipmentAsync(order);
-        if (shipSuccess)
+        if (result == FinalizeResult.AmountMismatch)
         {
-            order.CourierName = courier;
-            order.TrackingNumber = tracking;
-            order.ShippedAt = DateTime.UtcNow;
-            order.Status = OrderStatus.Shipped;
-            await _db.SaveChangesAsync();
+            TempData["CheckoutError"] = "Payment amount mismatch. Please contact support.";
+            return RedirectToAction(nameof(Payment), new { id = orderId });
         }
-
-        // Clear cart
-        await _cart.ClearCartAsync(userId);
-
-        // WhatsApp notify
-        await _whatsapp.SendOrderConfirmationAsync(order);
 
         return RedirectToAction(nameof(Success), new { id = order.OrderId });
     }
@@ -297,4 +289,21 @@ public class CheckoutController : Controller
 
         return View("~/Views/Checkout/Success.cshtml", order);
     }
+
+        [HttpGet, Route("status/{id:int}")]
+        public async Task<IActionResult> Status(int id)
+        {
+            var userId = GetUserId();
+            var order = await _orders.GetOrderAsync(id, userId);
+            if (order == null) return NotFound();
+
+            Response.Headers["Cache-Control"] = "no-store";
+            return Json(new
+            {
+                paid = order.PaymentStatus == PaymentStatus.Paid,
+                paymentStatus = order.PaymentStatus,
+                orderStatus = order.Status,
+                successUrl = Url.Action(nameof(Success), new { id })
+            });
+        }
 }

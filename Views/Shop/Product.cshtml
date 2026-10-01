@@ -630,6 +630,47 @@
     }
 })();
 
+// ---- Admin check: block purchase ----
+(function () {
+    const isAdmin = @(User.Identity?.IsAuthenticated == true && User.IsInRole("Admin") ? "true" : "false");
+    if (!isAdmin) return;
+
+    const addBtn = document.getElementById('addToCartBtn');
+    const buyBtn = document.getElementById('buyNowBtn');
+
+    // Toast modal elements (already exist in your page)
+    const toastModal = document.getElementById('pdpToastModal');
+    const toastTitle = document.getElementById('pdpToastTitle');
+    const toastMessage = document.getElementById('pdpToastMessage');
+
+    function showAdminBlockToast() {
+        if (!toastModal) return;
+        toastTitle.textContent = 'Admin Account';
+        toastMessage.textContent = 'Admin accounts cannot purchase. Please use a customer account to place orders.';
+        toastModal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    // Override the form submit for admin
+    const form = document.getElementById('addToCartForm');
+    if (form) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            showAdminBlockToast();
+        }, true);  // ← capture phase — pehle chale
+    }
+
+    // Also intercept button clicks directly (extra safety)
+    [addBtn, buyBtn].forEach(btn => {
+        if (!btn) return;
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            showAdminBlockToast();
+        });
+    });
+})();
 
 </script>
 
