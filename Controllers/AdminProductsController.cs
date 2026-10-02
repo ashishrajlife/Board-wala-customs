@@ -237,11 +237,35 @@ public class AdminProductsController : Controller
             return RedirectToAction(nameof(Index));
         }
 
+        // 1. Ordered before? Keep it (order history must stay intact)
+        var hasOrders = await _db.OrderItems.AnyAsync(o => o.ProductId == id);
+        if (hasOrders)
+        {
+            TempData["Error"] = $"Cannot delete '{product.Name}' because customers have already ordered it. " +
+                                "Edit the product and set it to Inactive instead, so it is hidden from the store but order history stays intact.";
+            return RedirectToAction(nameof(Index));
+        }
+
         var imgs = new[] { product.Image1, product.Image2, product.Image3, product.Image4 };
 
-        _db.Products.Remove(product);
-        await _db.SaveChangesAsync();
+        try
+        {
+            // 2. Remove it from any customer carts (temporary data, safe to remove)
+            var cartItems = await _db.CartItems.Where(c => c.ProductId == id).ToListAsync();
+            _db.CartItems.RemoveRange(cartItems);
 
+            // 3. Delete the product (both deletes go in one transaction)
+            _db.Products.Remove(product);
+            await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            TempData["Error"] = $"Cannot delete '{product.Name}' because it is still used by other data. " +
+                                "Set it to Inactive instead.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // 4. Only reached if the DB delete succeeded: remove image files
         foreach (var img in imgs)
             _files.DeleteImage(img);
 

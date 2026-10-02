@@ -50,8 +50,9 @@
                 <thead>
                     <tr>
                         <th class="col-name">Name</th>
-                        <th>Created At</th>
-                        <th>Status</th> 
+                        <th class="col-created">Created At</th>
+                        <th class="col-products">Products</th>  
+                        <th class="col-status">Status</th> 
                         <th class="col-actions">Actions</th>
                     </tr>
                 </thead>
@@ -65,6 +66,9 @@
                         </td>
                         <td data-label="Created At">
                             @c.CreatedAt.ToString("dd MMM yyyy, HH:mm")
+                        </td>
+                        <td class="col-products" data-label="Products">
+                            <span class="product-count @(productCount == 0 ? "is-zero" : "")">@productCount</span>
                         </td>
                         <td class="col-status" data-label="Status">
                             <form method="post" action="/Admin/Categories/ToggleActive/@c.CategoryId" class="status-form">
@@ -85,22 +89,20 @@
                                     </svg>
                                     <span class="icon-btn-label">Edit</span>
                                 </a>
-                                @if (productCount == 0)
-                                {
-                                    <form method="post" action="/Admin/Categories/Delete/@c.CategoryId" class="tbl-actions-form js-delete-form">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="icon-btn icon-btn-danger" title="Delete">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                <polyline points="3 6 5 6 21 6"/>
-                                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                                                <path d="M10 11v6"/>
-                                                <path d="M14 11v6"/>
-                                                <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>
-                                            </svg>
-                                            <span class="icon-btn-label">Delete</span>
-                                        </button>
-                                    </form>
-                                }
+                            <form method="post" action="/Admin/Categories/Delete/@c.CategoryId"
+                                class="tbl-actions-form js-delete-form"
+                                data-name="@c.Name" data-count="@productCount">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="icon-btn icon-btn-danger" title="Delete">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M3 6h18"/>
+                                        <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/>
+                                        <path d="M19 6l-1 15H6L5 6"/>
+                                        <path d="M10 11v6"/>
+                                        <path d="M14 11v6"/>
+                                    </svg>
+                                </button>
+                            </form>
                             </div>
                         </td>
                     </tr>
@@ -122,7 +124,7 @@
             </svg>
         </div>
         <h3 id="deleteConfirmTitle">Delete this category?</h3>
-        <p>This action cannot be undone.</p>
+     <p id="deleteConfirmText">This action cannot be undone.</p>
         <div class="confirm-actions">
             <button type="button" class="btn-cancel" id="deleteCancelBtn">Cancel</button>
             <button type="button" class="btn-confirm-danger" id="deleteYesBtn">Yes, delete</button>
@@ -209,7 +211,8 @@
     }
     .admin-table {
         width: 100%; border-collapse: collapse;
-        font-size: 12.5px; min-width: 400px;
+        font-size: 12.5px; min-width: 760px;
+        table-layout: fixed;
     }
     .admin-table thead { background: #1c1c1c; border-bottom: 1.5px solid #1c1c1c; }
     .admin-table th {
@@ -232,7 +235,11 @@
     .admin-table tbody tr { transition: background 0.15s; }
     .admin-table tbody tr:hover { background: var(--gray-100); }
 
-    .admin-table .col-actions { width: 110px; }
+    .admin-table .col-actions  { width: 18%; }
+    .admin-table .col-name     { width: 30%; text-align: center; padding-left: 16px; word-break: break-word; }
+.admin-table .col-created  { width: 22%; }
+.admin-table .col-products { width: 12%; }
+.admin-table .col-status   { width: 18%; }
 
     .tbl-name {
         font-weight: 600; font-size: 12.5px;
@@ -260,7 +267,9 @@
     .icon-btn-danger:hover { border-color: var(--red, #c0392b); background: var(--red, #c0392b); color: var(--white); }
     .icon-btn-label { display: none; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
         /* ---------- Status toggle switch ---------- */
-    .admin-table .col-status { width: 130px; }
+    .admin-table .col-status   { width: 18%; }
+    .admin-table .col-created  { width: 22%; }
+.admin-table .col-products { width: 12%; }
     .status-form { display: inline-flex; align-items: center; gap: 8px; margin: 0; }
 
     .switch { position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer; flex-shrink: 0; }
@@ -330,6 +339,7 @@
     @@media (max-width: 680px) {
         .admin-header-actions { width: 100%; }
         .admin-header-actions a { flex: 1; justify-content: center; }
+        .admin-table .col-name { width: auto; padding-left: 0; }
 
         .admin-table-wrap { border: none; background: transparent; overflow-x: visible; }
         .admin-table { min-width: 0; display: block; font-size: 13px; }
@@ -394,12 +404,40 @@
         .tbl-actions-form { display: flex; }
         .icon-btn { width: auto; height: 34px; padding: 0 12px; }
         .icon-btn-label { display: inline-block; }
+
+        /* ADD */
+        .admin-table .col-products {
+            grid-column: 1 / -1; grid-row: 3;
+            width: auto;
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--gray-100); border-radius: 6px; padding: 8px 10px;
+        }
+        .admin-table .col-products:before {
+            content: attr(data-label);
+            font-size: 9px; font-weight: 800; letter-spacing: 0.8px;
+            text-transform: uppercase; color: var(--gray-600);
+        }
+
+        /* CHANGE in the existing .col-status rule */
+        .admin-table .col-status {
+            grid-column: 1 / -1; grid-row: 4;     /* was grid-row: 3 */
+            ...rest stays the same...
+        }
+
     }
     @@media (max-width: 400px) {
         .admin-table tbody tr { padding: 11px; gap: 6px 8px; }
         .tbl-name { font-size: 12.5px; }
         .icon-btn { height: 32px; padding: 0 10px; font-size: 10px; }
         .confirm-box { padding: 20px 16px 16px; }
+    }
+    /* ---------- Product count badge ---------- */
+   .admin-table .col-products { width: 12%; }
+    .product-count {
+        display: inline-block; min-width: 28px;
+        padding: 3px 10px;
+        color:black;
+        font-size: 14px; font-weight: 600; line-height: 1.4;
     }
 </style>
 
@@ -410,7 +448,26 @@
         var cancelBtn = document.getElementById('deleteCancelBtn');
         var formToSubmit = null;
 
-        function openModal(form) { formToSubmit = form; overlay.classList.add('is-open'); }
+        function openModal(form) {
+    formToSubmit = form;
+    var name  = form.dataset.name || 'this category';
+    var count = parseInt(form.dataset.count || '0', 10);
+    var text  = document.getElementById('deleteConfirmText');
+
+    if (count > 0) {
+        // Has products: can't delete, so explain and hide the confirm button
+        text.textContent = '"' + name + '" still has ' + count +
+            ' product(s). Move or delete them first, or use the toggle to hide this category instead.';
+        yesBtn.style.display = 'none';
+        cancelBtn.textContent = 'Close';
+    } else {
+        text.textContent = 'Delete "' + name + '"? This action cannot be undone.';
+        yesBtn.style.display = '';
+        cancelBtn.textContent = 'Cancel';
+    }
+    overlay.classList.add('is-open');
+}
+function closeModal() { overlay.classList.remove('is-open'); formToSubmit = null; }
         function closeModal() { overlay.classList.remove('is-open'); formToSubmit = null; }
 
         document.querySelectorAll('.js-delete-form').forEach(function (form) {
