@@ -20,15 +20,6 @@
     </div>
 </div>
 
-    @if (TempData["AddressSuccess"] != null)
-    {
-        <div class="alert-success">@TempData["AddressSuccess"]</div>
-    }
-    @if (TempData["AddressError"] != null)
-    {
-        <div class="alert-error">@TempData["AddressError"]</div>
-    }
-
     @if (!Model.Any())
     {
         <div class="address-empty">
@@ -225,39 +216,27 @@
 .addr-btn-danger { background: transparent; color: var(--red); border-color: var(--red); }
 .addr-btn-danger:hover { background: var(--red); color: var(--white); }
 
-/* Delete confirmation modal */
 .confirm-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.55);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-        z-index: 9999;
-    }
-    .confirm-overlay.open { display: flex; }
-    .confirm-box {
-        background: var(--white);
-        border-radius: 6px;
-        padding: 28px 24px 22px;
-        width: 100%;
-        max-width: 380px;
-        text-align: center;
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
-    }
-    .confirm-box h4 {
-        margin: 0 0 8px;
-        font-size: 16px;
-        font-weight: 800;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-    }
-    .confirm-box p { margin: 0 0 22px; font-size: 13px; color: var(--gray-600); line-height: 1.5; }
-    .confirm-actions { display: flex; gap: 10px; justify-content: center; }
-    .confirm-actions .addr-btn { min-width: 110px; height: 38px; }
-    .confirm-actions .addr-btn-danger { background: var(--red); color: var(--white); }
-    .confirm-actions .addr-btn-danger:hover { opacity: 0.85; }
+    position: fixed; inset: 0; background: rgba(0,0,0,.6);
+    display: none; align-items: center; justify-content: center;
+    padding: 20px; z-index: 9999;
+}
+.confirm-overlay.open { display: flex; }
+.confirm-box {
+    background: var(--white); border: 1px solid var(--black); border-radius: 2px;
+    width: 100%; max-width: 400px; text-align: left; overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,.25);
+}
+.confirm-box h4 {
+    margin: 0; padding: 14px 20px;
+    font-size: 12px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
+    background: var(--gray-100); border-bottom: 1px solid var(--gray-200);
+}
+.confirm-box p { margin: 0; padding: 20px; font-size: 13px; color: var(--gray-800); line-height: 1.6; }
+.confirm-actions { display: flex; gap: 10px; justify-content: flex-end; padding: 0 20px 20px; }
+.confirm-actions .addr-btn { min-width: 110px; height: 38px; }
+.confirm-actions .addr-btn-danger { background: var(--red); color: var(--white); }
+.confirm-actions .addr-btn-danger:hover { opacity: .85; }
 
     @@media (max-width: 500px) {
         .address-page { padding: 25px 25px 25px; }

@@ -196,6 +196,7 @@
     .checkout-title {
         font-size: 28px;
         font-weight: 900;
+        margin-left: 20px;
         letter-spacing: 2px;
         text-transform: uppercase;
         margin: 0 0 30px;
@@ -386,6 +387,7 @@
         border-radius: 4px;
         padding: 24px;
         position: sticky;
+        margin: 15px;
         top: 100px;
     }
     .checkout-summary h3 {
@@ -454,13 +456,13 @@
     /* ---------- Responsive ---------- */
     @@media (max-width: 1024px) {
         .checkout-layout { grid-template-columns: 1fr; gap: 20px; }
-        .checkout-summary { position: static; }
+        .checkout-summary { position: static; margin: 15px; }
     }
 
     @@media (max-width: 500px) {
         .checkout-page { padding: 24px 0 60px; }
-        .checkout-title { font-size: 22px; margin-bottom: 20px; }
-        .checkout-step { padding: 16px; }
+        .checkout-title { font-size: 22px; margin-bottom: 20px; margin-left: 20px;}
+        .checkout-step { padding: 20px; }
 
         .address-list { grid-template-columns: 1fr; }
 

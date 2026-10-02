@@ -674,12 +674,13 @@ h1 {
 
 /* ================= ALERTS ================= */
 .alert-error {
-    background: #fdecea;
-    color: #b71c1c;
+    background: #ffdbd7;
+    color: #b40404;
     padding: 14px 18px;
     margin-bottom: 20px;
     font-size: 13px;
-    border-left: 4px solid var(--red);
+    margin-left: 20px;
+    margin-right: 20px;
     border-radius: 2px;
 }
 .link-disabled {

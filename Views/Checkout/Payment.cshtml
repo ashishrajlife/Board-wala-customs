@@ -9,10 +9,10 @@
 <div class="container payment-page">
     <h1 class="payment-title">COMPLETE PAYMENT</h1>
 
-    @if (TempData["CheckoutError"] != null)
+    @* @if (TempData["CheckoutError"] != null)
     {
         <div class="alert-error">@TempData["CheckoutError"]</div>
-    }
+    } *@
 
     @if (isFailed || isExpired)
     {
@@ -28,7 +28,7 @@
             <p>
                 @if (!string.IsNullOrWhiteSpace(Model.FailureReason))
                 {
-                    @Model.FailureReason
+                    @Model.FailureReason <!---BAD_REQUEST_ERROR-->
                 }
                 else
                 {
@@ -192,8 +192,9 @@
         text-align: center; margin: 0 0 30px;
     }
     .payment-card {
-        border: 1.5px solid var(--gray-200);
+        border: 1.5px solid black;
         border-radius: 6px;
+        margin: 30px;
         padding: 30px;
         background: var(--white);
     }
@@ -228,10 +229,6 @@
     }
 
     .payment-failed-box {
-        background: #fdecea;
-        border-left: 4px solid var(--red);
-        padding: 18px;
-        border-radius: 4px;
         margin-bottom: 20px;
         text-align: center;
     }
