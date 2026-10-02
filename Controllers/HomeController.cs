@@ -14,7 +14,7 @@ public class HomeController : Controller
         // Products for landing
         var products = await _db.Products
             .Include(p => p.Category)
-            .Where(p => p.IsActive && p.IsNewArrival)
+            .Where(p => p.IsActive && p.Category.IsActive && p.IsNewArrival)
             .OrderByDescending(p => p.CreatedAt)
             .Take(12)
             .ToListAsync();
@@ -26,7 +26,7 @@ public class HomeController : Controller
             .ToListAsync();
 
         ViewBag.TotalProducts = await _db.Products
-            .CountAsync(p => p.IsActive);
+        .CountAsync(p => p.IsActive && p.Category.IsActive);
 
         return View("~/Views/Home/Index.cshtml", products);
     }

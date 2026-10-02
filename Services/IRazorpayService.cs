@@ -14,4 +14,7 @@ public interface IRazorpayService
 
     Task<(bool success, string? refundId, string? error)> CreateRefundAsync(
         string razorpayPaymentId, decimal amount, string? notes = null);
+
+    Task<(bool success, string? paymentId, decimal? amount, string? error)> FetchCapturedPaymentForOrderAsync(
+    string razorpayOrderId);
 }

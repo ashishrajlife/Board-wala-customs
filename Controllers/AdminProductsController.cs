@@ -204,6 +204,14 @@ public class AdminProductsController : Controller
         existing.Tags = model.Tags;
         existing.Benefits = model.Benefits;
 
+        // Voucher
+        existing.VoucherCode = string.IsNullOrWhiteSpace(model.VoucherCode) ? null : model.VoucherCode.Trim();
+        existing.VoucherDiscountPercent = model.VoucherDiscountPercent;
+        existing.VoucherMinOrderValue = model.VoucherMinOrderValue;
+        existing.VoucherMaxDiscount = model.VoucherMaxDiscount;
+        existing.VoucherValidUntil = model.VoucherValidUntil;
+        existing.VoucherIsActive = model.VoucherIsActive;
+
         // Flags
         existing.IsActive = model.IsActive;
         existing.IsFeatured = model.IsFeatured;

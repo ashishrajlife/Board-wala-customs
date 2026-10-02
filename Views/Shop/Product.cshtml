@@ -540,15 +540,9 @@
 
     let pendingSubmit = null;
 
-    // ---- Show toast ----
-    function showToast(title, message, onSubmit) {
-        if (!toastModal) return;
-        toastTitle.textContent = title || 'Hold on!';
-        toastMessage.textContent = message || '';
-        pendingSubmit = onSubmit || null;
-        toastModal.classList.add('open');
-        document.body.style.overflow = 'hidden';
-    }
+   function showToast(title, message) {
+    window.showToast(message, 'warning');
+}
 
     function closeToast() {
         if (!toastModal) return;
@@ -630,6 +624,43 @@
     }
 })();
 
+// ---- Admin check: block purchase ----
+(function () {
+    const isAdmin = @(User.Identity?.IsAuthenticated == true && User.IsInRole("Admin") ? "true" : "false");
+    if (!isAdmin) return;
+
+    const addBtn = document.getElementById('addToCartBtn');
+    const buyBtn = document.getElementById('buyNowBtn');
+
+    // Toast modal elements (already exist in your page)
+    const toastModal = document.getElementById('pdpToastModal');
+    const toastTitle = document.getElementById('pdpToastTitle');
+    const toastMessage = document.getElementById('pdpToastMessage');
+
+    function showAdminBlockToast() {
+    window.showToast('Admin accounts cannot purchase. Please use a customer account.', 'error');
+}
+
+    // Override the form submit for admin
+    const form = document.getElementById('addToCartForm');
+    if (form) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            showAdminBlockToast();
+        }, true);  // ← capture phase — pehle chale
+    }
+
+    // Also intercept button clicks directly (extra safety)
+    [addBtn, buyBtn].forEach(btn => {
+        if (!btn) return;
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            showAdminBlockToast();
+        });
+    });
+})();
 
 </script>
 
@@ -1288,6 +1319,78 @@
     .pdp-toast-title { font-size: 14px; }
     .pdp-toast-message { font-size: 12px; margin-bottom: 18px; }
     .pdp-toast-btn { padding: 12px; font-size: 11px; }
+}
+
+/* ============================================================
+   DESKTOP / PC ONLY — equal height image + info box
+   ============================================================ */
+@@media (min-width: 901px) {
+
+    /* both columns same height */
+    .pdp-grid {
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+        align-items: stretch;
+        gap: 40px;
+    }
+
+    /* ---- LEFT: thumbs on the left, main image fills full height ---- */
+    .pdp-gallery {
+        flex-direction: row-reverse;   /* thumbs (2nd in DOM) show on the left */
+        gap: 12px;
+        min-height: 560px;
+    }
+    .pdp-main-wrap {
+        flex: 1;
+        min-width: 0;
+        border-radius: 4px;
+    }
+    .pdp-main,
+    .pdp-no-image {
+        position: absolute;            /* image follows box height, not the reverse */
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        aspect-ratio: auto;
+        object-fit: cover;
+    }
+    .pdp-thumbs {
+        display: flex;
+        flex-direction: column;
+        flex: 0 0 80px;
+        width: 80px;
+        gap: 10px;
+        overflow-y: auto;
+    }
+    .pdp-thumb { flex: 0 0 auto; border-radius: 3px; }
+
+    /* ---- RIGHT: info as a card, buttons pinned to the bottom ---- */
+    .pdp-info {
+        padding: 32px 36px;
+        border: 1px solid var(--gray-200);
+        border-radius: 4px;
+        background: var(--white);
+    }
+    /* the big wrapper block that holds size/color/qty/actions/meta */
+    .pdp-info > .pdp-block {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 0;
+    }
+    .pdp-info > .pdp-block .pdp-actions {
+        margin-top: auto;              /* pushes buttons + meta to the bottom edge */
+        padding-top: 26px;
+    }
+}
+
+/* ---- Big screens (1400px+) ---- */
+@@media (min-width: 1400px) {
+    .pdp-grid { gap: 64px; }
+    .pdp-gallery { min-height: 680px; }
+    .pdp-thumbs { flex-basis: 96px; width: 96px; }
+    .pdp-info { padding: 40px 44px; }
+    .pdp-info h1 { font-size: 30px; }
+    .pdp-sale { font-size: 26px; }
 }
 
 </style>

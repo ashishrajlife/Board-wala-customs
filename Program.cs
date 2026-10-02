@@ -84,8 +84,11 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IVoucherService, VoucherService>();
 builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 builder.Services.AddHostedService<OrderExpiryBackgroundService>();
+builder.Services.AddScoped<IPaymentFinalizer, PaymentFinalizer>();
+builder.Services.AddHostedService<PaymentReconciliationService>();
 
 var app = builder.Build();
 

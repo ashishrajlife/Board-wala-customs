@@ -37,7 +37,7 @@ public class ShopController : Controller
     {
         var product = await _db.Products
             .Include(p => p.Category)
-            .FirstOrDefaultAsync(p => p.ProductId == id && p.IsActive);
+          .FirstOrDefaultAsync(p => p.ProductId == id && p.IsActive && p.Category.IsActive);
         if (product == null) return NotFound();
 
         ViewBag.Related = await _db.Products
@@ -66,9 +66,9 @@ public async Task<IActionResult> Shop(
     string? colors = null)
 {
     var query = _db.Products
-        .Include(p => p.Category)
-        .Where(p => p.IsActive)
-        .AsQueryable();
+    .Include(p => p.Category)
+    .Where(p => p.IsActive && p.Category.IsActive)
+    .AsQueryable();
 
     // ----- Search -----
     if (!string.IsNullOrWhiteSpace(q))

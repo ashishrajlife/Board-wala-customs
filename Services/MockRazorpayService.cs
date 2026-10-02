@@ -37,4 +37,9 @@ public class MockRazorpayService : IRazorpayService
         _logger.LogInformation("[RAZORPAY MOCK] Refund: {PaymentId} → {RefundId}", razorpayPaymentId, mockRefundId);
         return Task.FromResult<(bool, string?, string?)>((true, mockRefundId, null));
     }
+    public Task<(bool success, string? paymentId, decimal? amount, string? error)> FetchCapturedPaymentForOrderAsync(
+    string razorpayOrderId)
+    {
+        return Task.FromResult<(bool, string?, decimal?, string?)>((true, null, null, null));
+    }
 }

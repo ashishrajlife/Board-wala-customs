@@ -459,12 +459,12 @@
     }
 
     @@media (max-width: 500px) {
-        .products-grid { grid-template-columns: 1fr; gap: 20px; }
-        .shop-sidebar { width: 88%; padding: 16px; }
-        .toolbar-btn { flex: 1; justify-content: center; }
-        .toolbar-count { width: 100%; text-align: right; margin-left: 0; }
-        .chip-check span { padding: 5px 10px; font-size: 11px; }
-    }
+    .products-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .shop-sidebar { width: 88%; padding: 16px; }
+    .toolbar-btn { flex: 1; justify-content: center; }
+    .toolbar-count { width: 100%; text-align: right; margin-left: 0; }
+    .chip-check span { padding: 5px 10px; font-size: 11px; }
+}
 </style>
 
 <script>

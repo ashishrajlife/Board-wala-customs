@@ -9,10 +9,10 @@
 <div class="container payment-page">
     <h1 class="payment-title">COMPLETE PAYMENT</h1>
 
-    @if (TempData["CheckoutError"] != null)
+    @* @if (TempData["CheckoutError"] != null)
     {
         <div class="alert-error">@TempData["CheckoutError"]</div>
-    }
+    } *@
 
     @if (isFailed || isExpired)
     {
@@ -28,7 +28,7 @@
             <p>
                 @if (!string.IsNullOrWhiteSpace(Model.FailureReason))
                 {
-                    @Model.FailureReason
+                    @Model.FailureReason <!---BAD_REQUEST_ERROR-->
                 }
                 else
                 {
@@ -112,6 +112,33 @@
         const payBtn = document.getElementById('payNowBtn');
         if (!payBtn) return;
 
+        let paymentDone = false;
+        let pollTimer = null;
+
+        function startPolling() {
+            if (pollTimer) return;
+            const started = Date.now();
+            pollTimer = setInterval(async function () {
+                if (Date.now() - started > 5 * 60 * 1000) {
+                    clearInterval(pollTimer);
+                    pollTimer = null;
+                    return;
+                }
+                try {
+                    const r = await fetch('/checkout/status/@Model.OrderId', {
+                        credentials: 'same-origin', cache: 'no-store'
+                    });
+                    if (!r.ok) return;
+                    const d = await r.json();
+                    if (d.paid) {
+                        clearInterval(pollTimer);
+                        paymentDone = true;
+                        window.location.href = d.successUrl;
+                    }
+                } catch (e) { /* ignore, try again */ }
+            }, 3000);
+        }
+
         const options = {
             "key": "@keyId",
             "amount": "@((int)Math.Round(Model.Total * 100))",
@@ -120,6 +147,7 @@
             "description": "Order @Model.OrderNumber",
             "order_id": "@Model.RazorpayOrderId",
             "handler": function (response) {
+                paymentDone = true;
                 document.getElementById('razorpay_payment_id').value = response.razorpay_payment_id;
                 document.getElementById('razorpay_order_id').value = response.razorpay_order_id;
                 document.getElementById('razorpay_signature').value = response.razorpay_signature;
@@ -132,6 +160,7 @@
             "theme": { "color": "#000000" },
             "modal": {
                 "ondismiss": function () {
+                    if (paymentDone) return;
                     document.getElementById('failForm').submit();
                 }
             }
@@ -142,15 +171,14 @@
 
             rzp.on('payment.failed', function (response) {
                 console.log("RAZORPAY FAILED:", response.error);
-
+                // Only store details. The user may retry inside the popup.
                 document.getElementById('errorCode').value = response.error.code || '';
                 document.getElementById('errorDesc').value = response.error.description || '';
                 document.getElementById('errorReason').value = response.error.reason || '';
                 document.getElementById('errorStep').value = response.error.step || '';
-
-                document.getElementById('failForm').submit();
             });
 
+            startPolling();
             rzp.open();
         });
     })();
@@ -164,8 +192,9 @@
         text-align: center; margin: 0 0 30px;
     }
     .payment-card {
-        border: 1.5px solid var(--gray-200);
+        border: 1.5px solid black;
         border-radius: 6px;
+        margin: 30px;
         padding: 30px;
         background: var(--white);
     }
@@ -200,10 +229,6 @@
     }
 
     .payment-failed-box {
-        background: #fdecea;
-        border-left: 4px solid var(--red);
-        padding: 18px;
-        border-radius: 4px;
         margin-bottom: 20px;
         text-align: center;
     }

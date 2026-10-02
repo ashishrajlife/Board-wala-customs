@@ -10,12 +10,14 @@ public class OrderService : IOrderService
 
     private readonly AppDbContext _db;
     private readonly ICartService _cart;
+    private readonly IVoucherService _vouchers;
     private readonly ILogger<OrderService> _logger;
 
-    public OrderService(AppDbContext db, ICartService cart, ILogger<OrderService> logger)
+    public OrderService(AppDbContext db, ICartService cart, IVoucherService vouchers, ILogger<OrderService> logger)
     {
         _db = db;
         _cart = cart;
+        _vouchers = vouchers;
         _logger = logger;
     }
 
@@ -26,7 +28,7 @@ public class OrderService : IOrderService
         return $"VW-{year}-{(count + 1):D4}";
     }
 
-    public async Task<Order> CreateOrderFromCartAsync(int userId, int addressId, decimal shipping)
+    public async Task<Order> CreateOrderFromCartAsync(int userId, int addressId, decimal shipping, string? voucherCode = null)
     {
         var cart = await _cart.GetCartAsync(userId)
             ?? throw new InvalidOperationException("Cart not found.");
@@ -40,6 +42,15 @@ public class OrderService : IOrderService
 
         var subtotal = cart.Items.Sum(i => i.UnitPrice * i.Quantity);
         var savings = cart.Items.Sum(i => (i.OriginalMRP - i.UnitPrice) * i.Quantity);
+        var voucherDiscount = 0m;
+        if (!string.IsNullOrWhiteSpace(voucherCode))
+        {
+            var voucher = await _vouchers.ValidateAsync(userId, voucherCode);
+            if (!voucher.IsValid)
+                throw new InvalidOperationException(voucher.Message);
+
+            voucherDiscount = voucher.DiscountAmount;
+        }
 
         var order = new Order
         {
@@ -47,9 +58,9 @@ public class OrderService : IOrderService
             UserId = userId,
             Status = OrderStatus.Created,
             Subtotal = subtotal,
-            Discount = savings,
+            Discount = savings + voucherDiscount,
             Shipping = shipping,
-            Total = subtotal + shipping,
+            Total = subtotal + shipping - voucherDiscount,
             PaymentMethod = "Razorpay",
             PaymentStatus = PaymentStatus.Created,
 

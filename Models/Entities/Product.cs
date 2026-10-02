@@ -52,6 +52,13 @@ public class Product
     [StringLength(1000)] public string? Benefits { get; set; }
     // =================================================================
 
+    [StringLength(100)] public string? VoucherCode { get; set; }
+    public int? VoucherDiscountPercent { get; set; }
+    [Column(TypeName = "decimal(10,2)")] public decimal? VoucherMinOrderValue { get; set; }
+    [Column(TypeName = "decimal(10,2)")] public decimal? VoucherMaxDiscount { get; set; }
+    public DateTime? VoucherValidUntil { get; set; }
+    public bool VoucherIsActive { get; set; }
+
     public bool IsActive { get; set; } = true;
     public bool IsFeatured { get; set; } = false;
     public bool IsNewArrival { get; set; } = true;

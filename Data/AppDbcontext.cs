@@ -19,6 +19,7 @@ public class AppDbContext : DbContext
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<PaymentAttempt> PaymentAttempts => Set<PaymentAttempt>();
     public DbSet<OtpLog> OtpLogs => Set<OtpLog>();
+    public DbSet<WebhookEvent> WebhookEvents => Set<WebhookEvent>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Role>().HasIndex(r => r.RoleName).IsUnique();
