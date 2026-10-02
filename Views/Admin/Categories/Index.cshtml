@@ -51,6 +51,7 @@
                     <tr>
                         <th class="col-name">Name</th>
                         <th>Created At</th>
+                        <th>Status</th> 
                         <th class="col-actions">Actions</th>
                     </tr>
                 </thead>
@@ -64,6 +65,16 @@
                         </td>
                         <td data-label="Created At">
                             @c.CreatedAt.ToString("dd MMM yyyy, HH:mm")
+                        </td>
+                        <td class="col-status" data-label="Status">
+                            <form method="post" action="/Admin/Categories/ToggleActive/@c.CategoryId" class="status-form">
+                                @Html.AntiForgeryToken()
+                                <label class="switch" title="@(c.IsActive ? "Active - click to turn OFF" : "Inactive - click to turn ON")">
+                                    <input type="checkbox" @(c.IsActive ? "checked" : "") onchange="this.form.submit()" />
+                                    <span class="slider"></span>
+                                </label>
+                                <span class="status-text @(c.IsActive ? "is-on" : "is-off")">@(c.IsActive ? "Active" : "Inactive")</span>
+                            </form>
                         </td>
                         <td class="col-actions" data-label="Actions">
                             <div class="tbl-actions">
@@ -89,10 +100,6 @@
                                             <span class="icon-btn-label">Delete</span>
                                         </button>
                                     </form>
-                                }
-                                else
-                                {
-                                    <span class="icon-btn icon-btn-locked" title="Cannot delete — @productCount product(s) linked">🔒</span>
                                 }
                             </div>
                         </td>
@@ -251,10 +258,26 @@
     }
     .icon-btn:hover { border-color: var(--black); background: var(--black); color: var(--white); }
     .icon-btn-danger:hover { border-color: var(--red, #c0392b); background: var(--red, #c0392b); color: var(--white); }
-    .icon-btn-locked { cursor: not-allowed; opacity: 0.6; }
-    .icon-btn-locked:hover { border-color: var(--gray-200); background: var(--white); color: var(--gray-800); }
     .icon-btn-label { display: none; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+        /* ---------- Status toggle switch ---------- */
+    .admin-table .col-status { width: 130px; }
+    .status-form { display: inline-flex; align-items: center; gap: 8px; margin: 0; }
 
+    .switch { position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .slider { position: absolute; inset: 0; background: #c9c9c9; border-radius: 24px; transition: background .2s; }
+    .slider::before {
+        content: ""; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px;
+        background: #fff; border-radius: 50%; transition: transform .2s;
+        box-shadow: 0 1px 3px rgba(0,0,0,.3);
+    }
+    .switch input:checked + .slider { background: #22c55e; }
+    .switch input:checked + .slider::before { transform: translateX(20px); }
+    .switch input:focus-visible + .slider { outline: 2px solid var(--black); outline-offset: 2px; }
+
+    .status-text { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; min-width: 52px; text-align: left; }
+    .status-text.is-on  { color: #2e7d32; }
+    .status-text.is-off { color: #b71c1c; }
     .confirm-overlay {
         display: none; position: fixed; inset: 0;
         background: rgba(0,0,0,0.55);
@@ -312,6 +335,17 @@
         .admin-table { min-width: 0; display: block; font-size: 13px; }
         .admin-table thead { display: none; }
         .admin-table tbody { display: block; }
+        .admin-table .col-status {
+            grid-column: 1 / -1; grid-row: 3;
+            width: auto;
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--gray-100); border-radius: 6px; padding: 8px 10px;
+        }
+        .admin-table .col-status:before {
+            content: attr(data-label);
+            font-size: 9px; font-weight: 800; letter-spacing: 0.8px;
+            text-transform: uppercase; color: var(--gray-600);
+        }
 
         .admin-table tbody tr {
             display: grid;

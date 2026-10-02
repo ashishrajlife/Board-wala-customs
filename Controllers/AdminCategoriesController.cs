@@ -123,4 +123,27 @@ public class AdminCategoriesController : Controller
 
     // private static string Slugify(string input)
     //     => input.Trim().ToLower().Replace(" ", "-").Replace("'", "").Replace("\"", "");
+
+    [HttpPost, Route("ToggleActive/{id:int}")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ToggleActive(int id)
+    {
+        var category = await _db.Categories.FindAsync(id);
+        if (category == null)
+        {
+            TempData["Error"] = "Category not found.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        category.IsActive = !category.IsActive;
+        await _db.SaveChangesAsync();
+
+        TempData["Success"] = category.IsActive
+            ? $"'{category.Name}' is now ACTIVE. Its products are visible on the site."
+            : $"'{category.Name}' is now INACTIVE. Its products are hidden from the site.";
+
+        return RedirectToAction(nameof(Index));
+    }
+
+
 }
