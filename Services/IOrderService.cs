@@ -4,7 +4,7 @@ namespace ValousWorld.Web.Services;
 
 public interface IOrderService
 {
-    Task<Order> CreateOrderFromCartAsync(int userId, int addressId, decimal shipping);
+    Task<Order> CreateOrderFromCartAsync(int userId, int addressId, decimal shipping, string? voucherCode = null);
     Task<Order?> GetOrderAsync(int orderId, int userId);
     Task<Order?> GetOrderByRazorpayIdAsync(string razorpayOrderId);
     Task<List<Order>> GetUserOrdersAsync(int userId);

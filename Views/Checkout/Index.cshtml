@@ -170,17 +170,32 @@
                     </p>
                 }
 
+                <div class="summary-row summary-row-save" id="voucherDiscountRow" hidden>
+                    <span>Voucher discount</span>
+                    <span id="checkoutVoucherDiscount">−₹0.00</span>
+                </div>
+
                 <div class="summary-total">
                     <span>TOTAL</span>
-                    <span>₹@grandTotal.ToString("0.00")</span>
+                    <span>₹<span id="checkoutGrandTotal">@grandTotal.ToString("0.00")</span></span>
                 </div>
 
                 <input type="hidden" name="shippingAmount" value="@shipping" />
                 <input type="hidden" name="grandTotal" value="@grandTotal" />
+                <input type="hidden" name="voucherCode" id="appliedVoucherCode" value="" />
 
                 <button type="submit" class="btn-primary place-order-btn" id="placeOrderBtn">
                     PLACE ORDER
                 </button>
+
+                <div class="voucher-entry">
+                    <label for="voucherCodeInput">Voucher code</label>
+                    <div class="voucher-controls">
+                        <input type="text" id="voucherCodeInput" maxlength="100" autocomplete="off" />
+                        <button type="button" class="btn-outline" id="applyVoucherBtn">Apply</button>
+                    </div>
+                    <p id="voucherMessage" class="voucher-message" role="status" aria-live="polite"></p>
+                </div>
 
                 <p class="summary-note">
                     Payment integration (Razorpay) coming soon.
@@ -444,6 +459,15 @@
         font-size: 13px;
     }
 
+    .voucher-entry { margin-top: 18px; }
+    .voucher-entry label { display: block; margin-bottom: 7px; font-size: 12px; font-weight: 700; }
+    .voucher-controls { display: flex; gap: 8px; }
+    .voucher-controls input { min-width: 0; flex: 1; padding: 10px; border: 1px solid var(--gray-300); border-radius: 2px; }
+    .voucher-controls button { flex: 0 0 auto; padding: 0 14px; }
+    .voucher-message { min-height: 16px; margin: 6px 0 0; font-size: 12px; color: var(--gray-600); }
+    .voucher-message.error { color: var(--red); }
+    .voucher-message.success { color: #2e7d32; }
+
     .summary-note {
         font-size: 11px;
         color: var(--gray-600);
@@ -487,5 +511,83 @@
 
         radios.forEach(r => r.addEventListener('change', sync));
         sync();
+    })();
+
+    (function () {
+        const form = document.getElementById('checkoutForm');
+        const codeInput = document.getElementById('voucherCodeInput');
+        const appliedCode = document.getElementById('appliedVoucherCode');
+        const applyButton = document.getElementById('applyVoucherBtn');
+        const message = document.getElementById('voucherMessage');
+        const total = document.getElementById('checkoutGrandTotal');
+        const discountRow = document.getElementById('voucherDiscountRow');
+        const discountLabel = document.getElementById('checkoutVoucherDiscount');
+        const baseTotal = Number(total.textContent);
+        let discountAmount = 0;
+
+        async function applyVoucher() {
+            const code = codeInput.value.trim();
+            const token = form.querySelector('input[name="__RequestVerificationToken"]').value;
+            if (!code) {
+                message.textContent = 'Enter a voucher code.';
+                message.className = 'voucher-message error';
+                return false;
+            }
+
+            applyButton.disabled = true;
+            message.textContent = 'Checking voucher...';
+            message.className = 'voucher-message';
+
+            try {
+                const response = await fetch('/checkout/voucher/validate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ code, __RequestVerificationToken: token })
+                });
+                const result = await response.json();
+
+                if (!response.ok || !result.isValid) {
+                    throw new Error(result.message || 'Unable to validate voucher.');
+                }
+
+                appliedCode.value = code;
+                discountAmount = Number(result.discountAmount);
+                discountRow.hidden = false;
+                discountLabel.textContent = `−₹${discountAmount.toFixed(2)}`;
+                total.textContent = Math.max(0, baseTotal - discountAmount).toFixed(2);
+                message.textContent = `${result.message} Discount: ₹${discountAmount.toFixed(2)}.`;
+                message.className = 'voucher-message success';
+                return true;
+            } catch (error) {
+                appliedCode.value = '';
+                discountAmount = 0;
+                discountRow.hidden = true;
+                total.textContent = baseTotal.toFixed(2);
+                message.textContent = error.message;
+                message.className = 'voucher-message error';
+                return false;
+            } finally {
+                applyButton.disabled = false;
+            }
+        }
+
+        applyButton.addEventListener('click', applyVoucher);
+        codeInput.addEventListener('input', () => {
+            if (codeInput.value.trim() === appliedCode.value) return;
+            appliedCode.value = '';
+            discountAmount = 0;
+            discountRow.hidden = true;
+            total.textContent = baseTotal.toFixed(2);
+            message.textContent = '';
+            message.className = 'voucher-message';
+        });
+
+        form.addEventListener('submit', async event => {
+            const code = codeInput.value.trim();
+            if (!code || code === appliedCode.value) return;
+
+            event.preventDefault();
+            if (await applyVoucher()) form.requestSubmit(document.getElementById('placeOrderBtn'));
+        });
     })();
 </script>

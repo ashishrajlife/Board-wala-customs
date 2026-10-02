@@ -85,7 +85,7 @@ public class CheckoutController : Controller
     // ============================================================
     [HttpPost, Route("place")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Place(int selectedAddressId)
+    public async Task<IActionResult> Place(int selectedAddressId, string? voucherCode)
     {
         var userId = GetUserId();
         if (userId == 0) return Unauthorized();
@@ -97,7 +97,7 @@ public class CheckoutController : Controller
             decimal shipping = ShippingCalculator.Calculate(subtotal);
 
             // Create order
-            var order = await _orders.CreateOrderFromCartAsync(userId, selectedAddressId, shipping);
+            var order = await _orders.CreateOrderFromCartAsync(userId, selectedAddressId, shipping, voucherCode);
 
             // Init Razorpay
             var (rzSuccess, rzOrderId, rzError) = await _razorpay.CreateOrderAsync(order);
