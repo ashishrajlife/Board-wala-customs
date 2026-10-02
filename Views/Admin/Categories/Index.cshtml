@@ -85,22 +85,20 @@
                                     </svg>
                                     <span class="icon-btn-label">Edit</span>
                                 </a>
-                                @if (productCount == 0)
-                                {
-                                    <form method="post" action="/Admin/Categories/Delete/@c.CategoryId" class="tbl-actions-form js-delete-form">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="icon-btn icon-btn-danger" title="Delete">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                <polyline points="3 6 5 6 21 6"/>
-                                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                                                <path d="M10 11v6"/>
-                                                <path d="M14 11v6"/>
-                                                <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>
-                                            </svg>
-                                            <span class="icon-btn-label">Delete</span>
-                                        </button>
-                                    </form>
-                                }
+                            <form method="post" action="/Admin/Categories/Delete/@c.CategoryId"
+                                class="tbl-actions-form js-delete-form"
+                                data-name="@c.Name" data-count="@productCount">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="icon-btn icon-btn-danger" title="Delete">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M3 6h18"/>
+                                        <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/>
+                                        <path d="M19 6l-1 15H6L5 6"/>
+                                        <path d="M10 11v6"/>
+                                        <path d="M14 11v6"/>
+                                    </svg>
+                                </button>
+                            </form>
                             </div>
                         </td>
                     </tr>
@@ -122,7 +120,7 @@
             </svg>
         </div>
         <h3 id="deleteConfirmTitle">Delete this category?</h3>
-        <p>This action cannot be undone.</p>
+     <p id="deleteConfirmText">This action cannot be undone.</p>
         <div class="confirm-actions">
             <button type="button" class="btn-cancel" id="deleteCancelBtn">Cancel</button>
             <button type="button" class="btn-confirm-danger" id="deleteYesBtn">Yes, delete</button>
@@ -410,7 +408,26 @@
         var cancelBtn = document.getElementById('deleteCancelBtn');
         var formToSubmit = null;
 
-        function openModal(form) { formToSubmit = form; overlay.classList.add('is-open'); }
+        function openModal(form) {
+    formToSubmit = form;
+    var name  = form.dataset.name || 'this category';
+    var count = parseInt(form.dataset.count || '0', 10);
+    var text  = document.getElementById('deleteConfirmText');
+
+    if (count > 0) {
+        // Has products: can't delete, so explain and hide the confirm button
+        text.textContent = '"' + name + '" still has ' + count +
+            ' product(s). Move or delete them first, or use the toggle to hide this category instead.';
+        yesBtn.style.display = 'none';
+        cancelBtn.textContent = 'Close';
+    } else {
+        text.textContent = 'Delete "' + name + '"? This action cannot be undone.';
+        yesBtn.style.display = '';
+        cancelBtn.textContent = 'Cancel';
+    }
+    overlay.classList.add('is-open');
+}
+function closeModal() { overlay.classList.remove('is-open'); formToSubmit = null; }
         function closeModal() { overlay.classList.remove('is-open'); formToSubmit = null; }
 
         document.querySelectorAll('.js-delete-form').forEach(function (form) {

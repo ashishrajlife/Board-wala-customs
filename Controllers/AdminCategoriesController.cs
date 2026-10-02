@@ -110,7 +110,7 @@ public class AdminCategoriesController : Controller
         if (productCount > 0)
         {
             TempData["Error"] = $"Cannot delete '{category.Name}' — {productCount} product(s) still belong to this category. " +
-                                $"Move or delete those products first.";
+                    $"Move or delete those products first, or switch the category OFF to hide it.";
             return RedirectToAction(nameof(Index));
         }
 
