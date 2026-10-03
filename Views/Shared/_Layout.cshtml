@@ -355,16 +355,33 @@
     </div>
 }
     <!-- ============ ANNOUNCEMENT BAR ============ -->
-    <div class="announcement-bar">
-        <div class="marquee">
-            <span>EXTRA 10% OFF | Use code VALOUS10 | Min. cart ₹500 🔥</span>
-            <span>AS SEEN ON SOCIAL MEDIA</span>
-            <span>NEW DROP JUST LANDED — SHOP NOW! 🔥</span>
-            <span>EXTRA 10% OFF | Use code VALOUS10 | Min. cart ₹500 🔥</span>
-            <span>AS SEEN ON SOCIAL MEDIA</span>
-            <span>NEW DROP JUST LANDED — SHOP NOW! 🔥</span>
-        </div>
+   <div class="announcement-bar">
+    <div class="marquee">
+        @{
+            var marqueeItems = await DbContext.Announcements
+                .Where(a => a.IsActive)
+                .OrderBy(a => a.DisplayOrder)
+                .Select(a => a.Text)
+                .ToListAsync();
+
+            // Fallback — agar koi active announcement nahi hai
+            if (!marqueeItems.Any())
+            {
+                marqueeItems.Add("WELCOME TO VALOUSWORLD");
+            }
+        }
+
+        @* Display twice for seamless scroll *@
+        @foreach (var item in marqueeItems)
+        {
+            <span>@item</span>
+        }
+        @foreach (var item in marqueeItems)
+        {
+            <span>@item</span>
+        }
     </div>
+</div>
 
     <header class="site-header">
         <div class="header-inner">
