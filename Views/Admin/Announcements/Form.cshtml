@@ -1,0 +1,48 @@
+@model ValousWorld.Web.Models.Entities.Announcement
+@{
+    var isEdit = Model.AnnouncementId > 0;
+    ViewData["Title"] = isEdit ? "Edit Announcement" : "New Announcement";
+}
+
+<div class="container admin-page">
+    <div class="admin-header">
+        <h1>@(isEdit ? "EDIT ANNOUNCEMENT" : "NEW ANNOUNCEMENT")</h1>
+        <a href="/Admin/Announcements" class="btn-outline">← BACK</a>
+    </div>
+
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <form method="post"
+          action="@(isEdit ? $"/Admin/Announcements/Edit/{Model.AnnouncementId}" : "/Admin/Announcements/Create")"
+          class="admin-form" style="grid-template-columns: 1fr; max-width: 640px;">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="AnnouncementId" />
+
+        <div class="form-main">
+            <section class="form-section">
+                <h2 class="form-section-title">Announcement</h2>
+                <div class="form-section-body">
+
+                    <label>Text *</label>
+                    <textarea asp-for="Text" rows="3" required maxlength="300"
+                              placeholder="e.g. EXTRA 10% OFF | Use code VALOUS10 | Min. cart ₹500"></textarea>
+
+                    <label>Display Order</label>
+                    <input asp-for="DisplayOrder" type="number" min="0" />
+
+                    <div class="check-row">
+                        <label><input asp-for="IsActive" type="checkbox" /> Active</label>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">
+                            @(isEdit ? "UPDATE" : "CREATE")
+                        </button>
+                        <a href="/Admin/Announcements" class="btn-outline">CANCEL</a>
+                    </div>
+
+                </div>
+            </section>
+        </div>
+    </form>
+</div>

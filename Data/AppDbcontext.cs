@@ -20,6 +20,7 @@ public class AppDbContext : DbContext
     public DbSet<PaymentAttempt> PaymentAttempts => Set<PaymentAttempt>();
     public DbSet<OtpLog> OtpLogs => Set<OtpLog>();
     public DbSet<WebhookEvent> WebhookEvents => Set<WebhookEvent>();
+    public DbSet<Announcement> Announcements => Set<Announcement>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Role>().HasIndex(r => r.RoleName).IsUnique();
@@ -149,6 +150,12 @@ public class AppDbContext : DbContext
             e.HasKey(o => o.OtpLogId);
             e.HasIndex(o => o.Phone);
             e.HasIndex(o => o.ExpiresAt);
+        });
+        modelBuilder.Entity<Announcement>(e =>
+        {
+            e.HasKey(a => a.AnnouncementId);
+            e.HasIndex(a => a.DisplayOrder);
+            e.HasIndex(a => a.IsActive);
         });
     }
 }
