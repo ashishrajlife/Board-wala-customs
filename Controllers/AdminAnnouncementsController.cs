@@ -112,4 +112,23 @@ public class AdminAnnouncementsController : Controller
         TempData["Success"] = "Announcement deleted.";
         return RedirectToAction(nameof(Index));
     }
+
+    [HttpPost, Route("ToggleActive/{id:int}")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ToggleActive(int id)
+    {
+        var a = await _db.Announcements.FindAsync(id);
+        if (a == null)
+        {
+            TempData["Error"] = "Announcement not found.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        a.IsActive = !a.IsActive;
+        await _db.SaveChangesAsync();
+
+        TempData["Success"] = a.IsActive ? "Announcement is now ACTIVE." : "Announcement is now INACTIVE.";
+        return RedirectToAction(nameof(Index));
+    }
+
 }

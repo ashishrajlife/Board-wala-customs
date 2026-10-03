@@ -4,7 +4,7 @@
     ViewData["Title"] = isEdit ? "Edit Announcement" : "New Announcement";
 }
 
-<div class="container admin-page">
+<div class="container admin-page ann-page">
     <div class="admin-header">
         <h1>@(isEdit ? "EDIT ANNOUNCEMENT" : "NEW ANNOUNCEMENT")</h1>
         <a href="/Admin/Announcements" class="btn-outline">← BACK</a>
@@ -14,7 +14,7 @@
 
     <form method="post"
           action="@(isEdit ? $"/Admin/Announcements/Edit/{Model.AnnouncementId}" : "/Admin/Announcements/Create")"
-          class="admin-form" style="grid-template-columns: 1fr; max-width: 640px;">
+          class="admin-form ann-form">
         @Html.AntiForgeryToken()
         <input type="hidden" asp-for="AnnouncementId" />
 
@@ -23,15 +23,21 @@
                 <h2 class="form-section-title">Announcement</h2>
                 <div class="form-section-body">
 
-                    <label>Text *</label>
+                    <label for="Text">Text *</label>
                     <textarea asp-for="Text" rows="3" required maxlength="300"
                               placeholder="e.g. EXTRA 10% OFF | Use code VALOUS10 | Min. cart ₹500"></textarea>
+                    <span class="field-hint">Max 300 characters. This is the text shown in the top bar of the website.</span>
 
-                    <label>Display Order</label>
-                    <input asp-for="DisplayOrder" type="number" min="0" />
-
-                    <div class="check-row">
-                        <label><input asp-for="IsActive" type="checkbox" /> Active</label>
+                    <!-- Active / Inactive toggle -->
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <span class="toggle-title">Active</span>
+                            <span class="toggle-sub">Show this announcement on the website</span>
+                        </div>
+                        <label class="switch">
+                            <input asp-for="IsActive" type="checkbox" />
+                            <span class="slider"></span>
+                        </label>
                     </div>
 
                     <div class="form-actions">
@@ -46,3 +52,73 @@
         </div>
     </form>
 </div>
+
+<style>
+    .ann-page { padding: 28px 20px 60px; }
+    .ann-page .admin-header {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 12px; flex-wrap: wrap; margin-bottom: 20px; max-width: 640px;
+    }
+    .ann-page .admin-header h1 { font-size: 20px; font-weight: 800; letter-spacing: 1px; margin: 0; color: var(--black, #111); }
+
+    /* ---------- Card ---------- */
+    .ann-page .ann-form { display: block; max-width: 640px; }
+    .ann-page .form-section { background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; overflow: hidden; }
+    .ann-page .form-section-title {
+        margin: 0; padding: 14px 20px; background: #1c1c1c; color: #f2f2f2;
+        font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    }
+    .ann-page .form-section-body { padding: 20px; display: flex; flex-direction: column; gap: 6px; }
+
+    /* ---------- Fields ---------- */
+    .ann-page .form-section-body > label {
+        font-size: 11px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase;
+        color: #444; margin-top: 12px;
+    }
+    .ann-page .form-section-body > label:first-child { margin-top: 0; }
+    .ann-page .form-section-body textarea,
+    .ann-page .form-section-body input[type="number"] {
+        width: 100%; padding: 11px 12px; font-size: 13.5px; font-family: inherit;
+        border: 1.5px solid #ddd; border-radius: 4px; background: #fff; color: #111;
+        box-sizing: border-box; transition: border-color .15s;
+    }
+    .ann-page .form-section-body textarea { resize: vertical; min-height: 90px; }
+    .ann-page .form-section-body textarea:focus,
+    .ann-page .form-section-body input[type="number"]:focus { outline: none; border-color: var(--black, #111); }
+    .ann-page .form-section-body input[type="number"] { max-width: 160px; }
+    .ann-page .field-hint { font-size: 11.5px; color: #888; }
+
+    /* ---------- Toggle row: label left, switch right ---------- */
+    .ann-page .toggle-row {
+        display: flex; align-items: center; justify-content: space-between; gap: 16px;
+        margin-top: 16px; padding: 14px 16px; background: #f7f7f7;
+        border: 1px solid #e5e5e5; border-radius: 6px;
+    }
+    .ann-page .toggle-info { display: flex; flex-direction: column; gap: 2px; }
+    .ann-page .toggle-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #111; }
+    .ann-page .toggle-sub { font-size: 12px; color: #777; }
+
+    .ann-page .switch { position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer; flex-shrink: 0; }
+    .ann-page .switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .ann-page .slider { position: absolute; inset: 0; background: #c9c9c9; border-radius: 24px; transition: background .2s; }
+    .ann-page .slider::before {
+        content: ""; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px;
+        background: #fff; border-radius: 50%; transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.3);
+    }
+    /* "~" because asp-for adds a hidden input right after the checkbox */
+    .ann-page .switch input:checked ~ .slider { background: #22c55e; }
+    .ann-page .switch input:checked ~ .slider::before { transform: translateX(20px); }
+    .ann-page .switch input:focus-visible ~ .slider { outline: 2px solid var(--black, #111); outline-offset: 2px; }
+
+    /* ---------- Buttons ---------- */
+    .ann-page .form-actions { display: flex; gap: 10px; margin-top: 20px; padding-top: 18px; border-top: 1px solid #eee; }
+    .ann-page .btn-primary, .ann-page .btn-outline {
+        display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 11px 22px;
+        font-size: 12px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
+        border-radius: 4px; text-decoration: none; cursor: pointer; transition: all .15s; white-space: nowrap;
+    }
+    .ann-page .btn-primary { background: var(--black, #111); border: 1.5px solid var(--black, #111); color: #fff; }
+    .ann-page .btn-primary:hover { opacity: .85; }
+    .ann-page .btn-outline { background: #fff; border: 1.5px solid #ddd; color: #222; }
+    .ann-page .btn-outline:hover { border-color: var(--black, #111); background: var(--black, #111); color: #fff; }
+</style>

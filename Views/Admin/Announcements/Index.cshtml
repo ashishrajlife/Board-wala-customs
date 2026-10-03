@@ -4,7 +4,7 @@
     ViewData["Breadcrumb"] = Html.Raw("<span>Admin / Announcements</span>");
 }
 
-<div class="container admin-page">
+<div class="container admin-page ann-page">
     <div class="admin-header">
         <h1>ANNOUNCEMENTS</h1>
         <a href="/Admin/Announcements/Create" class="btn-primary">
@@ -38,29 +38,34 @@
             <table class="admin-table">
                 <thead>
                     <tr>
-                        <th>Order</th>
-                        <th>Text</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <th class="col-text">Text</th>
+                        <th class="col-status">Status</th>
+                        <th class="col-actions">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                 @foreach (var a in Model)
                 {
+                    var preview = a.Text ?? "";
+                    if (preview.Length > 60) { preview = preview.Substring(0, 60) + "…"; }
+
                     <tr>
-                        <td>@a.DisplayOrder</td>
-                        <td>@a.Text</td>
-                        <td>
-                            @if (a.IsActive)
-                            {
-                                <span class="pill-green">Active</span>
-                            }
-                            else
-                            {
-                                <span class="pill-gray">Inactive</span>
-                            }
+                        <td class="col-text">@a.Text</td>
+
+                        <!-- Active / Inactive toggle -->
+                        <td class="col-status">
+                            <form method="post" action="/Admin/Announcements/ToggleActive/@a.AnnouncementId" class="status-form">
+                                @Html.AntiForgeryToken()
+                                <label class="switch" title="@(a.IsActive ? "Active - click to turn OFF" : "Inactive - click to turn ON")">
+                                    <input type="checkbox" @(a.IsActive ? "checked" : "") onchange="this.form.submit()" />
+                                    <span class="slider"></span>
+                                </label>
+                                <span class="status-text @(a.IsActive ? "is-on" : "is-off")">@(a.IsActive ? "Active" : "Inactive")</span>
+                            </form>
                         </td>
-                        <td>
+
+                        <!-- Edit / Delete -->
+                        <td class="col-actions">
                             <div class="tbl-actions">
                                 <a href="/Admin/Announcements/Edit/@a.AnnouncementId" class="icon-btn" title="Edit">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -69,7 +74,7 @@
                                     </svg>
                                 </a>
                                 <form method="post" action="/Admin/Announcements/Delete/@a.AnnouncementId"
-                                      style="display:inline" onsubmit="return confirm('Delete this announcement?');">
+                                      class="js-delete-form" data-name="@preview">
                                     @Html.AntiForgeryToken()
                                     <button type="submit" class="icon-btn icon-btn-danger" title="Delete">
                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -77,6 +82,7 @@
                                             <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
                                             <path d="M10 11v6"/>
                                             <path d="M14 11v6"/>
+                                            <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>
                                         </svg>
                                     </button>
                                 </form>
@@ -89,3 +95,155 @@
         </div>
     }
 </div>
+
+<!-- ============ Delete confirmation modal ============ -->
+<div class="confirm-overlay" id="deleteConfirmOverlay">
+    <div class="confirm-box" role="dialog" aria-modal="true" aria-labelledby="deleteConfirmTitle">
+        <div class="confirm-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="13"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+        </div>
+        <h3 id="deleteConfirmTitle">Delete this announcement?</h3>
+        <p id="deleteConfirmText">This action cannot be undone.</p>
+        <div class="confirm-actions">
+            <button type="button" class="btn-cancel" id="deleteCancelBtn">Cancel</button>
+            <button type="button" class="btn-confirm-danger" id="deleteYesBtn">Yes, delete</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .ann-page { padding: 28px 20px 60px; }
+    .ann-page .admin-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+    .ann-page .admin-header h1 { font-size: 20px; font-weight: 800; letter-spacing: 1px; margin: 0; color: var(--black, #111); }
+
+    .ann-page .btn-primary, .ann-page .btn-outline {
+        display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px;
+        font-size: 12px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
+        border-radius: 4px; text-decoration: none; cursor: pointer; transition: all .15s; white-space: nowrap;
+    }
+    .ann-page .btn-primary { background: var(--black, #111); border: 1.5px solid var(--black, #111); color: #fff; }
+    .ann-page .btn-primary:hover { opacity: .85; }
+
+    .ann-page .alert-success, .ann-page .alert-error { padding: 12px 16px; border-radius: 4px; font-size: 13px; font-weight: 600; margin-bottom: 16px; }
+    .ann-page .alert-success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+    .ann-page .alert-error { background: #fdecea; color: #b71c1c; border: 1px solid #f5c6c2; }
+
+    .ann-page .empty-state { text-align: center; padding: 56px 20px; border: 1px solid #e5e5e5; border-radius: 6px; background: #fff; }
+    .ann-page .empty-state p { color: #666; font-size: 13px; margin: 0 0 8px; }
+    .ann-page .empty-state a { color: var(--black, #111); font-weight: 600; font-size: 13px; text-decoration: underline; }
+
+    /* ---------- Table ---------- */
+    .ann-page .admin-table-wrap { width: 100%; overflow-x: auto; border: 1px solid #e5e5e5; background: #fff; border-radius: 6px; }
+    .ann-page .admin-table { width: 100%; min-width: 640px; table-layout: fixed; border-collapse: collapse; font-size: 12.5px; }
+    .ann-page .admin-table thead { background: #1c1c1c; }
+    .ann-page .admin-table th {
+        padding: 11px 12px; text-align: center; font-size: 10px; font-weight: 700; letter-spacing: 1px;
+        text-transform: uppercase; color: #f2f2f2; border-right: 1px solid rgba(255,255,255,.08);
+    }
+    .ann-page .admin-table th:last-child { border-right: none; }
+    .ann-page .admin-table td {
+        padding: 12px; text-align: center; vertical-align: middle; color: #222;
+        border-bottom: 1px solid #e5e5e5; border-right: 1px solid #e5e5e5;
+    }
+    .ann-page .admin-table td:last-child { border-right: none; }
+    .ann-page .admin-table tbody tr:last-child td { border-bottom: none; }
+    .ann-page .admin-table tbody tr:hover { background: #f7f7f7; }
+
+    /* Column widths (total 100%) */
+    .ann-page .admin-table .col-text    { width: 50%; text-align: left; padding-left: 16px; word-break: break-word; line-height: 1.4; }
+    .ann-page .admin-table .col-status  { width: 20%; }
+    .ann-page .admin-table .col-actions { width: 20%; }
+
+    /* ---------- Edit / Delete buttons ---------- */
+    .ann-page .tbl-actions { display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .ann-page .tbl-actions form { display: inline-flex; margin: 0; }
+    .ann-page .icon-btn {
+        display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; padding: 0;
+        border: 1.5px solid #e5e5e5; background: #fff; color: #222; border-radius: 4px; cursor: pointer;
+        transition: all .15s; text-decoration: none;
+    }
+    .ann-page .icon-btn:hover { border-color: var(--black, #111); background: var(--black, #111); color: #fff; }
+    .ann-page .icon-btn-danger:hover { border-color: #c0392b; background: #c0392b; color: #fff; }
+
+    /* ---------- Toggle switch ---------- */
+    .ann-page .status-form { display: inline-flex; align-items: center; gap: 8px; margin: 0; }
+    .ann-page .switch { position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer; flex-shrink: 0; }
+    .ann-page .switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .ann-page .slider { position: absolute; inset: 0; background: #c9c9c9; border-radius: 24px; transition: background .2s; }
+    .ann-page .slider::before {
+        content: ""; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px;
+        background: #fff; border-radius: 50%; transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.3);
+    }
+    .ann-page .switch input:checked ~ .slider { background: #22c55e; }
+    .ann-page .switch input:checked ~ .slider::before { transform: translateX(20px); }
+    .ann-page .switch input:focus-visible ~ .slider { outline: 2px solid var(--black, #111); outline-offset: 2px; }
+    .ann-page .status-text { font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; min-width: 56px; text-align: left; }
+    .ann-page .status-text.is-on { color: #2e7d32; }
+    .ann-page .status-text.is-off { color: #b71c1c; }
+
+    /* ---------- Delete modal ---------- */
+    .confirm-overlay {
+        display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 1000;
+        align-items: center; justify-content: center; padding: 16px;
+    }
+    .confirm-overlay.is-open { display: flex; }
+    .confirm-box {
+        background: #fff; width: 100%; max-width: 360px; border-radius: 8px; padding: 24px 22px 20px;
+        text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,.25);
+    }
+    .confirm-icon {
+        width: 44px; height: 44px; margin: 0 auto 12px; border-radius: 50%;
+        background: #fdecea; color: #b71c1c; display: flex; align-items: center; justify-content: center;
+    }
+    .confirm-box h3 { margin: 0 0 6px; font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; color: #111; }
+    .confirm-box p { margin: 0 0 18px; font-size: 12.5px; color: #666; word-break: break-word; }
+    .confirm-actions { display: flex; gap: 10px; }
+    .btn-cancel, .btn-confirm-danger {
+        flex: 1; padding: 10px 0; font-size: 12px; font-weight: 700; letter-spacing: .5px;
+        text-transform: uppercase; border-radius: 4px; cursor: pointer; transition: all .15s; border: 1.5px solid;
+    }
+    .btn-cancel { background: #fff; border-color: #ddd; color: #222; }
+    .btn-cancel:hover { background: #f4f4f4; }
+    .btn-confirm-danger { background: #c0392b; border-color: #c0392b; color: #fff; }
+    .btn-confirm-danger:hover { opacity: .9; }
+</style>
+
+<script>
+    (function () {
+        var overlay   = document.getElementById('deleteConfirmOverlay');
+        var yesBtn    = document.getElementById('deleteYesBtn');
+        var cancelBtn = document.getElementById('deleteCancelBtn');
+        var textEl    = document.getElementById('deleteConfirmText');
+        var formToSubmit = null;
+
+        function openModal(form) {
+            formToSubmit = form;
+            var name = form.dataset.name || '';
+            textEl.textContent = name
+                ? 'Delete "' + name + '"? This action cannot be undone.'
+                : 'This action cannot be undone.';
+            overlay.classList.add('is-open');
+        }
+        function closeModal() { overlay.classList.remove('is-open'); formToSubmit = null; }
+
+        document.querySelectorAll('.js-delete-form').forEach(function (form) {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                openModal(form);
+            });
+        });
+
+        yesBtn.addEventListener('click', function () {
+            if (formToSubmit) { var f = formToSubmit; closeModal(); f.submit(); }
+        });
+        cancelBtn.addEventListener('click', closeModal);
+        overlay.addEventListener('click', function (e) { if (e.target === overlay) closeModal(); });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && overlay.classList.contains('is-open')) closeModal();
+        });
+    })();
+</script>
