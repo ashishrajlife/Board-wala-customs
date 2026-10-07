@@ -201,11 +201,21 @@
                         <label>@label</label>
                         <div class="upload-block">
                             <input type="file" name="@inputId" accept="image/*" id="@inputId" />
-                            <div class="upload-hint">JPG, PNG, WEBP — Max 5 MB</div>
+                            <div class="upload-hint">JPG, PNG, WEBP — Max 100 MB</div>
                             <img id="@previewId" class="upload-preview" style="display:none;" alt="preview" />
                         </div>
                     </div>
                 }
+            </div>
+
+                        <h3 style="margin-top:24px;">
+                VIDEO
+                <span class="req-note">(optional, 15-20 sec)</span>
+            </h3>
+            <div class="upload-block">
+                <input type="file" name="video" id="video" accept="video/mp4,video/webm" />
+                <div class="upload-hint">MP4 or WebM, 720p, max 100 MB</div>
+                <video id="videoPreview" class="upload-preview" controls muted playsinline style="display:none;"></video>
             </div>
 
             <h3 style="margin-top:24px;">FLAGS</h3>
@@ -241,6 +251,20 @@
             preview.style.display = 'block';
         });
     });
+
+  document.getElementById('video')?.addEventListener('change', function () {
+    const v = document.getElementById('videoPreview');
+    const f = this.files[0];
+    if (f && f.size > 100 * 1024 * 1024) {
+        alert('Video must be under 15 MB. Please compress it and try again.');
+        this.value = '';
+        v.style.display = 'none';
+        return;
+    }
+    if (f) { v.src = URL.createObjectURL(f); v.style.display = 'block'; }
+    else { v.style.display = 'none'; }
+});
+
 </script>
 
 <style>

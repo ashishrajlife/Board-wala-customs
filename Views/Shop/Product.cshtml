@@ -10,6 +10,9 @@
         .Where(x => !string.IsNullOrWhiteSpace(x))
         .ToList();
 
+    var hasVideo = !string.IsNullOrWhiteSpace(Model.VideoUrl);
+    var totalSlides = galleryImgs.Count + (hasVideo ? 1 : 0);    
+
     var sizes = (Model.Sizes ?? "")
         .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
         .ToList();
@@ -42,7 +45,7 @@
     <div class="container pdp-grid">
 
         <!-- ================= LEFT: Gallery ================= -->
-        <div class="pdp-gallery">
+                <div class="pdp-gallery">
             @if (galleryImgs.Any())
             {
                 <div class="pdp-main-wrap" id="pdpSlider">
@@ -51,28 +54,38 @@
                          alt="@Model.Name"
                          class="pdp-main"
                          data-current="0"
-                         data-total="@galleryImgs.Count" />
+                         data-total="@totalSlides" />
+
+                    @if (hasVideo)
+                    {
+                        <video id="pdpMainVideo"
+                               class="pdp-main pdp-main-video"
+                               src="@Model.VideoUrl"
+                               poster="@galleryImgs.First()"
+                               controls playsinline preload="metadata"
+                               style="display:none;"></video>
+                    }
 
                     @if (Model.SavePercent > 0 && Model.SalePrice.HasValue && Model.SalePrice.Value > 0 && Model.SalePrice.Value < Model.MRP)
                     {
                         <span class="pdp-save-badge">SAVE @Model.SavePercent%</span>
                     }
 
-                    @if (galleryImgs.Count > 1)
+                    @if (totalSlides > 1)
                     {
-                        <button type="button" class="pdp-nav pdp-nav-prev" id="pdpPrev" aria-label="Previous image">
+                        <button type="button" class="pdp-nav pdp-nav-prev" id="pdpPrev" aria-label="Previous">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="15 18 9 12 15 6"/>
                             </svg>
                         </button>
-                        <button type="button" class="pdp-nav pdp-nav-next" id="pdpNext" aria-label="Next image">
+                        <button type="button" class="pdp-nav pdp-nav-next" id="pdpNext" aria-label="Next">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="9 18 15 12 9 6"/>
                             </svg>
                         </button>
 
                         <div class="pdp-dots" id="pdpDots">
-                            @for (int i = 0; i < galleryImgs.Count; i++)
+                            @for (int i = 0; i < totalSlides; i++)
                             {
                                 <span class="pdp-dot @(i == 0 ? "active" : "")" data-index="@i"></span>
                             }
@@ -80,7 +93,7 @@
                     }
                 </div>
 
-                @if (galleryImgs.Count > 1)
+                @if (totalSlides > 1)
                 {
                     <div class="pdp-thumbs" id="pdpThumbs">
                         @for (int i = 0; i < galleryImgs.Count; i++)
@@ -88,10 +101,26 @@
                             var img = galleryImgs[i];
                             <button type="button"
                                     class="pdp-thumb @(i == 0 ? "active" : "")"
+                                    data-type="image"
                                     data-img="@img"
                                     data-index="@i"
                                     aria-label="View image @(i + 1)">
                                 <img src="@img" alt="@Model.Name @(i + 1)" />
+                            </button>
+                        }
+
+                        @if (hasVideo)
+                        {
+                            <button type="button"
+                                    class="pdp-thumb pdp-thumb-video"
+                                    data-type="video"
+                                    data-img="@Model.VideoUrl"
+                                    data-index="@galleryImgs.Count"
+                                    aria-label="Watch product video">
+                                <img src="@galleryImgs.First()" alt="Product video" />
+                                <span class="pdp-play">
+                                    <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="7 4 20 12 7 20 7 4"/></svg>
+                                </span>
                             </button>
                         }
                     </div>
@@ -427,31 +456,45 @@
     </section>
 }
 <script>
-    // ---- Image gallery + mobile slider ----
+      // ---- Image + video gallery + mobile slider ----
     (function () {
         const mainImg = document.getElementById('pdpMainImg');
+        const mainVideo = document.getElementById('pdpMainVideo');
+        const wrap = document.getElementById('pdpSlider');
         const thumbs = document.querySelectorAll('.pdp-thumb');
         const prevBtn = document.getElementById('pdpPrev');
         const nextBtn = document.getElementById('pdpNext');
         const dots = document.querySelectorAll('.pdp-dot');
         if (!mainImg) return;
 
-        const images = [];
-        thumbs.forEach(t => images.push(t.dataset.img));
-        if (images.length === 0) images.push(mainImg.src);
+        const items = [];
+        thumbs.forEach(t => items.push({ type: t.dataset.type || 'image', src: t.dataset.img }));
+        if (items.length === 0) items.push({ type: 'image', src: mainImg.src });
 
         let current = 0;
 
         function setActive(i) {
             current = i;
-            mainImg.src = images[current];
-            mainImg.style.opacity = '0';
-            setTimeout(() => { mainImg.style.opacity = '1'; }, 80);
+            const item = items[current];
+
+            if (item.type === 'video' && mainVideo) {
+                mainImg.style.display = 'none';
+                mainVideo.style.display = 'block';
+                wrap.classList.add('is-video');
+            } else {
+                if (mainVideo) { mainVideo.pause(); mainVideo.style.display = 'none'; }
+                wrap.classList.remove('is-video');
+                mainImg.style.display = 'block';
+                mainImg.src = item.src;
+                mainImg.style.opacity = '0';
+                setTimeout(() => { mainImg.style.opacity = '1'; }, 80);
+            }
+
             thumbs.forEach((t, idx) => t.classList.toggle('active', idx === current));
             dots.forEach((d, idx) => d.classList.toggle('active', idx === current));
         }
-        function next() { if (images.length > 1) setActive((current + 1) % images.length); }
-        function prev() { if (images.length > 1) setActive((current - 1 + images.length) % images.length); }
+        function next() { if (items.length > 1) setActive((current + 1) % items.length); }
+        function prev() { if (items.length > 1) setActive((current - 1 + items.length) % items.length); }
 
         thumbs.forEach(t => t.addEventListener('click', () => setActive(parseInt(t.dataset.index, 10) || 0)));
         dots.forEach(d => d.addEventListener('click', () => setActive(parseInt(d.dataset.index, 10) || 0)));
@@ -768,6 +811,17 @@
     .pdp-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .pdp-thumb:hover { border-color: var(--gray-400); }
     .pdp-thumb.active { border-color: var(--black); }
+
+    .pdp-thumb-video { position: relative; }
+    .pdp-thumb-video img { filter: brightness(0.7); }
+    .pdp-play {
+        position: absolute; inset: 0;
+        display: flex; align-items: center; justify-content: center;
+        color: #fff; pointer-events: none;
+    }
+    .pdp-play svg { width: 26px; height: 26px; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5)); }
+    .pdp-main.pdp-main-video { background: #000; object-fit: contain; }
+    .pdp-main-wrap.is-video .pdp-dots { display: none !important; }
 
     .pdp-info { display: flex; flex-direction: column; min-width: 0; }
     .pdp-cat {
