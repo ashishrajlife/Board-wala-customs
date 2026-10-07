@@ -35,6 +35,10 @@ public class Product
     [StringLength(300)] public string? Image3 { get; set; }
     [StringLength(300)] public string? Image4 { get; set; }
 
+    // ====================== Video ======================
+    [StringLength(300)] 
+    public string? VideoUrl { get; set; }
+
     // ====================== Additional Details ======================
     [StringLength(100)] public string? SKU { get; set; }
     [StringLength(100)] public string? Brand { get; set; }

@@ -47,13 +47,14 @@ public class AdminProductsController : Controller
 
     [HttpPost, Route("Create")]
     [ValidateAntiForgeryToken]
-    [RequestSizeLimit(30 * 1024 * 1024)]
+    [RequestSizeLimit(130 * 1024 * 1024)]
     public async Task<IActionResult> Create(
         Product model,
         IFormFile? img1,
         IFormFile? img2,
         IFormFile? img3,
-        IFormFile? img4)
+        IFormFile? img4,
+        IFormFile? video)
     {
         ModelState.Remove(nameof(Product.Category));
 
@@ -61,6 +62,9 @@ public class AdminProductsController : Controller
             .Count(f => f != null && f.Length > 0);
         if (uploadedCount < 2)
             ModelState.AddModelError("", "At least 2 images are required.");
+       
+        if (video != null && video.Length > 100 * 1024 * 1024)
+    ModelState.AddModelError("", "Video is too large. Max 15 MB allowed.");
 
         if (!ModelState.IsValid)
         {
@@ -82,6 +86,9 @@ public class AdminProductsController : Controller
             model.Image2 = saved.ElementAtOrDefault(1) ?? string.Empty;
             model.Image3 = saved.ElementAtOrDefault(2);
             model.Image4 = saved.ElementAtOrDefault(3);
+            model.VideoUrl = (video != null && video.Length > 0)
+            ? await _files.SaveVideoAsync(video, "products")
+            : null;
         }
         catch (Exception ex)
         {
@@ -116,18 +123,22 @@ public class AdminProductsController : Controller
 
     [HttpPost, Route("Edit/{id:int}")]
     [ValidateAntiForgeryToken]
-    [RequestSizeLimit(30 * 1024 * 1024)]
+    [RequestSizeLimit(130 * 1024 * 1024)]
     public async Task<IActionResult> Edit(
         int id,
         Product model,
         IFormFile? img1,
         IFormFile? img2,
         IFormFile? img3,
-        IFormFile? img4)
+        IFormFile? img4,
+        IFormFile? video,
+        bool removeVideo = false)
     {
         if (id != model.ProductId) return BadRequest();
 
         ModelState.Remove(nameof(Product.Category));
+        if (video != null && video.Length > 100 * 1024 * 1024)
+    ModelState.AddModelError("", "Video is too large. Max 15 MB allowed.");
 
         if (!ModelState.IsValid)
         {
@@ -163,6 +174,17 @@ public class AdminProductsController : Controller
                 var old = existing.Image4;
                 existing.Image4 = await _files.SaveImageAsync(img4, "products");
                 _files.DeleteImage(old);
+            }
+            if (video != null && video.Length > 0)
+            {
+                var old = existing.VideoUrl;
+                existing.VideoUrl = await _files.SaveVideoAsync(video, "products");
+                _files.DeleteImage(old);
+            }
+            else if (removeVideo)
+            {
+                _files.DeleteImage(existing.VideoUrl);
+                existing.VideoUrl = null;
             }
         }
         catch (Exception ex)
@@ -246,7 +268,7 @@ public class AdminProductsController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        var imgs = new[] { product.Image1, product.Image2, product.Image3, product.Image4 };
+        var imgs = new[] { product.Image1, product.Image2, product.Image3, product.Image4, product.VideoUrl };
 
         try
         {

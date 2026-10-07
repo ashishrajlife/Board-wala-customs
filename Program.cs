@@ -25,7 +25,7 @@ var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>()!;
 
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(opt =>
 {
-    opt.MultipartBodyLengthLimit = 10 * 1024 * 1024; // 6 MB (buffer above 5 MB limit)
+    opt.MultipartBodyLengthLimit = 150 * 1024 * 1024;
 });
 
 // Auth: both Cookie (for MVC) and JWT (for API)

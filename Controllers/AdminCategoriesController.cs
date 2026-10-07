@@ -48,7 +48,7 @@ public class AdminCategoriesController : Controller
 
     [HttpPost, Route("Create")]
     [ValidateAntiForgeryToken]
-    [RequestSizeLimit(6 * 1024 * 1024)]
+    [RequestSizeLimit(130* 1024 * 1024)]
     public async Task<IActionResult> Create(Category model, IFormFile? imageFile)
     {
         // Clear navigation/auto properties from validation
@@ -73,7 +73,7 @@ public class AdminCategoriesController : Controller
 
     [HttpPost, Route("Edit/{id:int}")]
     [ValidateAntiForgeryToken]
-    [RequestSizeLimit(6 * 1024 * 1024)]
+    [RequestSizeLimit(130 * 1024 * 1024)]
     public async Task<IActionResult> Edit(int id, Category model, IFormFile? imageFile)
     {
         if (id != model.CategoryId) return BadRequest();

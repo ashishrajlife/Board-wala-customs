@@ -13,4 +13,7 @@ public interface IFileService
     /// Silently does nothing if the file doesn't exist or URL is external.
     /// </summary>
     void DeleteImage(string? relativeUrl);
+
+    /// <summary>Saves an uploaded product video (mp4/webm, max 15 MB). Returns relative URL.</summary>
+   Task<string> SaveVideoAsync(IFormFile file, string folder);
 }
