@@ -197,4 +197,18 @@ public class AdminOrdersController : Controller
             return RedirectToAction(nameof(Detail), new { id });
         }
     }
+
+        // ============================================================
+    // ADMIN — INVOICE DOWNLOAD
+    // ============================================================
+    [HttpGet, Route("{id:int}/invoice")]
+    public async Task<IActionResult> Invoice(int id, [FromServices] IInvoiceService invoice)
+    {
+        var order = await _orders.GetOrderForAdminAsync(id);
+        if (order == null) return NotFound();
+
+        var pdf = invoice.GenerateInvoice(order);
+        var fileName = invoice.GetInvoiceFileName(order);
+        return File(pdf, "application/pdf", fileName);
+    }
 }
