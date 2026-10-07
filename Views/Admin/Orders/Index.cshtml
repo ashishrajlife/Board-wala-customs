@@ -1,0 +1,406 @@
+@model ValousWorld.Web.ViewModels.Admin.AdminOrderListVm
+@{
+    ViewData["Title"] = "Admin Orders";
+    string StatusClass(string s) => "order-status-" + (s ?? "").ToLower();
+}
+
+<div class="container admin-page">
+    <div class="admin-header">
+        <h1>ORDERS</h1>
+        <div class="admin-header-actions">
+            <a href="/Admin/Dashboard" class="btn-secondary">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"/>
+                    <polyline points="12 19 5 12 12 5"/>
+                </svg>
+                BACK
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null) { <div class="alert-success">@TempData["Success"]</div> }
+    @if (TempData["Error"] != null)   { <div class="alert-error">@TempData["Error"]</div> }
+
+    <!-- ============ STAT COUNTERS ============ -->
+    <div class="ord-stats">
+        <a href="/Admin/Orders" class="ord-stat @(string.IsNullOrEmpty(Model.Status) && string.IsNullOrEmpty(Model.PaymentMethod) ? "active" : "")">
+            <span class="ord-stat-label">All</span>
+            <span class="ord-stat-value">@Model.CountAll</span>
+        </a>
+        <a href="/Admin/Orders?status=Confirmed" class="ord-stat @(Model.Status == "Confirmed" ? "active" : "")">
+            <span class="ord-stat-label">Confirmed</span>
+            <span class="ord-stat-value">@Model.CountConfirmed</span>
+        </a>
+        <a href="/Admin/Orders?status=Shipped" class="ord-stat @(Model.Status == "Shipped" ? "active" : "")">
+            <span class="ord-stat-label">Shipped</span>
+            <span class="ord-stat-value">@Model.CountShipped</span>
+        </a>
+        <a href="/Admin/Orders?status=Delivered" class="ord-stat @(Model.Status == "Delivered" ? "active" : "")">
+            <span class="ord-stat-label">Delivered</span>
+            <span class="ord-stat-value">@Model.CountDelivered</span>
+        </a>
+        <a href="/Admin/Orders?status=Cancelled" class="ord-stat @(Model.Status == "Cancelled" ? "active" : "")">
+            <span class="ord-stat-label">Cancelled</span>
+            <span class="ord-stat-value">@Model.CountCancelled</span>
+        </a>
+        <a href="/Admin/Orders?method=COD" class="ord-stat ord-stat-cod @(Model.PaymentMethod == "COD" ? "active" : "")">
+            <span class="ord-stat-label">COD pending</span>
+            <span class="ord-stat-value">@Model.CountCodPending</span>
+        </a>
+    </div>
+
+    <!-- ============ FILTERS ============ -->
+    <form method="get" action="/Admin/Orders" class="ord-filters">
+        <div class="ord-filter">
+            <label>Status</label>
+            <select name="status">
+                <option value="">All</option>
+                @foreach (var s in new[] { "Created", "PaymentPending", "Confirmed", "Shipped", "Delivered", "Cancelled", "Failed", "Expired", "Refunded" })
+                {
+                    <option value="@s" selected="@(Model.Status == s)">@s</option>
+                }
+            </select>
+        </div>
+
+        <div class="ord-filter">
+            <label>Method</label>
+            <select name="method">
+                <option value="">All</option>
+                <option value="Razorpay" selected="@(Model.PaymentMethod == "Razorpay")">Razorpay</option>
+                <option value="COD" selected="@(Model.PaymentMethod == "COD")">COD</option>
+            </select>
+        </div>
+
+        <div class="ord-filter ord-filter-grow">
+            <label>Search</label>
+            <input type="text" name="q" value="@Model.Search"
+                   placeholder="Order # / name / phone / email" />
+        </div>
+
+        <button type="submit" class="btn-primary">APPLY</button>
+        <a href="/Admin/Orders" class="btn-secondary">RESET</a>
+    </form>
+
+    <!-- ============ LIST ============ -->
+    @if (!Model.Orders.Any())
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                    <line x1="3" y1="6" x2="21" y2="6"/>
+                    <path d="M16 10a4 4 0 0 1-8 0"/>
+                </svg>
+            </div>
+            <p>No orders match the current filters.</p>
+        </div>
+    }
+    else
+    {
+        <div class="ord-list">
+            @foreach (var o in Model.Orders)
+            {
+                var totalItems = o.Items?.Sum(i => i.Quantity) ?? 0;
+                <a href="/Admin/Orders/@o.OrderId" class="ord-card">
+                    <div class="ord-card-top">
+                        <div class="ord-card-num">
+                            <span class="ord-num-label">Order</span>
+                            <span class="ord-num-value">@o.OrderNumber</span>
+                        </div>
+                        <div class="ord-card-badges">
+                            <span class="order-status @StatusClass(o.Status)">@o.Status</span>
+                            <span class="ord-pay-badge ord-pay-@o.PaymentMethod?.ToLower()">
+                                @(o.PaymentMethod == "COD" ? "COD" : "Razorpay")
+                            </span>
+                            <span class="ord-pay-status">@o.PaymentStatus</span>
+                        </div>
+                    </div>
+
+                    <div class="ord-card-mid">
+                        <div class="ord-info-block">
+                            <div class="ord-info-label">Customer</div>
+                            <div class="ord-info-value">@(o.User?.FullName ?? o.ShippingFullName)</div>
+                            <div class="ord-info-sub">📞 @o.ShippingPhone</div>
+                            @if (!string.IsNullOrWhiteSpace(o.User?.Email))
+                            {
+                                <div class="ord-info-sub">✉️ @o.User.Email</div>
+                            }
+                        </div>
+
+                        <div class="ord-info-block">
+                            <div class="ord-info-label">Items</div>
+                            <div class="ord-info-value">@totalItems</div>
+                            <div class="ord-info-sub">@o.Items?.Count line(s)</div>
+                        </div>
+
+                        <div class="ord-info-block">
+                            <div class="ord-info-label">Total</div>
+                            <div class="ord-info-value ord-total">₹@o.Total.ToString("0.00")</div>
+                            @if (o.CodFee > 0)
+                            {
+                                <div class="ord-info-sub">incl. ₹@o.CodFee.ToString("0.00") COD</div>
+                            }
+                        </div>
+
+                        <div class="ord-info-block">
+                            <div class="ord-info-label">Placed</div>
+                            <div class="ord-info-value">@o.PlacedAt.ToString("dd MMM yyyy")</div>
+                            <div class="ord-info-sub">@o.PlacedAt.ToString("HH:mm")</div>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(o.TrackingNumber) || !string.IsNullOrWhiteSpace(o.RefundId))
+                    {
+                        <div class="ord-card-bottom">
+                            @if (!string.IsNullOrWhiteSpace(o.TrackingNumber))
+                            {
+                                <span class="ord-foot-item">
+                                    <strong>Tracking:</strong> @o.CourierName — @o.TrackingNumber
+                                </span>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(o.RefundId))
+                            {
+                                <span class="ord-foot-item ord-foot-refund">
+                                    <strong>Refund:</strong> ₹@o.RefundedAmount?.ToString("0.00") · @o.RefundStatus
+                                </span>
+                            }
+                        </div>
+                    }
+                </a>
+            }
+        </div>
+
+        <!-- ============ PAGINATION ============ -->
+        @if (Model.TotalPages > 1)
+        {
+            <div class="ord-pager">
+                @{
+                    var prevPage = Model.Page - 1;
+                    var nextPage = Model.Page + 1;
+                    var qs = $"status={Model.Status}&method={Model.PaymentMethod}&q={Model.Search}";
+                }
+
+                @if (Model.Page > 1)
+                {
+                    <a href="/Admin/Orders?@qs&page=@prevPage" class="pager-btn">← Prev</a>
+                }
+                <span class="pager-info">Page @Model.Page of @Model.TotalPages · @Model.TotalCount total</span>
+                @if (Model.Page < Model.TotalPages)
+                {
+                    <a href="/Admin/Orders?@qs&page=@nextPage" class="pager-btn">Next →</a>
+                }
+            </div>
+        }
+    }
+</div>
+
+<style>
+    .admin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 22px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid var(--black);
+    }
+    .admin-header h1 {
+        font-size: 22px;
+        font-weight: 900;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin: 0;
+    }
+    .admin-header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .btn-secondary {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 9px 14px; font-size: 12px; font-weight: 700;
+        letter-spacing: 0.5px; text-transform: uppercase;
+        border: 1.5px solid var(--gray-200);
+        background: var(--white); color: var(--gray-800);
+        border-radius: 4px; text-decoration: none;
+        cursor: pointer; transition: all 0.15s;
+    }
+    .btn-secondary:hover { border-color: var(--black); background: var(--black); color: var(--white); }
+
+    .alert-success { background:#e8f5e9; color:#2e7d32; border:1px solid #a5d6a7; border-radius:4px; padding:12px 16px; font-size:13px; margin-bottom:14px; }
+    .alert-error   { background:#fdecea; color:#b71c1c; border:1px solid #f5c2c0; border-radius:4px; padding:12px 16px; font-size:13px; margin-bottom:14px; }
+
+    /* ============ Stats ============ */
+    .ord-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 8px;
+        margin-bottom: 18px;
+    }
+    .ord-stat {
+        display: flex; flex-direction: column;
+        padding: 12px 14px;
+        border: 1.5px solid var(--gray-200);
+        border-radius: 4px;
+        background: var(--white);
+        text-decoration: none; color: inherit;
+        transition: all .15s;
+    }
+    .ord-stat:hover { border-color: var(--black); background: var(--gray-100); }
+    .ord-stat.active { border-color: var(--black); background: var(--black); color: var(--white); }
+    .ord-stat.active .ord-stat-label { color: rgba(255,255,255,0.75); }
+    .ord-stat-label {
+        font-size: 10px; font-weight: 700; letter-spacing: 1px;
+        text-transform: uppercase; color: var(--gray-600); margin-bottom: 3px;
+    }
+    .ord-stat-value { font-size: 20px; font-weight: 800; }
+    .ord-stat-cod { border-color: #d4af37; }
+    .ord-stat-cod.active { background: #b8860b; border-color: #b8860b; }
+
+    /* ============ Filters ============ */
+    .ord-filters {
+        display: grid;
+        grid-template-columns: 180px 180px 1fr auto auto;
+        gap: 10px;
+        align-items: end;
+        padding: 14px;
+        border: 1px solid var(--gray-200);
+        border-radius: 4px;
+        background: var(--white);
+        margin-bottom: 18px;
+    }
+    .ord-filter { display: flex; flex-direction: column; gap: 4px; }
+    .ord-filter label {
+        font-size: 10px; font-weight: 700; letter-spacing: 1px;
+        text-transform: uppercase; color: var(--gray-600);
+    }
+    .ord-filter select,
+    .ord-filter input {
+        padding: 9px 10px;
+        border: 1.5px solid var(--gray-200);
+        border-radius: 3px;
+        font-family: inherit;
+        font-size: 13px;
+        background: var(--white);
+    }
+    .ord-filter select:focus,
+    .ord-filter input:focus { outline: none; border-color: var(--black); }
+
+    /* ============ List ============ */
+    .ord-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .ord-card {
+        display: block;
+        border: 1px solid black;
+        border-radius: 4px;
+        background: var(--white);
+        padding: 14px 16px;
+        text-decoration: none; color: inherit;
+        transition: border-color .15s, background .15s;
+    }
+    .ord-card:hover, .ord-card:focus-visible {
+        border-color: var(--gray-400);
+        background: var(--gray-100);
+        outline: none;
+    }
+
+    .ord-card-top {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 10px; flex-wrap: wrap;
+        padding-bottom: 10px; margin-bottom: 12px;
+        border-bottom: 1px solid black;
+    }
+    .ord-card-num { display: flex; align-items: baseline; gap: 8px; }
+    .ord-num-label {
+        font-size: 9px; font-weight: 700; letter-spacing: 1px;
+        text-transform: uppercase; color: var(--gray-600);
+    }
+    .ord-num-value { font-size: 14px; font-weight: 800; letter-spacing: .5px; }
+    .ord-card-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+    .order-status {
+        display: inline-block; font-size: 9px; font-weight: 700;
+        letter-spacing: .6px; text-transform: uppercase;
+        padding: 4px 9px; border-radius: 20px; white-space: nowrap;
+    }
+    .order-status-created        { background:#f5f5f5; color:#424242; }
+    .order-status-paymentpending { background:#fff8e1; color:#7c5700; }
+    .order-status-confirmed      { background:#e3f2fd; color:#0d47a1; }
+    .order-status-shipped        { background:#f3e5f5; color:#6a1b9a; }
+    .order-status-delivered      { background:#e8f5e9; color:#2e7d32; }
+    .order-status-cancelled      { background:#fdecea; color:#b71c1c; }
+    .order-status-failed         { background:#fdecea; color:#b71c1c; }
+    .order-status-expired        { background:#eceff1; color:#455a64; }
+    .order-status-refunded       { background:#e0f2f1; color:#00695c; }
+    .order-status-returned       { background:#fff3e0; color:#e65100; }
+
+    .ord-pay-badge {
+        display: inline-block; font-size: 9px; font-weight: 800;
+        letter-spacing: 1px; text-transform: uppercase;
+        padding: 3px 7px; border-radius: 2px;
+    }
+    .ord-pay-razorpay { background: #e3f2fd; color: #0d47a1; }
+    .ord-pay-cod      { background: #fff8e1; color: #7c5700; }
+    .ord-pay-status {
+        font-size: 10px; font-weight: 600;
+        color: var(--gray-600);
+        text-transform: uppercase; letter-spacing: .5px;
+    }
+
+    .ord-card-mid {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1.2fr;
+        gap: 14px;
+    }
+    .ord-info-block { min-width: 0; }
+    .ord-info-label {
+        font-size: 9px; font-weight: 700; letter-spacing: 1px;
+        text-transform: uppercase; color: var(--gray-600); margin-bottom: 3px;
+    }
+    .ord-info-value {
+        font-size: 13px; font-weight: 700; color: var(--black);
+        overflow-wrap: anywhere;
+    }
+    .ord-info-sub {
+        font-size: 11px; color: var(--gray-600);
+        margin-top: 2px; overflow-wrap: anywhere;
+    }
+    .ord-total { color: var(--red); }
+
+    .ord-card-bottom {
+        display: flex; gap: 16px; flex-wrap: wrap;
+        padding-top: 10px; margin-top: 10px;
+        border-top: 1px dashed var(--gray-200);
+        font-size: 11px; color: var(--gray-600);
+    }
+    .ord-foot-item strong { color: var(--gray-800); }
+    .ord-foot-refund { color: #00695c; }
+
+    /* ============ Pagination ============ */
+    .ord-pager {
+        display: flex; align-items: center; justify-content: center;
+        gap: 14px; margin-top: 24px;
+    }
+    .pager-btn {
+        padding: 9px 16px;
+        border: 1.5px solid var(--gray-200);
+        background: var(--white); color: var(--gray-800);
+        border-radius: 3px; text-decoration: none;
+        font-size: 12px; font-weight: 700;
+        letter-spacing: .5px; text-transform: uppercase;
+        transition: all .15s;
+    }
+    .pager-btn:hover { border-color: var(--black); background: var(--black); color: var(--white); }
+    .pager-info { font-size: 12px; color: var(--gray-600); }
+
+    /* ============ Responsive ============ */
+    @@media (max-width: 900px) {
+        .ord-filters { grid-template-columns: 1fr 1fr; }
+        .ord-filters .ord-filter-grow { grid-column: 1 / -1; }
+        .ord-filters button, .ord-filters a { justify-content: center; }
+        .ord-card-mid { grid-template-columns: 1fr 1fr; }
+    }
+    @@media (max-width: 500px) {
+        .admin-header h1 { font-size: 18px; }
+        .ord-card-mid { grid-template-columns: 1fr; }
+        .ord-card-top { flex-direction: column; align-items: flex-start; }
+        .ord-card-badges { gap: 4px; }
+    }
+</style>
