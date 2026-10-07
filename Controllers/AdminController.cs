@@ -18,6 +18,17 @@ public class AdminController : Controller
         ViewBag.CategoryCount = await _db.Categories.CountAsync();
         ViewBag.NewArrivals = await _db.Products.CountAsync(p => p.IsNewArrival);
          ViewBag.AnnouncementCount = await _db.Announcements.CountAsync(a => a.IsActive);
+                 // Order counters
+        ViewBag.OrderCount = await _db.Orders.CountAsync();
+        ViewBag.OrderConfirmed = await _db.Orders.CountAsync(o => o.Status == "Confirmed");
+        ViewBag.OrderShipped = await _db.Orders.CountAsync(o => o.Status == "Shipped");
+        ViewBag.OrderDelivered = await _db.Orders.CountAsync(o => o.Status == "Delivered");
+        ViewBag.OrderCancelled = await _db.Orders.CountAsync(o => o.Status == "Cancelled");
+        ViewBag.CodPending = await _db.Orders.CountAsync(o =>
+            o.PaymentMethod == "COD" &&
+            o.PaymentStatus == "CodPending" &&
+            o.Status != "Cancelled" &&
+            o.Status != "Delivered");
           return View("~/Views/Admin/Dashboard.cshtml");
     }
 }

@@ -27,4 +27,16 @@ public interface IOrderService
         int orderId, int userId, string reason, string cancelledBy);
 
     Task MarkCodCollectedAsync(Order order);
+
+        // -------- Admin --------
+    Task<(List<Order> Orders, int TotalCount)> GetAllOrdersAsync(
+        string? status, string? paymentMethod, string? search, int page, int pageSize);
+
+    Task<Order?> GetOrderForAdminAsync(int orderId);
+
+    Task<(bool success, string? error, bool refundInitiated)> CancelOrderAsAdminAsync(int orderId, string reason);
+    Task<int> GetOrderCountAsync(string? status, string? paymentMethod, string? search);
+    Task<int> GetCodPendingCountAsync();
+
+
 }

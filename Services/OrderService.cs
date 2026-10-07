@@ -378,4 +378,106 @@ public class OrderService : IOrderService
         _logger.LogInformation("[ORDER] COD collected for {OrderNumber} — ₹{Total}",
             order.OrderNumber, order.Total);
     }
+
+        // ============================================================
+    // ADMIN — LIST
+    // ============================================================
+    public async Task<(List<Order> Orders, int TotalCount)> GetAllOrdersAsync(
+        string? status, string? paymentMethod, string? search, int page, int pageSize)
+    {
+        if (page < 1) page = 1;
+        if (pageSize < 1 || pageSize > 100) pageSize = 20;
+
+        var q = _db.Orders
+            .Include(o => o.Items)
+            .Include(o => o.User)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(status))
+            q = q.Where(o => o.Status == status);
+
+        if (!string.IsNullOrWhiteSpace(paymentMethod))
+            q = q.Where(o => o.PaymentMethod == paymentMethod);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var s = search.Trim();
+            q = q.Where(o =>
+                o.OrderNumber.Contains(s) ||
+                o.ShippingFullName.Contains(s) ||
+                o.ShippingPhone.Contains(s) ||
+                (o.User != null && o.User.Email != null && o.User.Email.Contains(s)));
+        }
+
+        var total = await q.CountAsync();
+
+        var list = await q
+            .OrderByDescending(o => o.PlacedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (list, total);
+    }
+
+    // ============================================================
+    // ADMIN — DETAIL
+    // ============================================================
+    public async Task<Order?> GetOrderForAdminAsync(int orderId)
+    {
+        return await _db.Orders
+            .Include(o => o.Items)
+            .Include(o => o.User)
+            .Include(o => o.PaymentAttemptLog)
+            .FirstOrDefaultAsync(o => o.OrderId == orderId);
+    }
+
+    // ============================================================
+    // ADMIN — CANCEL (as Admin, on behalf of the customer)
+    // ============================================================
+    public async Task<(bool success, string? error, bool refundInitiated)> CancelOrderAsAdminAsync(
+        int orderId, string reason)
+    {
+        var order = await _db.Orders
+            .Include(o => o.Items)
+            .FirstOrDefaultAsync(o => o.OrderId == orderId);
+
+        if (order == null) return (false, "Order not found.", false);
+
+        // Reuse the same core cancel logic but with CancelledBy="Admin"
+        // and by looking up the order's own UserId (the customer).
+        return await CancelOrderAsync(orderId, order.UserId, reason, "Admin");
+    }
+
+        public async Task<int> GetOrderCountAsync(string? status, string? paymentMethod, string? search)
+    {
+        var q = _db.Orders.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(status))
+            q = q.Where(o => o.Status == status);
+
+        if (!string.IsNullOrWhiteSpace(paymentMethod))
+            q = q.Where(o => o.PaymentMethod == paymentMethod);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var s = search.Trim();
+            q = q.Where(o =>
+                o.OrderNumber.Contains(s) ||
+                o.ShippingFullName.Contains(s) ||
+                o.ShippingPhone.Contains(s));
+        }
+
+        return await q.CountAsync();
+    }
+
+    public async Task<int> GetCodPendingCountAsync()
+    {
+        return await _db.Orders.CountAsync(o =>
+            o.PaymentMethod == PaymentMethods.Cod &&
+            o.Status != OrderStatus.Delivered &&
+            o.Status != OrderStatus.Cancelled &&
+            o.PaymentStatus == PaymentStatus.CodPending);
+    }
+
 }

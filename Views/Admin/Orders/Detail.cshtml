@@ -1,0 +1,500 @@
+@model ValousWorld.Web.ViewModels.Admin.AdminOrderDetailVm
+@{
+    ViewData["Title"] = "Admin · Order " + Model.Order.OrderNumber;
+    var o = Model.Order;
+    string StatusClass(string s) => "order-status-" + (s ?? "").ToLower();
+}
+
+<div class="container admin-page">
+
+    @if (TempData["Success"] != null) { <div class="alert-success">@TempData["Success"]</div> }
+    @if (TempData["Error"] != null)   { <div class="alert-error">@TempData["Error"]</div> }
+
+    <!-- ============ HEADER ============ -->
+    <div class="admin-header">
+        <div>
+            <h1>ORDER @o.OrderNumber</h1>
+            <p class="adm-sub">Placed @o.PlacedAt.ToString("dd MMM yyyy, HH:mm") UTC</p>
+        </div>
+        <div class="admin-header-actions">
+            <a href="/orders/invoice/@o.OrderId" class="btn-secondary" target="_blank" rel="noopener">
+                INVOICE
+            </a>
+            <a href="/Admin/Orders" class="btn-secondary">← BACK TO ORDERS</a>
+        </div>
+    </div>
+
+    <div class="adm-grid">
+
+        <!-- ============ LEFT COLUMN ============ -->
+        <div class="adm-col">
+
+            <!-- CUSTOMER -->
+            <div class="adm-card">
+                <h3>CUSTOMER</h3>
+                <div class="adm-kv-grid">
+                    <div class="adm-kv">
+                        <span class="adm-k">Name</span>
+                        <span class="adm-v">@Model.DisplayUserName</span>
+                    </div>
+                    <div class="adm-kv">
+                        <span class="adm-k">User ID</span>
+                        <span class="adm-v">#@o.UserId</span>
+                    </div>
+                    <div class="adm-kv">
+                        <span class="adm-k">Email</span>
+                        <span class="adm-v">@Model.DisplayEmail</span>
+                    </div>
+                    <div class="adm-kv">
+                        <span class="adm-k">Phone (shipping)</span>
+                        <span class="adm-v">@o.ShippingPhone</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SHIPPING -->
+            <div class="adm-card">
+                <h3>SHIPPING ADDRESS</h3>
+                <p><strong>@o.ShippingFullName</strong></p>
+                <p>📞 @o.ShippingPhone</p>
+                <p>@o.ShippingLine1</p>
+                @if (!string.IsNullOrWhiteSpace(o.ShippingLine2)) { <p>@o.ShippingLine2</p> }
+                <p>@o.ShippingCity, @o.ShippingState — @o.ShippingPincode</p>
+                <p>@o.ShippingCountry</p>
+                @if (!string.IsNullOrWhiteSpace(o.TrackingNumber))
+                {
+                    <p class="adm-tracking">
+                        <strong>Tracking:</strong>
+                        <a href="https://www.delhivery.com/track/package/@o.TrackingNumber" target="_blank" rel="noopener">
+                            @o.CourierName — @o.TrackingNumber
+                        </a>
+                        @* @if (!string.IsNullOrWhiteSpace(o.DelhiveryStatus))
+                        {
+                            <span class="adm-substatus">(@o.DelhiveryStatus)</span>
+                        } *@
+                    </p>
+                }
+            </div>
+
+            <!-- ITEMS -->
+            <div class="adm-card">
+                <h3>ITEMS (@o.Items.Count)</h3>
+                @foreach (var i in o.Items)
+                {
+                    <div class="adm-item">
+                        @if (!string.IsNullOrWhiteSpace(i.ProductImage))
+                        {
+                            <img src="@i.ProductImage" alt="@i.ProductName" loading="lazy" />
+                        }
+                        else
+                        {
+                            <div class="adm-noimg"></div>
+                        }
+                        <div class="adm-item-info">
+                            <p class="adm-item-name">@i.ProductName</p>
+                            <p class="adm-item-meta">
+                                @if (!string.IsNullOrWhiteSpace(i.Size)) { <span>Size: @i.Size</span> }
+                                @if (!string.IsNullOrWhiteSpace(i.Color)) { <span>Color: @i.Color</span> }
+                                <span>Qty: @i.Quantity</span>
+                                <span>·</span>
+                                <span>Unit ₹@i.UnitPrice.ToString("0.00")</span>
+                            </p>
+                        </div>
+                        <div class="adm-item-price">₹@i.LineTotal.ToString("0.00")</div>
+                    </div>
+                }
+            </div>
+
+            <!-- PAYMENT ATTEMPTS -->
+            @if (o.PaymentAttemptLog != null && o.PaymentAttemptLog.Any())
+            {
+                <div class="adm-card">
+                    <h3>PAYMENT ATTEMPTS (@o.PaymentAttemptLog.Count)</h3>
+                    <div class="adm-table-wrap">
+                        <table class="adm-table">
+                            <thead>
+                                <tr>
+                                    <th>When</th>
+                                    <th>Status</th>
+                                    <th>Amount</th>
+                                    <th>Code / Reason</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var a in o.PaymentAttemptLog.OrderByDescending(x => x.AttemptedAt))
+                                {
+                                    <tr>
+                                        <td>@a.AttemptedAt.ToString("dd MMM HH:mm:ss")</td>
+                                        <td>@a.Status</td>
+                                        <td>₹@a.Amount.ToString("0.00")</td>
+                                        <td>@(string.IsNullOrWhiteSpace(a.ErrorCode) ? "—" : a.ErrorCode) @a.ErrorDescription</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+
+        </div>
+
+        <!-- ============ RIGHT COLUMN ============ -->
+        <div class="adm-col">
+
+            <!-- STATUS + TIMELINE -->
+            <div class="adm-card">
+                <h3>STATUS</h3>
+                <div class="adm-status-row">
+                    <span class="order-status @StatusClass(o.Status)">@o.Status</span>
+                    <span class="order-status @StatusClass(o.PaymentStatus)">@o.PaymentStatus</span>
+                </div>
+
+                <div class="adm-timeline">
+                    <div class="adm-tl-row"><span>Placed</span><span>@o.PlacedAt.ToString("dd MMM yyyy HH:mm")</span></div>
+                    @if (o.PaidAt.HasValue)      { <div class="adm-tl-row"><span>Paid</span><span>@o.PaidAt.Value.ToString("dd MMM yyyy HH:mm")</span></div> }
+                    @if (o.ShippedAt.HasValue)   { <div class="adm-tl-row"><span>Shipped</span><span>@o.ShippedAt.Value.ToString("dd MMM yyyy HH:mm")</span></div> }
+                    @if (o.DeliveredAt.HasValue) { <div class="adm-tl-row"><span>Delivered</span><span>@o.DeliveredAt.Value.ToString("dd MMM yyyy HH:mm")</span></div> }
+                    @if (o.CodCollectedAt.HasValue) { <div class="adm-tl-row"><span>COD collected</span><span>@o.CodCollectedAt.Value.ToString("dd MMM yyyy HH:mm")</span></div> }
+                    @if (o.CancelledAt.HasValue) { <div class="adm-tl-row"><span>Cancelled</span><span>@o.CancelledAt.Value.ToString("dd MMM yyyy HH:mm") · @o.CancelledBy</span></div> }
+                    @if (o.RefundedAt.HasValue)  { <div class="adm-tl-row"><span>Refunded</span><span>@o.RefundedAt.Value.ToString("dd MMM yyyy HH:mm")</span></div> }
+                </div>
+            </div>
+
+            <!-- PAYMENT SUMMARY -->
+            <div class="adm-card">
+                <h3>PAYMENT</h3>
+                <div class="os-row"><span>Subtotal</span><span>₹@o.Subtotal.ToString("0.00")</span></div>
+                @if (o.Discount > 0)
+                {
+                    <div class="os-row os-save"><span>Discount</span><span>−₹@o.Discount.ToString("0.00")</span></div>
+                }
+                <div class="os-row"><span>Shipping</span><span>₹@o.Shipping.ToString("0.00")</span></div>
+                @if (o.CodFee > 0)
+                {
+                    <div class="os-row"><span>COD handling</span><span>₹@o.CodFee.ToString("0.00")</span></div>
+                }
+                <div class="os-row os-total"><span>TOTAL</span><span>₹@o.Total.ToString("0.00")</span></div>
+                <div class="os-row os-meta"><span>Method</span><span>@(o.PaymentMethod == "COD" ? "Cash on Delivery" : o.PaymentMethod)</span></div>
+                <div class="os-row os-meta"><span>Status</span><span>@o.PaymentStatus</span></div>
+                @if (!string.IsNullOrWhiteSpace(o.RazorpayPaymentId))
+                {
+                    <div class="os-row os-meta"><span>Txn ID</span><span>@o.RazorpayPaymentId</span></div>
+                }
+                @if (!string.IsNullOrWhiteSpace(o.RefundId))
+                {
+                    <div class="os-row os-meta os-refund"><span>Refund</span><span>₹@o.RefundedAmount?.ToString("0.00") — @o.RefundStatus</span></div>
+                }
+                @if (!string.IsNullOrWhiteSpace(o.CancellationReason))
+                {
+                    <div class="os-row os-meta"><span>Cancel reason</span><span>@o.CancellationReason</span></div>
+                }
+            </div>
+
+            <!-- ADMIN ACTIONS -->
+            <div class="adm-card adm-actions-card">
+                <h3>ADMIN ACTIONS</h3>
+
+                @if (Model.CanMarkDelivered)
+                {
+                    <form method="post" action="/Admin/Orders/@o.OrderId/mark-delivered"
+                          class="adm-action-form" onsubmit="return confirm('Mark this order as delivered and record COD cash collected?');">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="adm-action-btn adm-action-primary">
+                            MARK COD AS DELIVERED
+                        </button>
+                    </form>
+                }
+
+                @if (Model.CanRefund)
+                {
+                    <button type="button" class="adm-action-btn" id="openRefundBtn">
+                        REFUND MANUALLY
+                    </button>
+                }
+
+                @if (Model.CanResync)
+                {
+                    <form method="post" action="/Admin/Orders/@o.OrderId/resync"
+                          class="adm-action-form" onsubmit="return confirm('Fetch latest status from Delhivery?');">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="adm-action-btn">RESYNC TRACKING</button>
+                    </form>
+                }
+
+                @if (Model.CanCancel)
+                {
+                    <button type="button" class="adm-action-btn adm-action-danger" id="openCancelBtn">
+                        CANCEL ORDER
+                    </button>
+                }
+
+                @if (!Model.CanMarkDelivered && !Model.CanRefund && !Model.CanResync && !Model.CanCancel)
+                {
+                    <p class="adm-noactions">No actions available for this order.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ CANCEL MODAL ============ -->
+<div class="confirm-overlay" id="cancelModal" hidden>
+    <div class="confirm-box" role="dialog" aria-modal="true">
+        <h4>Cancel order @o.OrderNumber?</h4>
+        <form method="post" action="/Admin/Orders/@o.OrderId/cancel">
+            @Html.AntiForgeryToken()
+            <p>This action cannot be undone. If the order is paid, a refund will be initiated automatically.</p>
+            <select name="reason" required class="adm-reason">
+                <option value="">Select a reason…</option>
+                <option>Customer request</option>
+                <option>Out of stock</option>
+                <option>Payment verification failed</option>
+                <option>Address unserviceable</option>
+                <option>Duplicate order</option>
+                <option>Other</option>
+            </select>
+            <div class="confirm-actions">
+                <button type="button" class="confirm-btn confirm-btn-ghost" data-close="cancelModal">KEEP ORDER</button>
+                <button type="submit" class="confirm-btn confirm-btn-danger">YES, CANCEL</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ============ REFUND MODAL ============ -->
+<div class="confirm-overlay" id="refundModal" hidden>
+    <div class="confirm-box" role="dialog" aria-modal="true">
+        <h4>Refund ₹@o.Total.ToString("0.00")?</h4>
+        <form method="post" action="/Admin/Orders/@o.OrderId/refund">
+            @Html.AntiForgeryToken()
+            <p>Full refund will be issued to the customer's original payment method via Razorpay.</p>
+            <input type="text" name="reason" required placeholder="Reason for refund" class="adm-reason" />
+            <div class="confirm-actions">
+                <button type="button" class="confirm-btn confirm-btn-ghost" data-close="refundModal">CLOSE</button>
+                <button type="submit" class="confirm-btn confirm-btn-danger">REFUND NOW</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .admin-header {
+        display: flex; justify-content: space-between; align-items: center;
+        gap: 16px; flex-wrap: wrap;
+        margin-bottom: 22px; padding-bottom: 16px;
+        border-bottom: 2px solid var(--black);
+    }
+    .admin-header h1 {
+        font-size: 22px; font-weight: 900;
+        letter-spacing: 2px; text-transform: uppercase;
+        margin: 0;
+    }
+    .adm-sub { font-size: 12px; color: var(--gray-600); margin: 4px 0 0; }
+    .admin-header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-secondary {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 9px 14px; font-size: 11px; font-weight: 700;
+        letter-spacing: .5px; text-transform: uppercase;
+        border: 1.5px solid var(--gray-200);
+        background: var(--white); color: var(--gray-800);
+        border-radius: 4px; text-decoration: none;
+        transition: all .15s;
+    }
+    .btn-secondary:hover { border-color: var(--black); background: var(--black); color: var(--white); }
+
+    .alert-success { background:#e8f5e9; color:#2e7d32; border:1px solid #a5d6a7; border-radius:4px; padding:12px 16px; font-size:13px; margin-bottom:14px; }
+    .alert-error   { background:#fdecea; color:#b71c1c; border:1px solid #f5c2c0; border-radius:4px; padding:12px 16px; font-size:13px; margin-bottom:14px; }
+
+    .adm-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 380px;
+        gap: 16px;
+        align-items: start;
+    }
+    .adm-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+
+    .adm-card {
+        border: 1px solid black;
+        border-radius: 4px;
+        padding: 14px 16px;
+        background: var(--white);
+    }
+    .adm-card h3 {
+        font-size: 10px; font-weight: 700;
+        letter-spacing: .8px; text-transform: uppercase;
+        color: var(--gray-600);
+        margin: 0 0 10px; padding-bottom: 10px;
+        border-bottom: 1px solid black;
+    }
+    .adm-card p {
+        font-size: 12.5px; line-height: 1.55;
+        margin: 3px 0; color: var(--gray-800);
+        overflow-wrap: anywhere;
+    }
+
+    .adm-kv-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px 14px;
+    }
+    .adm-kv { min-width: 0; }
+    .adm-k { display: block; font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--gray-600); margin-bottom: 2px; }
+    .adm-v { font-size: 13px; font-weight: 600; color: var(--black); overflow-wrap: anywhere; }
+
+    .adm-tracking { margin-top: 10px !important; padding: 8px 10px; background: var(--gray-100); border-radius: 3px; font-size: 12px !important; }
+    .adm-tracking a { color: inherit; text-decoration: underline; }
+    .adm-substatus { color: var(--gray-600); font-size: 11px; margin-left: 4px; }
+
+    .adm-item {
+        display: grid; grid-template-columns: 48px minmax(0, 1fr) auto;
+        gap: 12px; align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--gray-200);
+    }
+    .adm-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .adm-item img, .adm-noimg {
+        width: 48px; height: 60px; object-fit: cover;
+        border-radius: 3px; background: var(--gray-100);
+    }
+    .adm-item-name { font-size: 11.5px; font-weight: 700; text-transform: uppercase; margin: 0 0 3px !important; line-height: 1.35; }
+    .adm-item-meta { display: flex; flex-wrap: wrap; gap: 2px 8px; font-size: 10.5px !important; color: var(--gray-600) !important; margin: 0 !important; }
+    .adm-item-price { font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+
+    .adm-status-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .order-status { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; }
+    .order-status-created        { background:#f5f5f5; color:#424242; }
+    .order-status-paymentpending { background:#fff8e1; color:#7c5700; }
+    .order-status-confirmed      { background:#e3f2fd; color:#0d47a1; }
+    .order-status-shipped        { background:#f3e5f5; color:#6a1b9a; }
+    .order-status-delivered      { background:#e8f5e9; color:#2e7d32; }
+    .order-status-cancelled      { background:#fdecea; color:#b71c1c; }
+    .order-status-failed         { background:#fdecea; color:#b71c1c; }
+    .order-status-expired        { background:#eceff1; color:#455a64; }
+    .order-status-refunded       { background:#e0f2f1; color:#00695c; }
+    .order-status-returned       { background:#fff3e0; color:#e65100; }
+    .order-status-codpending     { background:#fff8e1; color:#7c5700; }
+    .order-status-paid           { background:#e8f5e9; color:#2e7d32; }
+    .order-status-pending        { background:#fff8e1; color:#7c5700; }
+
+    .adm-timeline { display: flex; flex-direction: column; gap: 4px; }
+    .adm-tl-row { display: flex; justify-content: space-between; gap: 14px; font-size: 12px; padding: 4px 0; border-bottom: 1px dashed var(--gray-200); }
+    .adm-tl-row:last-child { border-bottom: none; }
+    .adm-tl-row span:first-child { color: var(--gray-600); }
+    .adm-tl-row span:last-child { font-weight: 600; text-align: right; }
+
+    .os-row { display: flex; justify-content: space-between; gap: 16px; padding: 5px 0; font-size: 12.5px; }
+    .os-save { color: #2e7d32; font-weight: 600; }
+    .os-total { padding-top: 10px; margin-top: 6px; border-top: 1px solid black; font-size: 14px; font-weight: 800; }
+    .os-meta { font-size: 11.5px; color: var(--gray-600); }
+    .os-refund { color: #00695c; }
+
+    .adm-actions-card { border: 1.5px solid black; }
+    .adm-action-form { display: block; margin-bottom: 8px; }
+    .adm-action-btn {
+        display: block; width: 100%;
+        padding: 12px 14px;
+        border: 1.5px solid var(--black);
+        background: var(--white); color: var(--black);
+        font-family: inherit; font-size: 11px; font-weight: 800;
+        letter-spacing: 1px; text-transform: uppercase;
+        border-radius: 3px; cursor: pointer;
+        transition: all .15s;
+        margin-bottom: 8px;
+    }
+    .adm-action-btn:hover { background: var(--black); color: var(--white); }
+    .adm-action-primary { background: #2e7d32; border-color: #2e7d32; color: var(--white); }
+    .adm-action-primary:hover { background: #1b5e20; border-color: #1b5e20; }
+    .adm-action-danger { border-color: #b71c1c; color: #b71c1c; }
+    .adm-action-danger:hover { background: #b71c1c; color: var(--white); }
+    .adm-noactions { font-size: 12px; color: var(--gray-600); margin: 0; text-align: center; }
+
+    .confirm-overlay {
+        position: fixed; inset: 0; background: rgba(0,0,0,.6);
+        display: flex; align-items: center; justify-content: center;
+        padding: 20px; z-index: 9999;
+    }
+    .confirm-overlay[hidden] { display: none; }
+    .confirm-box {
+        background: var(--white); border: 1px solid var(--black); border-radius: 4px;
+        width: 100%; max-width: 440px; overflow: hidden;
+        box-shadow: 0 20px 50px rgba(0,0,0,.25);
+    }
+    .confirm-box h4 {
+        margin: 0; padding: 14px 20px;
+        font-size: 12px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
+        background: var(--gray-100); border-bottom: 1px solid var(--gray-200);
+    }
+    .confirm-box p { margin: 0; padding: 12px 20px 0; font-size: 13px; line-height: 1.6; }
+    .adm-reason {
+        display: block; width: calc(100% - 40px);
+        margin: 12px 20px 0;
+        padding: 10px 12px; font-family: inherit; font-size: 13px;
+        border: 1.5px solid var(--gray-200); border-radius: 3px;
+    }
+    .confirm-actions { display: flex; gap: 10px; justify-content: flex-end; padding: 16px 20px 20px; }
+    .confirm-btn {
+        min-width: 110px; height: 38px; padding: 0 14px;
+        font-family: inherit; font-size: 11px; font-weight: 700;
+        letter-spacing: 1px; text-transform: uppercase;
+        border: 1.5px solid var(--black); border-radius: 3px; cursor: pointer;
+        transition: background .2s, color .2s;
+    }
+    .confirm-btn-ghost { background: transparent; color: var(--black); }
+    .confirm-btn-ghost:hover { background: var(--black); color: var(--white); }
+    .confirm-btn-danger { background: #b71c1c; border-color: #b71c1c; color: var(--white); }
+    .confirm-btn-danger:hover { opacity: .85; }
+
+    .adm-table-wrap { width: 100%; overflow-x: auto; }
+    .adm-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+    .adm-table th {
+        text-align: left; padding: 6px 8px;
+        background: var(--gray-100);
+        font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
+        border-bottom: 1px solid var(--gray-200);
+    }
+    .adm-table td {
+        padding: 6px 8px;
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    @@media (max-width: 900px) {
+        .adm-grid { grid-template-columns: minmax(0, 1fr); }
+        .adm-kv-grid { grid-template-columns: 1fr; }
+    }
+    @@media (max-width: 500px) {
+        .admin-header h1 { font-size: 16px; }
+        .admin-header-actions { flex-direction: column; width: 100%; }
+        .admin-header-actions .btn-secondary { width: 100%; justify-content: center; }
+        .adm-item { grid-template-columns: 44px minmax(0, 1fr); }
+        .adm-item-price { grid-column: 2; }
+    }
+</style>
+
+<script>
+    (function () {
+        function openModal(id) { document.getElementById(id).removeAttribute('hidden'); }
+        function closeModal(id) { document.getElementById(id).setAttribute('hidden', ''); }
+
+        var openCancel = document.getElementById('openCancelBtn');
+        var openRefund = document.getElementById('openRefundBtn');
+
+        if (openCancel) openCancel.addEventListener('click', () => openModal('cancelModal'));
+        if (openRefund) openRefund.addEventListener('click', () => openModal('refundModal'));
+
+        document.querySelectorAll('[data-close]').forEach(btn => {
+            btn.addEventListener('click', () => closeModal(btn.getAttribute('data-close')));
+        });
+
+        ['cancelModal', 'refundModal'].forEach(id => {
+            var el = document.getElementById(id);
+            if (el) el.addEventListener('click', e => { if (e.target === el) closeModal(id); });
+        });
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                closeModal('cancelModal');
+                closeModal('refundModal');
+            }
+        });
+    })();
+</script>

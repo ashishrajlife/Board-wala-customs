@@ -38,6 +38,16 @@
             <h3>Users</h3>
             <p class="dash-stat">@ViewBag.UserCount</p>
         </div>
+                <div class="dash-card">
+            <h3>Orders</h3>
+            <p class="dash-stat">@ViewBag.OrderCount</p>
+            <div class="dash-substats">
+                <span><strong>@ViewBag.OrderConfirmed</strong> confirmed</span>
+                <span><strong>@ViewBag.OrderShipped</strong> shipped</span>
+                <span><strong>@ViewBag.CodPending</strong> COD pending</span>
+            </div>
+            <a href="/Admin/Orders" class="btn-outline">Manage →</a>
+        </div>
         <div class="dash-card">
             <h3>New Arrivals</h3>
             <p class="dash-stat">@ViewBag.NewArrivals</p>
@@ -114,4 +124,13 @@
             justify-content: center;
         }
     }
+        .dash-substats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 14px;
+        font-size: 11px;
+        color: var(--gray-600);
+        margin: 8px 0 12px;
+    }
+    .dash-substats strong { color: var(--black); font-weight: 700; }
 </style>
