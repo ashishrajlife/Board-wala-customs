@@ -952,3 +952,85 @@ h1 {
         text-align: right;
     }
 }
+/* ===== Admin product form: image + video upload layout fix ===== */
+
+/* One column in the narrow side panel (desktop) */
+.admin-form .form-side .img-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+}
+/* Side panel drops below the form on tablets: 2 columns fit again */
+@media (min-width: 640px) and (max-width: 1024px) {
+    .admin-form .form-side .img-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+.admin-form .form-side .img-slot { min-width: 0; }
+.admin-form .form-side .img-slot label { margin-top: 0; }
+
+/* Upload boxes: never taller or wider than their content/column */
+.admin-form .form-side .upload-block {
+    height: auto;
+    min-width: 0;
+    flex-shrink: 0;
+    box-sizing: border-box;
+}
+.admin-form .form-side .upload-block input[type=file] {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    flex-shrink: 0;
+    text-overflow: ellipsis;
+}
+
+/* Video preview: show the whole frame, not a cropped one */
+.admin-form .form-side video.upload-preview {
+    height: auto;
+    max-height: 220px;
+    object-fit: contain;
+    background: #000;
+}
+
+/* Edit page: current video + remove checkbox */
+.admin-form .form-side .current-video {
+    margin: 8px 0 10px;
+    padding: 6px;
+    border: 1px solid var(--gray-200);
+    background: var(--white);
+    border-radius: 4px;
+}
+.admin-form .form-side .current-video video {
+    display: block;
+    width: 100%;
+    max-height: 220px;
+    background: #000;
+    border-radius: 2px;
+}
+.admin-form .form-side .remove-video { margin: 0 0 12px; }
+.admin-form .form-side .remove-video label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    cursor: pointer;
+}
+.admin-form .form-side .remove-video input[type=checkbox] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+}
+
+/* Desktop: keep the sticky panel inside the screen and scroll it if tall */
+@media (min-width: 1025px) {
+    .admin-form .form-side {
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+}
