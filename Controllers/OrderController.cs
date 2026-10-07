@@ -51,4 +51,34 @@ public class OrderController : Controller
 
         return File(pdfBytes, "application/pdf", fileName);
     }
+
+        // POST /orders/cancel/{id}
+    [HttpPost, Route("cancel/{id:int}")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Cancel(int id, string reason)
+    {
+        var userId = GetUserId();
+
+        if (string.IsNullOrWhiteSpace(reason))
+        {
+            TempData["CancelError"] = "Please select a reason for cancellation.";
+            return RedirectToAction(nameof(Detail), new { id });
+        }
+
+        var (ok, error, refundInitiated) =
+            await _orders.CancelOrderAsync(id, userId, reason, "User");
+
+        if (!ok)
+        {
+            TempData["CancelError"] = error ?? "Unable to cancel this order.";
+            return RedirectToAction(nameof(Detail), new { id });
+        }
+
+        TempData["CancelSuccess"] = refundInitiated
+            ? "Order cancelled. Your refund has been initiated and will reflect in 5–7 business days."
+            : "Order cancelled successfully.";
+
+        return RedirectToAction(nameof(Detail), new { id });
+    }
+
 }

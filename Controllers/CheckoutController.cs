@@ -83,23 +83,43 @@ public class CheckoutController : Controller
     // ============================================================
     // PLACE ORDER
     // ============================================================
-    [HttpPost, Route("place")]
+       [HttpPost, Route("place")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Place(int selectedAddressId, string? voucherCode)
+    public async Task<IActionResult> Place(
+        int selectedAddressId, string? voucherCode, string? paymentMethod)
     {
         var userId = GetUserId();
         if (userId == 0) return Unauthorized();
 
         try
         {
-            // Server-side shipping calculation
+            paymentMethod = string.IsNullOrWhiteSpace(paymentMethod)
+                ? PaymentMethods.Razorpay
+                : paymentMethod;
+
+            if (paymentMethod != PaymentMethods.Razorpay &&
+                paymentMethod != PaymentMethods.Cod)
+            {
+                TempData["CheckoutError"] = "Invalid payment method.";
+                return RedirectToAction(nameof(Index));
+            }
+
             var subtotal = await _cart.GetSubtotalAsync(userId);
             decimal shipping = ShippingCalculator.Calculate(subtotal);
+            bool isCod = paymentMethod == PaymentMethods.Cod;
+            decimal codFee = ShippingCalculator.CodFee(subtotal, isCod);
 
-            // Create order
-            var order = await _orders.CreateOrderFromCartAsync(userId, selectedAddressId, shipping, voucherCode);
+            var order = await _orders.CreateOrderFromCartAsync(
+                userId, selectedAddressId, shipping, voucherCode, paymentMethod, codFee);
 
-            // Init Razorpay
+            // ---- COD: skip Razorpay entirely ----
+            if (isCod)
+            {
+                await _finalizer.FinalizeCodAsync(order.OrderId, "checkout");
+                return RedirectToAction(nameof(Success), new { id = order.OrderId });
+            }
+
+            // ---- Online (Razorpay) ----
             var (rzSuccess, rzOrderId, rzError) = await _razorpay.CreateOrderAsync(order);
             if (!rzSuccess)
             {
@@ -118,7 +138,6 @@ public class CheckoutController : Controller
             order.LastPaymentAttemptAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
 
-            // Log attempt
             await _orders.LogPaymentAttemptAsync(order, "Initiated");
 
             return RedirectToAction(nameof(Payment), new { id = order.OrderId });
@@ -141,18 +160,19 @@ public class CheckoutController : Controller
         var order = await _orders.GetOrderAsync(id, userId);
         if (order == null) return NotFound();
 
-        // Already paid? Redirect to success
+        // COD orders never touch Razorpay
+        if (order.PaymentMethod == PaymentMethods.Cod)
+            return RedirectToAction(nameof(Success), new { id });
+
         if (order.PaymentStatus == PaymentStatus.Paid)
             return RedirectToAction(nameof(Success), new { id });
 
-        // Cancelled? Block
         if (order.Status == OrderStatus.Cancelled)
         {
             TempData["CheckoutError"] = "This order has been cancelled.";
             return RedirectToAction("Index", "Home");
         }
 
-        // Expired or failed? Still show page — user can retry
         ViewBag.RazorpayKeyId = _configuration["Integrations:Razorpay:KeyId"];
         return View("~/Views/Checkout/Payment.cshtml", order);
     }
@@ -283,27 +303,32 @@ public class CheckoutController : Controller
         var order = await _orders.GetOrderAsync(id, userId);
         if (order == null) return NotFound();
 
-        // Only show if actually paid
-        if (order.PaymentStatus != PaymentStatus.Paid)
+        // Razorpay orders must be paid; COD orders are Confirmed with CodPending
+        var showable = order.PaymentStatus == PaymentStatus.Paid
+                    || (order.PaymentMethod == PaymentMethods.Cod
+                        && (order.Status == OrderStatus.Confirmed
+                            || order.Status == OrderStatus.Shipped));
+
+        if (!showable)
             return RedirectToAction(nameof(Payment), new { id });
 
         return View("~/Views/Checkout/Success.cshtml", order);
     }
 
-        [HttpGet, Route("status/{id:int}")]
-        public async Task<IActionResult> Status(int id)
-        {
-            var userId = GetUserId();
-            var order = await _orders.GetOrderAsync(id, userId);
-            if (order == null) return NotFound();
+    [HttpGet, Route("status/{id:int}")]
+    public async Task<IActionResult> Status(int id)
+    {
+        var userId = GetUserId();
+        var order = await _orders.GetOrderAsync(id, userId);
+        if (order == null) return NotFound();
 
-            Response.Headers["Cache-Control"] = "no-store";
-            return Json(new
-            {
-                paid = order.PaymentStatus == PaymentStatus.Paid,
-                paymentStatus = order.PaymentStatus,
-                orderStatus = order.Status,
-                successUrl = Url.Action(nameof(Success), new { id })
-            });
-        }
+        Response.Headers["Cache-Control"] = "no-store";
+        return Json(new
+        {
+            paid = order.PaymentStatus == PaymentStatus.Paid,
+            paymentStatus = order.PaymentStatus,
+            orderStatus = order.Status,
+            successUrl = Url.Action(nameof(Success), new { id })
+        });
+    }
 }

@@ -88,6 +88,31 @@
                     }
                 </section>
 
+                                <!-- ---------- STEP 3: PAYMENT METHOD ---------- -->
+                <section class="checkout-step">
+                    <div class="step-header">
+                        <h2>Payment Method</h2>
+                    </div>
+
+                    <div class="payment-method-list">
+                        <label class="payment-option selected" id="pmRazorpayLabel">
+                            <input type="radio" name="paymentMethod" value="Razorpay" checked />
+                            <div class="payment-option-body">
+                                <span class="payment-option-title">Pay Online</span>
+                                <span class="payment-option-desc">UPI · Card · Netbanking (via Razorpay)</span>
+                            </div>
+                        </label>
+
+                        <label class="payment-option" id="pmCodLabel">
+                            <input type="radio" name="paymentMethod" value="COD" />
+                            <div class="payment-option-body">
+                                <span class="payment-option-title">Cash on Delivery</span>
+                                <span class="payment-option-desc">Pay at your doorstep · +₹49 handling fee</span>
+                            </div>
+                        </label>
+                    </div>
+                </section>
+
                 <!-- ---------- STEP 2: ORDER ITEMS ---------- -->
                 <section class="checkout-step">
                     <div class="step-header">
@@ -170,6 +195,11 @@
                     </p>
                 }
 
+                <div class="summary-row" id="codFeeRow" hidden>
+                    <span>COD handling</span>
+                    <span>+₹49.00</span>
+                </div>
+
                 <div class="summary-row summary-row-save" id="voucherDiscountRow" hidden>
                     <span>Voucher discount</span>
                     <span id="checkoutVoucherDiscount">−₹0.00</span>
@@ -185,7 +215,7 @@
                 <input type="hidden" name="voucherCode" id="appliedVoucherCode" value="" />
 
                 <button type="submit" class="btn-primary place-order-btn" id="placeOrderBtn">
-                    PLACE ORDER
+                    <span id="placeOrderBtnText">PLACE ORDER</span>
                 </button>
 
                 <div class="voucher-entry">
@@ -197,9 +227,8 @@
                     <p id="voucherMessage" class="voucher-message" role="status" aria-live="polite"></p>
                 </div>
 
-                <p class="summary-note">
-                    Payment integration (Razorpay) coming soon.
-                    Order will be created in pending state.
+                <p class="summary-note" id="summaryNote">
+                    You'll be redirected to Razorpay to complete payment.
                 </p>
             </aside>
         </div>
@@ -494,6 +523,59 @@
         .order-thumb { width: 60px; height: 76px; }
         .order-price { grid-column: 2; font-size: 13px; }
     }
+        /* ---------- Payment method selector ---------- */
+    .payment-method-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .payment-option {
+        display: block;
+        position: relative;
+        cursor: pointer;
+    }
+    .payment-option input[type=radio] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .payment-option-body {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        border: 1.5px solid var(--gray-200);
+        border-radius: 4px;
+        padding: 14px 16px;
+        background: var(--white);
+        transition: border-color .15s, background .15s;
+        position: relative;
+    }
+    .payment-option:hover .payment-option-body { border-color: var(--gray-400); }
+    .payment-option.selected .payment-option-body {
+        border-color: var(--black);
+        background: #fafafa;
+    }
+    .payment-option.selected .payment-option-body::before {
+        content: "";
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--black);
+    }
+    .payment-option-title {
+        font-size: 13px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .payment-option-desc {
+        font-size: 11.5px;
+        color: var(--gray-600);
+        letter-spacing: 0.2px;
+    }
 </style>
 
 <script>
@@ -508,22 +590,64 @@
                 label.classList.toggle('selected', input && input.checked);
             });
         }
-
         radios.forEach(r => r.addEventListener('change', sync));
         sync();
     })();
 
+    // Payment method + voucher + total
     (function () {
         const form = document.getElementById('checkoutForm');
         const codeInput = document.getElementById('voucherCodeInput');
         const appliedCode = document.getElementById('appliedVoucherCode');
         const applyButton = document.getElementById('applyVoucherBtn');
         const message = document.getElementById('voucherMessage');
-        const total = document.getElementById('checkoutGrandTotal');
+        const totalEl = document.getElementById('checkoutGrandTotal');
         const discountRow = document.getElementById('voucherDiscountRow');
         const discountLabel = document.getElementById('checkoutVoucherDiscount');
-        const baseTotal = Number(total.textContent);
-        let discountAmount = 0;
+        const codFeeRow = document.getElementById('codFeeRow');
+        const summaryNote = document.getElementById('summaryNote');
+        const btnText = document.getElementById('placeOrderBtnText');
+
+        const pmRadios = document.querySelectorAll('input[name="paymentMethod"]');
+        const pmLabels = document.querySelectorAll('.payment-option');
+
+        const COD_FEE = 49;
+        const baseSubtotal = parseFloat(totalEl.dataset.subtotal || "0");
+        const baseShipping = parseFloat(totalEl.dataset.shipping || "0");
+
+        let voucherDiscount = 0;
+
+        function isCod() {
+            const r = document.querySelector('input[name="paymentMethod"]:checked');
+            return r && r.value === 'COD';
+        }
+
+        function refreshTotal() {
+            const subtotal = parseFloat("@subtotal.ToString("0.00")");
+            const shipping = @shipping.ToString("0.00");
+            const cod = isCod() ? COD_FEE : 0;
+            const t = subtotal + shipping - voucherDiscount + cod;
+            totalEl.textContent = Math.max(0, t).toFixed(2);
+
+            codFeeRow.hidden = !isCod();
+            summaryNote.textContent = isCod()
+                ? "You'll pay the full amount in cash when your order is delivered."
+                : "You'll be redirected to Razorpay to complete payment.";
+            btnText.textContent = isCod()
+                ? `PLACE COD ORDER — PAY ₹${Math.max(0, t).toFixed(2)} ON DELIVERY`
+                : "PLACE ORDER";
+        }
+
+        function syncPaymentLabels() {
+            pmLabels.forEach(l => {
+                const inp = l.querySelector('input');
+                l.classList.toggle('selected', inp && inp.checked);
+            });
+            refreshTotal();
+        }
+
+        pmRadios.forEach(r => r.addEventListener('change', syncPaymentLabels));
+        syncPaymentLabels();
 
         async function applyVoucher() {
             const code = codeInput.value.trim();
@@ -551,18 +675,18 @@
                 }
 
                 appliedCode.value = code;
-                discountAmount = Number(result.discountAmount);
+                voucherDiscount = Number(result.discountAmount);
                 discountRow.hidden = false;
-                discountLabel.textContent = `−₹${discountAmount.toFixed(2)}`;
-                total.textContent = Math.max(0, baseTotal - discountAmount).toFixed(2);
-                message.textContent = `${result.message} Discount: ₹${discountAmount.toFixed(2)}.`;
+                discountLabel.textContent = `−₹${voucherDiscount.toFixed(2)}`;
+                refreshTotal();
+                message.textContent = `${result.message} Discount: ₹${voucherDiscount.toFixed(2)}.`;
                 message.className = 'voucher-message success';
                 return true;
             } catch (error) {
                 appliedCode.value = '';
-                discountAmount = 0;
+                voucherDiscount = 0;
                 discountRow.hidden = true;
-                total.textContent = baseTotal.toFixed(2);
+                refreshTotal();
                 message.textContent = error.message;
                 message.className = 'voucher-message error';
                 return false;
@@ -575,9 +699,9 @@
         codeInput.addEventListener('input', () => {
             if (codeInput.value.trim() === appliedCode.value) return;
             appliedCode.value = '';
-            discountAmount = 0;
+            voucherDiscount = 0;
             discountRow.hidden = true;
-            total.textContent = baseTotal.toFixed(2);
+            refreshTotal();
             message.textContent = '';
             message.className = 'voucher-message';
         });

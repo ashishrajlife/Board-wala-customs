@@ -11,13 +11,20 @@ public class OrderService : IOrderService
     private readonly AppDbContext _db;
     private readonly ICartService _cart;
     private readonly IVoucherService _vouchers;
+    private readonly IRazorpayService _razorpay;
     private readonly ILogger<OrderService> _logger;
 
-    public OrderService(AppDbContext db, ICartService cart, IVoucherService vouchers, ILogger<OrderService> logger)
+    public OrderService(
+        AppDbContext db,
+        ICartService cart,
+        IVoucherService vouchers,
+        IRazorpayService razorpay,
+        ILogger<OrderService> logger)
     {
         _db = db;
         _cart = cart;
         _vouchers = vouchers;
+        _razorpay = razorpay;
         _logger = logger;
     }
 
@@ -28,7 +35,11 @@ public class OrderService : IOrderService
         return $"VW-{year}-{(count + 1):D4}";
     }
 
-    public async Task<Order> CreateOrderFromCartAsync(int userId, int addressId, decimal shipping, string? voucherCode = null)
+    public async Task<Order> CreateOrderFromCartAsync(
+        int userId, int addressId, decimal shipping,
+        string? voucherCode = null,
+        string paymentMethod = PaymentMethods.Razorpay,
+        decimal codFee = 0m)
     {
         var cart = await _cart.GetCartAsync(userId)
             ?? throw new InvalidOperationException("Cart not found.");
@@ -52,17 +63,20 @@ public class OrderService : IOrderService
             voucherDiscount = voucher.DiscountAmount;
         }
 
+        var isCod = paymentMethod == PaymentMethods.Cod;
+
         var order = new Order
         {
             OrderNumber = await GenerateOrderNumberAsync(),
             UserId = userId,
-            Status = OrderStatus.Created,
+            Status = isCod ? OrderStatus.Confirmed : OrderStatus.Created,
             Subtotal = subtotal,
             Discount = savings + voucherDiscount,
             Shipping = shipping,
-            Total = subtotal + shipping - voucherDiscount,
-            PaymentMethod = "Razorpay",
-            PaymentStatus = PaymentStatus.Created,
+            CodFee = codFee,
+            Total = subtotal + shipping + codFee - voucherDiscount,
+            PaymentMethod = paymentMethod,
+            PaymentStatus = isCod ? PaymentStatus.CodPending : PaymentStatus.Created,
 
             ShippingFullName = address.FullName,
             ShippingPhone = address.Phone,
@@ -74,7 +88,7 @@ public class OrderService : IOrderService
             ShippingCountry = address.Country,
 
             PlacedAt = DateTime.UtcNow,
-            ExpiresAt = DateTime.UtcNow.AddMinutes(OrderExpiryMinutes)
+            ExpiresAt = isCod ? null : DateTime.UtcNow.AddMinutes(OrderExpiryMinutes)
         };
 
         foreach (var ci in cart.Items)
@@ -96,8 +110,8 @@ public class OrderService : IOrderService
         _db.Orders.Add(order);
         await _db.SaveChangesAsync();
 
-        _logger.LogInformation("[ORDER] Created {OrderNumber} for user {UserId} | Total ₹{Total}",
-            order.OrderNumber, userId, order.Total);
+        _logger.LogInformation("[ORDER] Created {OrderNumber} for user {UserId} | Method {Method} | Total ₹{Total}",
+            order.OrderNumber, userId, order.PaymentMethod, order.Total);
 
         return order;
     }
@@ -137,7 +151,8 @@ public class OrderService : IOrderService
 
         if (order == null) return null;
 
-        // Only allow retry for created/failed/expired orders
+        if (order.PaymentMethod == PaymentMethods.Cod) return null;
+
         var retryable = order.PaymentStatus == PaymentStatus.Created
                      || order.PaymentStatus == PaymentStatus.Pending
                      || order.PaymentStatus == PaymentStatus.Failed
@@ -173,7 +188,6 @@ public class OrderService : IOrderService
 
     public async Task MarkPaymentPaidAsync(Order order, string razorpayPaymentId, string signature)
     {
-        // Idempotency — already paid? Skip
         if (order.PaymentStatus == PaymentStatus.Paid)
         {
             _logger.LogInformation("[ORDER] {OrderNumber} already paid — idempotent skip",
@@ -217,14 +231,15 @@ public class OrderService : IOrderService
     }
 
     // ============================================================
-    // EXPIRY JOB (call from background service or manual action)
+    // EXPIRY JOB
     // ============================================================
     public async Task<int> ExpireAbandonedOrdersAsync()
     {
         var now = DateTime.UtcNow;
 
         var expired = await _db.Orders
-            .Where(o => o.PaymentStatus != PaymentStatus.Paid
+            .Where(o => o.PaymentMethod != PaymentMethods.Cod
+                     && o.PaymentStatus != PaymentStatus.Paid
                      && o.PaymentStatus != PaymentStatus.Refunded
                      && o.Status != OrderStatus.Cancelled
                      && o.ExpiresAt != null
@@ -246,5 +261,121 @@ public class OrderService : IOrderService
         }
 
         return expired.Count;
+    }
+
+    // ============================================================
+    // CANCEL ORDER
+    // ============================================================
+    public async Task<(bool success, string? error, bool refundInitiated)> CancelOrderAsync(
+        int orderId, int userId, string reason, string cancelledBy)
+    {
+        var order = await _db.Orders
+            .Include(o => o.Items)
+            .FirstOrDefaultAsync(o => o.OrderId == orderId && o.UserId == userId);
+
+        if (order == null) return (false, "Order not found.", false);
+
+        // Only cancellable before shipment
+                // Block only the terminal states
+        var blocked = order.Status == OrderStatus.Cancelled
+                   || order.Status == OrderStatus.Delivered
+                   || order.Status == OrderStatus.Refunded
+                   || order.PaymentStatus == PaymentStatus.Refunded;
+
+        if (blocked)
+            return (false, $"This order cannot be cancelled (status: {order.Status}).", false);
+
+        var refundInitiated = false;
+
+        // Mark cancelled first — the truth wins even if refund API blows up
+        order.Status = OrderStatus.Cancelled;
+        order.CancelledAt = DateTime.UtcNow;
+        order.CancelledBy = cancelledBy;
+        order.CancellationReason = string.IsNullOrWhiteSpace(reason) ? "Not specified" : reason;
+        order.UpdatedAt = DateTime.UtcNow;
+
+        // ---- Refund logic ----
+        if (order.PaymentStatus == PaymentStatus.Paid &&
+            !string.IsNullOrWhiteSpace(order.RazorpayPaymentId))
+        {
+            try
+            {
+                var (ok, refundId, error) = await _razorpay.CreateRefundAsync(
+                    order.RazorpayPaymentId, order.Total, reason);
+
+                if (ok)
+                {
+                    order.RefundId = refundId;
+                    order.RefundedAmount = order.Total;
+                    order.RefundedAt = DateTime.UtcNow;
+                    order.RefundStatus = "Initiated";
+                    order.PaymentStatus = PaymentStatus.Refunded;
+                    refundInitiated = true;
+
+                    _logger.LogInformation("[CANCEL] Refund initiated for {OrderNumber} — RefundId {RefundId}",
+                        order.OrderNumber, refundId);
+                }
+                else
+                {
+                    order.RefundStatus = "Failed";
+                    _logger.LogError("[CANCEL] Refund FAILED for {OrderNumber}: {Error}",
+                        order.OrderNumber, error);
+                }
+            }
+            catch (Exception ex)
+            {
+                order.RefundStatus = "Failed";
+                _logger.LogError(ex, "[CANCEL] Refund exception for {OrderNumber}", order.OrderNumber);
+            }
+        }
+        else if (order.PaymentStatus == PaymentStatus.CodPending)
+        {
+            order.PaymentStatus = PaymentStatus.Cancelled;
+        }
+        else if (order.PaymentStatus == PaymentStatus.Pending ||
+                 order.PaymentStatus == PaymentStatus.Created ||
+                 order.PaymentStatus == PaymentStatus.Failed)
+        {
+            order.PaymentStatus = PaymentStatus.Cancelled;
+        }
+
+        await _db.SaveChangesAsync();
+
+        // Log the cancellation as a payment attempt for audit
+        try
+        {
+            await LogPaymentAttemptAsync(order, "Cancelled",
+                errorCode: "USER_CANCEL", errorDesc: reason,
+                reason: reason, step: cancelledBy);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[CANCEL] LogPaymentAttempt failed for {OrderNumber}", order.OrderNumber);
+        }
+
+        _logger.LogInformation("[CANCEL] Order {OrderNumber} cancelled by {By} | Reason: {Reason}",
+            order.OrderNumber, cancelledBy, reason);
+
+        return (true, null, refundInitiated);
+    }
+
+    // ============================================================
+    // MARK COD COLLECTED (Delhivery webhook will call this later)
+    // ============================================================
+    public async Task MarkCodCollectedAsync(Order order)
+    {
+        if (order.PaymentStatus == PaymentStatus.Paid) return;
+
+        order.PaymentStatus = PaymentStatus.Paid;
+        order.CodCollectedAt = DateTime.UtcNow;
+        order.PaidAt = DateTime.UtcNow;
+        order.Status = OrderStatus.Delivered;
+        order.DeliveredAt = DateTime.UtcNow;
+        order.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+
+        _logger.LogInformation("[ORDER] COD collected for {OrderNumber} — ₹{Total}",
+            order.OrderNumber, order.Total);
     }
 }

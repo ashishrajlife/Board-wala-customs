@@ -13,4 +13,10 @@ public class MockDeliveryService : IDeliveryService
             order.OrderNumber, tracking);
         return Task.FromResult<(bool, string?, string?, string?)>((true, "MockExpress", tracking, null));
     }
+
+    public Task<(bool success, string? error)> CancelShipmentAsync(string trackingNumber)
+    {
+        _logger.LogInformation("[DELIVERY MOCK] Shipment cancelled for {Tracking}", trackingNumber);
+        return Task.FromResult<(bool, string?)>((true, null));
+    }
 }

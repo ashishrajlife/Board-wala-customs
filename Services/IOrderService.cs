@@ -4,7 +4,12 @@ namespace ValousWorld.Web.Services;
 
 public interface IOrderService
 {
-    Task<Order> CreateOrderFromCartAsync(int userId, int addressId, decimal shipping, string? voucherCode = null);
+    Task<Order> CreateOrderFromCartAsync(
+        int userId, int addressId, decimal shipping,
+        string? voucherCode = null,
+        string paymentMethod = "Razorpay",
+        decimal codFee = 0m);
+
     Task<Order?> GetOrderAsync(int orderId, int userId);
     Task<Order?> GetOrderByRazorpayIdAsync(string razorpayOrderId);
     Task<List<Order>> GetUserOrdersAsync(int userId);
@@ -16,4 +21,10 @@ public interface IOrderService
     Task MarkPaymentPaidAsync(Order order, string razorpayPaymentId, string signature);
     Task LogPaymentAttemptAsync(Order order, string status, string? errorCode = null, string? errorDesc = null, string? reason = null, string? step = null);
     Task<int> ExpireAbandonedOrdersAsync();
+
+    // -------- COD + Cancel --------
+    Task<(bool success, string? error, bool refundInitiated)> CancelOrderAsync(
+        int orderId, int userId, string reason, string cancelledBy);
+
+    Task MarkCodCollectedAsync(Order order);
 }

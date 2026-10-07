@@ -6,4 +6,5 @@ public interface IWhatsAppService
 {
     Task SendOrderConfirmationAsync(Order order);
     Task SendOrderStatusUpdateAsync(Order order);
+    Task SendOrderCancelledAsync(Order order);
 }
