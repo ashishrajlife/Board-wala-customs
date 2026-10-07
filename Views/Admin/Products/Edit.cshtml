@@ -188,11 +188,10 @@
 
             @if (!string.IsNullOrEmpty(Model.VideoUrl))
             {
-                <div class="current-image" style="display:block;">
-                    <video src="@Model.VideoUrl" controls muted playsinline preload="metadata"
-                           style="width:100%; max-height:200px; display:block;"></video>
+                <div class="current-video">
+                    <video src="@Model.VideoUrl" controls muted playsinline preload="metadata"></video>
                 </div>
-                <div class="check-row" style="padding:0; margin:8px 0;">
+                <div class="remove-video">
                     <label>
                         <input type="checkbox" name="removeVideo" value="true" />
                         Remove current video

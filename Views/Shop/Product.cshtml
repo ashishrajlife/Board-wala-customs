@@ -62,7 +62,7 @@
                                class="pdp-main pdp-main-video"
                                src="@Model.VideoUrl"
                                poster="@galleryImgs.First()"
-                               controls playsinline preload="metadata"
+                               controls playsinline muted loop preload="metadata"
                                style="display:none;"></video>
                     }
 
@@ -481,7 +481,10 @@
                 mainImg.style.display = 'none';
                 mainVideo.style.display = 'block';
                 wrap.classList.add('is-video');
-            } else {
+                mainVideo.muted = true;
+                mainVideo.currentTime = 0;
+                mainVideo.play().catch(() => {});
+                } else {
                 if (mainVideo) { mainVideo.pause(); mainVideo.style.display = 'none'; }
                 wrap.classList.remove('is-video');
                 mainImg.style.display = 'block';
