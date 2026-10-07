@@ -84,6 +84,24 @@ public class Order
     public DateTime? ShippedAt { get; set; }
     public DateTime? DeliveredAt { get; set; }
 
+        // ---- COD ----
+    [Column(TypeName = "decimal(10,2)")]
+    public decimal CodFee { get; set; } = 0m;
+
+    public DateTime? CodCollectedAt { get; set; }
+
+    // ---- Cancellation ----
+    public DateTime? CancelledAt { get; set; }
+
+    [StringLength(50)]
+    public string? CancelledBy { get; set; }        // "User" /"System"
+
+    [StringLength(300)]
+    public string? CancellationReason { get; set; }
+
+    [StringLength(50)]
+    public string? RefundStatus { get; set; }       // "Initiated" / "Refunded" / "Failed"
+
     // ---- Timestamps ----
     public DateTime PlacedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
@@ -97,15 +115,16 @@ public class Order
 // ============================================================
 public static class OrderStatus
 {
-    public const string Created = "Created";              // Order created, no payment yet
-    public const string PaymentPending = "PaymentPending"; // Payment initiated
-    public const string Confirmed = "Confirmed";          // Payment success
+    public const string Created = "Created";
+    public const string PaymentPending = "PaymentPending";
+    public const string Confirmed = "Confirmed";
     public const string Shipped = "Shipped";
     public const string Delivered = "Delivered";
-    public const string Cancelled = "Cancelled";          // User/admin cancelled
-    public const string Failed = "Failed";                // Payment failed permanently
-    public const string Expired = "Expired";              // 30 min timeout
+    public const string Cancelled = "Cancelled";
+    public const string Failed = "Failed";
+    public const string Expired = "Expired";
     public const string Refunded = "Refunded";
+    public const string Returned = "Returned";           // future-proof
 }
 
 // ============================================================
@@ -119,4 +138,15 @@ public static class PaymentStatus
     public const string Failed = "Failed";
     public const string Refunded = "Refunded";
     public const string PartiallyRefunded = "PartiallyRefunded";
+    public const string CodPending = "CodPending";       // COD placed, cash not yet collected
+    public const string Cancelled = "Cancelled";         // Order cancelled before payment
+}
+
+// ============================================================
+// PAYMENT METHODS
+// ============================================================
+public static class PaymentMethods
+{
+    public const string Razorpay = "Razorpay";
+    public const string Cod = "COD";
 }

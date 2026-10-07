@@ -1,14 +1,37 @@
 @model ValousWorld.Web.Models.Entities.Order
 @{
     ViewData["Title"] = "Order " + Model.OrderNumber;
+
+        var canCancel = Model.Status != "Cancelled"
+                 && Model.Status != "Delivered"
+                 && Model.Status != "Refunded"
+                 && Model.PaymentStatus != "Refunded";
+
+    var isCod = Model.PaymentMethod == "COD";
+    var isPaid = Model.PaymentStatus == "Paid";
 }
 
 <div class="container order-detail-page">
+
+    @if (TempData["CancelSuccess"] != null)
+    {
+        <div class="alert-success">@TempData["CancelSuccess"]</div>
+    }
+    @if (TempData["CancelError"] != null)
+    {
+        <div class="alert-error">@TempData["CancelError"]</div>
+    }
 
     <!-- ============ HEADER ============ -->
     <div class="order-detail-head">
         <h1>ORDER @Model.OrderNumber</h1>
         <div class="order-detail-actions">
+            @if (canCancel)
+            {
+                <button type="button" class="btn-outline btn-cancel" id="cancelOrderBtn">
+                    CANCEL ORDER
+                </button>
+            }
             <a href="/orders/invoice/@Model.OrderId" class="btn-primary" target="_blank" rel="noopener">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -34,6 +57,16 @@
                 @if (!string.IsNullOrWhiteSpace(Model.TrackingNumber))
                 {
                     <p class="order-detail-tracking"><strong>Tracking:</strong> @Model.CourierName — @Model.TrackingNumber</p>
+                }
+                @if (Model.Status == "Cancelled")
+                {
+                    <p class="order-detail-tracking order-detail-cancel">
+                        <strong>Cancelled:</strong> @Model.CancelledAt?.ToString("dd MMM yyyy, HH:mm") by @Model.CancelledBy
+                        @if (!string.IsNullOrWhiteSpace(Model.CancellationReason))
+                        {
+                            <br /><strong>Reason:</strong> @Model.CancellationReason
+                        }
+                    </p>
                 }
             </div>
 
@@ -87,16 +120,71 @@
                     <div class="os-row os-row-save"><span>Savings</span><span>−₹@Model.Discount.ToString("0.00")</span></div>
                 }
                 <div class="os-row"><span>Shipping</span><span>₹@Model.Shipping.ToString("0.00")</span></div>
+                @if (Model.CodFee > 0)
+                {
+                    <div class="os-row"><span>COD handling</span><span>₹@Model.CodFee.ToString("0.00")</span></div>
+                }
                 <div class="os-row os-row-total"><span>TOTAL</span><span>₹@Model.Total.ToString("0.00")</span></div>
-                <div class="os-row os-row-meta"><span>Method</span><span>@Model.PaymentMethod</span></div>
+                <div class="os-row os-row-meta"><span>Method</span><span>@(isCod ? "Cash on Delivery" : Model.PaymentMethod)</span></div>
                 <div class="os-row os-row-meta"><span>Status</span><span>@Model.PaymentStatus</span></div>
+
+                @if (!string.IsNullOrWhiteSpace(Model.RefundId))
+                {
+                    <div class="os-row os-row-meta">
+                        <span>Refund</span>
+                        <span>₹@Model.RefundedAmount?.ToString("0.00") — @Model.RefundStatus</span>
+                    </div>
+                }
             </div>
         </div>
     </div>
 </div>
 
+@if (canCancel)
+{
+    <div class="confirm-overlay" id="cancelOrderModal" aria-hidden="true">
+        <div class="confirm-box" role="dialog" aria-modal="true" aria-labelledby="cancelTitle">
+            <h4 id="cancelTitle">Cancel this order?</h4>
+            <form method="post" action="/orders/cancel/@Model.OrderId" id="cancelForm">
+                @Html.AntiForgeryToken()
+                <p>Please select a reason. This action cannot be undone.</p>
+
+                <select name="reason" required class="cancel-reason">
+                    <option value="">Select a reason…</option>
+                    <option value="Ordered by mistake">Ordered by mistake</option>
+                    <option value="Found a better price">Found a better price</option>
+                    <option value="Delivery taking too long">Delivery taking too long</option>
+                    <option value="Changed my mind">Changed my mind</option>
+                    <option value="Other">Other</option>
+                </select>
+
+                @if (isPaid)
+                {
+                    <p class="refund-note">
+                        A refund of <strong>₹@Model.Total.ToString("0.00")</strong> will be initiated to your original payment method. It usually reflects in 5–7 business days.
+                    </p>
+                }
+
+                <div class="confirm-actions">
+                    <button type="button" class="confirm-btn confirm-btn-ghost" id="cancelModalClose">KEEP ORDER</button>
+                    <button type="submit" class="confirm-btn confirm-btn-danger">YES, CANCEL</button>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
 <style>
     .order-detail-page { padding: 50px 50px 50px; }
+
+    .alert-success, .alert-error {
+        border-radius: 4px;
+        padding: 12px 16px;
+        font-size: 13px;
+        margin-bottom: 18px;
+    }
+    .alert-success { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+    .alert-error   { background: #fdecea; color: #b71c1c; border: 1px solid #f5c2c0; }
 
     /* ---------- Header ---------- */
     .order-detail-head {
@@ -131,6 +219,8 @@
         font-size: 11px;
         padding: 9px 14px;
     }
+    .btn-cancel { color: #b71c1c; border-color: #b71c1c; }
+    .btn-cancel:hover { background: #b71c1c; color: #fff; }
 
     /* ---------- Layout ---------- */
     .order-detail-grid {
@@ -186,6 +276,10 @@
         border-radius: 3px;
         font-size: 12px !important;
     }
+    .order-detail-cancel {
+        background: #fdecea;
+        color: #7a1f1f;
+    }
     .order-status {
         display: inline-block;
         font-size: 9px;
@@ -196,11 +290,17 @@
         border-radius: 20px;
         white-space: nowrap;
     }
-    .order-status-pending   { background: #fff8e1; color: #7c5700; }
-    .order-status-confirmed { background: #e3f2fd; color: #0d47a1; }
-    .order-status-shipped   { background: #f3e5f5; color: #6a1b9a; }
-    .order-status-delivered { background: #e8f5e9; color: #2e7d32; }
-    .order-status-cancelled { background: #fdecea; color: #b71c1c; }
+    .order-status-created        { background: #f5f5f5; color: #424242; }
+    .order-status-paymentpending { background: #fff8e1; color: #7c5700; }
+    .order-status-pending        { background: #fff8e1; color: #7c5700; }
+    .order-status-confirmed      { background: #e3f2fd; color: #0d47a1; }
+    .order-status-shipped        { background: #f3e5f5; color: #6a1b9a; }
+    .order-status-delivered      { background: #e8f5e9; color: #2e7d32; }
+    .order-status-cancelled      { background: #fdecea; color: #b71c1c; }
+    .order-status-failed         { background: #fdecea; color: #b71c1c; }
+    .order-status-expired        { background: #eceff1; color: #455a64; }
+    .order-status-refunded       { background: #e0f2f1; color: #00695c; }
+    .order-status-returned       { background: #fff3e0; color: #e65100; }
 
     /* Items */
     .order-detail-item {
@@ -263,6 +363,55 @@
     }
     .os-row-meta { font-size: 11.5px; color: var(--gray-600); }
 
+    /* Cancel modal */
+    .confirm-overlay {
+        position: fixed; inset: 0; background: rgba(0,0,0,.6);
+        display: none; align-items: center; justify-content: center;
+        padding: 20px; z-index: 9999;
+    }
+    .confirm-overlay.open { display: flex; }
+    .confirm-box {
+        background: var(--white); border: 1px solid var(--black); border-radius: 4px;
+        width: 100%; max-width: 460px; overflow: hidden;
+        box-shadow: 0 20px 50px rgba(0,0,0,.25);
+    }
+    .confirm-box h4 {
+        margin: 0; padding: 14px 20px;
+        font-size: 12px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
+        background: var(--gray-100); border-bottom: 1px solid var(--gray-200);
+    }
+    .confirm-box p { margin: 0; padding: 12px 20px 0; font-size: 13px; color: var(--gray-800); line-height: 1.6; }
+    .cancel-reason {
+        display: block;
+        width: calc(100% - 40px);
+        margin: 12px 20px 0;
+        padding: 10px 12px;
+        border: 1.5px solid var(--gray-200);
+        border-radius: 3px;
+        font-family: inherit;
+        font-size: 13px;
+    }
+    .refund-note {
+        color: #7a1f1f !important;
+        background: #fdecea;
+        border-radius: 3px;
+        padding: 10px 12px !important;
+        margin: 14px 20px 0 !important;
+        font-size: 12px !important;
+    }
+    .confirm-actions { display: flex; gap: 10px; justify-content: flex-end; padding: 16px 20px 20px; }
+    .confirm-btn {
+        min-width: 110px; height: 38px; padding: 0 14px;
+        font-family: inherit; font-size: 11px; font-weight: 700;
+        letter-spacing: 1px; text-transform: uppercase;
+        border: 1.5px solid var(--black); border-radius: 3px; cursor: pointer;
+        transition: background .2s, color .2s, opacity .2s;
+    }
+    .confirm-btn-ghost { background: transparent; color: var(--black); }
+    .confirm-btn-ghost:hover { background: var(--black); color: var(--white); }
+    .confirm-btn-danger { background: #b71c1c; border-color: #b71c1c; color: var(--white); }
+    .confirm-btn-danger:hover { opacity: .85; }
+
     /* ---------- Tablet ---------- */
     @@media (max-width: 1024px) {
         .order-detail-grid { grid-template-columns: minmax(0, 1fr) 300px; gap: 14px; }
@@ -271,14 +420,13 @@
         .order-detail-page { padding: 22px var(--container-pad, 20px) 44px; }
         .order-detail-grid { grid-template-columns: minmax(0, 1fr); }
     }
-
-    /* ---------- Mobile ---------- */
     @@media (max-width: 600px) {
         .order-detail-page { padding: 18px var(--container-pad, 16px) 36px; }
         .order-detail-head { flex-direction: column; align-items: stretch; gap: 12px; }
         .order-detail-actions { flex-direction: column-reverse; }
         .order-detail-actions .btn-primary,
-        .order-detail-actions .btn-outline { width: 100%; }
+        .order-detail-actions .btn-outline,
+        .order-detail-actions .btn-cancel { width: 100%; }
 
         .order-detail-card { padding: 13px 14px; }
         .order-detail-item { grid-template-columns: 44px minmax(0, 1fr); gap: 10px; }
@@ -287,3 +435,34 @@
         .order-detail-item-price { grid-column: 2; }
     }
 </style>
+
+<script>
+    (function () {
+        const modal = document.getElementById('cancelOrderModal');
+        const openBtn = document.getElementById('cancelOrderBtn');
+        if (!modal || !openBtn) return;
+
+        const closeBtn = document.getElementById('cancelModalClose');
+
+        openBtn.addEventListener('click', () => {
+            modal.classList.add('open');
+            modal.setAttribute('aria-hidden', 'false');
+        });
+        closeBtn.addEventListener('click', () => {
+            modal.classList.remove('open');
+            modal.setAttribute('aria-hidden', 'true');
+        });
+        modal.addEventListener('click', e => {
+            if (e.target === modal) {
+                modal.classList.remove('open');
+                modal.setAttribute('aria-hidden', 'true');
+            }
+        });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && modal.classList.contains('open')) {
+                modal.classList.remove('open');
+                modal.setAttribute('aria-hidden', 'true');
+            }
+        });
+    })();
+</script>

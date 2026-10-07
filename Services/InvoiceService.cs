@@ -26,7 +26,6 @@ public class InvoiceService : IInvoiceService
                 page.Size(PageSizes.A4);
                 page.Margin(30);
 
-                // ✅ Lato — QuestPDF ka built-in font, har environment me kaam karega
                 page.DefaultTextStyle(x => x.FontSize(10));
 
                 // ---------- HEADER ----------
@@ -50,6 +49,16 @@ public class InvoiceService : IInvoiceService
                     });
 
                     col.Item().PaddingTop(10).LineHorizontal(1).LineColor(Colors.Black);
+
+                    if (order.Status == "Cancelled")
+                    {
+                        col.Item().PaddingTop(6)
+                            .Background(Colors.Red.Lighten3)
+                            .Padding(6)
+                            .AlignCenter()
+                            .Text("CANCELLED ORDER")
+                            .FontSize(11).Bold().FontColor(Colors.Red.Darken2);
+                    }
                 });
 
                 // ---------- CONTENT ----------
@@ -137,6 +146,17 @@ public class InvoiceService : IInvoiceService
                             r.ConstantItem(140).Text("Shipping").FontSize(10);
                             r.ConstantItem(100).AlignRight().Text(order.Shipping == 0 ? "FREE" : $"₹{order.Shipping:0.00}").FontSize(10);
                         });
+
+                        // COD handling fee — shown BEFORE the TOTAL row
+                        if (order.CodFee > 0)
+                        {
+                            c.Item().Row(r =>
+                            {
+                                r.ConstantItem(140).Text("COD handling").FontSize(10);
+                                r.ConstantItem(100).AlignRight().Text($"₹{order.CodFee:0.00}").FontSize(10);
+                            });
+                        }
+
                         c.Item().PaddingTop(4).LineHorizontal(1).LineColor(Colors.Black);
                         c.Item().PaddingTop(4).Row(r =>
                         {
@@ -149,12 +169,36 @@ public class InvoiceService : IInvoiceService
                     col.Item().PaddingTop(20).Background(Colors.Grey.Lighten4).Padding(12).Column(c =>
                     {
                         c.Item().Text("PAYMENT DETAILS").FontSize(9).Bold();
-                        c.Item().PaddingTop(4).Text($"Method: {order.PaymentMethod}").FontSize(9);
+                        c.Item().PaddingTop(4)
+                            .Text($"Method: {(order.PaymentMethod == "COD" ? "Cash on Delivery" : order.PaymentMethod)}")
+                            .FontSize(9);
                         c.Item().Text($"Status: {order.PaymentStatus}").FontSize(9);
+
+                        if (order.PaymentMethod == "COD")
+                        {
+                            c.Item().Text($"Amount to collect on delivery: ₹{order.Total:0.00}")
+                                .FontSize(9).Bold();
+                        }
+
                         if (!string.IsNullOrWhiteSpace(order.RazorpayPaymentId))
                             c.Item().Text($"Transaction ID: {order.RazorpayPaymentId}").FontSize(9);
+
                         if (!string.IsNullOrWhiteSpace(order.TrackingNumber))
                             c.Item().Text($"Tracking: {order.CourierName} — {order.TrackingNumber}").FontSize(9);
+
+                        if (!string.IsNullOrWhiteSpace(order.RefundId))
+                            c.Item().Text($"Refund: ₹{order.RefundedAmount:0.00} — {order.RefundStatus} (ID: {order.RefundId})")
+                                .FontSize(9).FontColor(Colors.Green.Darken2);
+
+                        if (order.Status == "Cancelled")
+                        {
+                            c.Item().PaddingTop(4)
+                                .Text($"Cancelled on {order.CancelledAt:dd MMM yyyy} by {order.CancelledBy}")
+                                .FontSize(9).FontColor(Colors.Red.Darken2);
+                            if (!string.IsNullOrWhiteSpace(order.CancellationReason))
+                                c.Item().Text($"Reason: {order.CancellationReason}")
+                                    .FontSize(9).FontColor(Colors.Red.Darken2);
+                        }
                     });
                 });
 
@@ -167,8 +211,11 @@ public class InvoiceService : IInvoiceService
                         text.Span("Thank you for shopping with VALOUSWORLD! ").FontSize(9).FontColor(Colors.Grey.Darken2);
                         text.Span("· For queries: support@valousworld.com").FontSize(9).FontColor(Colors.Grey.Medium);
                     });
-                    col.Item().AlignCenter().Text("This is a computer-generated invoice. No signature required.")
-                        .FontSize(8).FontColor(Colors.Grey.Medium);
+                    col.Item().AlignCenter().Text(
+                        order.Status == "Cancelled"
+                            ? "This is a computer-generated cancellation record. No signature required."
+                            : "This is a computer-generated invoice. No signature required."
+                    ).FontSize(8).FontColor(Colors.Grey.Medium);
                 });
             });
         });

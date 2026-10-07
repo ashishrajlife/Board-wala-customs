@@ -5,4 +5,5 @@ namespace ValousWorld.Web.Services;
 public interface IDeliveryService
 {
     Task<(bool success, string? courier, string? tracking, string? error)> CreateShipmentAsync(Order order);
+    Task<(bool success, string? error)> CancelShipmentAsync(string trackingNumber);
 }

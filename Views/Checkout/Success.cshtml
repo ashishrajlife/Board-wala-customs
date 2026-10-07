@@ -1,6 +1,7 @@
 @model ValousWorld.Web.Models.Entities.Order
 @{
     ViewData["Title"] = "Order Confirmed";
+    var isCod = Model.PaymentMethod == "COD";
 }
 
 <div class="container success-page">
@@ -11,7 +12,7 @@
             </svg>
         </div>
 
-        <h1>ORDER CONFIRMED</h1>
+        <h1>@(isCod ? "ORDER PLACED" : "ORDER CONFIRMED")</h1>
         <p class="success-sub">Thank you for your purchase!</p>
 
         <div class="success-details">
@@ -19,10 +20,26 @@
                 <span>Order Number</span>
                 <strong>@Model.OrderNumber</strong>
             </div>
-            <div class="detail-row">
-                <span>Total Paid</span>
-                <strong class="detail-amount">₹@Model.Total.ToString("0.00")</strong>
-            </div>
+
+            @if (isCod)
+            {
+                <div class="detail-row">
+                    <span>Amount to Pay on Delivery</span>
+                    <strong class="detail-amount">₹@Model.Total.ToString("0.00")</strong>
+                </div>
+                <div class="detail-row">
+                    <span>Payment Method</span>
+                    <strong>Cash on Delivery</strong>
+                </div>
+            }
+            else
+            {
+                <div class="detail-row">
+                    <span>Total Paid</span>
+                    <strong class="detail-amount">₹@Model.Total.ToString("0.00")</strong>
+                </div>
+            }
+
             @if (!string.IsNullOrWhiteSpace(Model.TrackingNumber))
             {
                 <div class="detail-row">
@@ -30,6 +47,7 @@
                     <strong>@Model.CourierName — @Model.TrackingNumber</strong>
                 </div>
             }
+
             <div class="detail-row">
                 <span>Payment Status</span>
                 <strong class="payment-paid">@Model.PaymentStatus</strong>
@@ -38,6 +56,10 @@
 
         <p class="success-note">
             A confirmation has been sent to your WhatsApp (@Model.ShippingPhone).
+            @if (isCod)
+            {
+                <br /><text>Please keep ₹@Model.Total.ToString("0.00") ready — our delivery partner will collect it.</text>
+            }
         </p>
 
         <div class="success-actions">

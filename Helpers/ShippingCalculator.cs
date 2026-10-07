@@ -4,6 +4,7 @@ public static class ShippingCalculator
 {
     public const decimal FreeShippingThreshold = 999m;
     public const decimal StandardShippingFee = 79m;
+    public const decimal CodHandlingFee = 49m;
 
     public static decimal Calculate(decimal subtotal)
     {
@@ -16,4 +17,7 @@ public static class ShippingCalculator
         var remaining = FreeShippingThreshold - subtotal;
         return remaining > 0 ? remaining : 0m;
     }
+
+    public static decimal CodFee(decimal subtotal, bool isCod)
+        => isCod && subtotal > 0 ? CodHandlingFee : 0m;
 }
