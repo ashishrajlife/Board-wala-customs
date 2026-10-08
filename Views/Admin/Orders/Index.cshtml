@@ -82,17 +82,43 @@
     </form>
 
     <!-- ============ LIST ============ -->
-    @if (!Model.Orders.Any())
+   @if (!Model.Orders.Any())
     {
-        <div class="empty-state">
-            <div class="empty-state-icon">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <div style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            width: 100%;
+        ">
+            <div style="
+                width: 64px;
+                height: 64px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                background: #f5f5f5;
+                color: #000000;
+                margin-bottom: 16px;
+            ">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="1.5"
+                    stroke-linecap="round" stroke-linejoin="round">
                     <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
                     <line x1="3" y1="6" x2="21" y2="6"/>
                     <path d="M16 10a4 4 0 0 1-8 0"/>
                 </svg>
             </div>
-            <p>No orders match the current filters.</p>
+
+            <p style="
+                margin: 0;
+                font-size: 16px;
+                color: black;
+            ">
+                No orders match the current filters.
+            </p>
         </div>
     }
     else
@@ -120,10 +146,10 @@
                         <div class="ord-info-block">
                             <div class="ord-info-label">Customer</div>
                             <div class="ord-info-value">@(o.User?.FullName ?? o.ShippingFullName)</div>
-                            <div class="ord-info-sub">📞 @o.ShippingPhone</div>
+                            <div class="ord-info-sub">@o.ShippingPhone</div>
                             @if (!string.IsNullOrWhiteSpace(o.User?.Email))
                             {
-                                <div class="ord-info-sub">✉️ @o.User.Email</div>
+                                <div class="ord-info-sub">@o.User.Email</div>
                             }
                         </div>
 
@@ -245,11 +271,13 @@
     }
     .ord-stat:hover { border-color: var(--black); background: var(--gray-100); }
     .ord-stat.active { border-color: var(--black); background: var(--black); color: var(--white); }
-    .ord-stat.active .ord-stat-label { color: rgba(255,255,255,0.75); }
-    .ord-stat-label {
-        font-size: 10px; font-weight: 700; letter-spacing: 1px;
-        text-transform: uppercase; color: var(--gray-600); margin-bottom: 3px;
+    .ord-stat.active .ord-stat-label {
+         color: var(--white);
     }
+    .ord-stat-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; color: inherit; margin-bottom: 3px;
+   }
     .ord-stat-value { font-size: 20px; font-weight: 800; }
     .ord-stat-cod { border-color: #d4af37; }
     .ord-stat-cod.active { background: #b8860b; border-color: #b8860b; }
@@ -269,12 +297,12 @@
     .ord-filter { display: flex; flex-direction: column; gap: 4px; }
     .ord-filter label {
         font-size: 10px; font-weight: 700; letter-spacing: 1px;
-        text-transform: uppercase; color: var(--gray-600);
+        text-transform: uppercase; color:black;
     }
     .ord-filter select,
     .ord-filter input {
         padding: 9px 10px;
-        border: 1.5px solid var(--gray-200);
+        border: 1.5px solid darkslategray;
         border-radius: 3px;
         font-family: inherit;
         font-size: 13px;
@@ -310,7 +338,7 @@
     .ord-card-num { display: flex; align-items: baseline; gap: 8px; }
     .ord-num-label {
         font-size: 9px; font-weight: 700; letter-spacing: 1px;
-        text-transform: uppercase; color: var(--gray-600);
+        text-transform: uppercase; color:black;
     }
     .ord-num-value { font-size: 14px; font-weight: 800; letter-spacing: .5px; }
     .ord-card-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
@@ -352,14 +380,15 @@
     .ord-info-block { min-width: 0; }
     .ord-info-label {
         font-size: 9px; font-weight: 700; letter-spacing: 1px;
-        text-transform: uppercase; color: var(--gray-600); margin-bottom: 3px;
+        text-transform: uppercase; color: black; margin-bottom: 3px;
     }
     .ord-info-value {
         font-size: 13px; font-weight: 700; color: var(--black);
         overflow-wrap: anywhere;
     }
     .ord-info-sub {
-        font-size: 11px; color: var(--gray-600);
+        font-size: 11px; color: black;
+        font-weight: 500;
         margin-top: 2px; overflow-wrap: anywhere;
     }
     .ord-total { color: var(--red); }
