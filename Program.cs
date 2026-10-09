@@ -14,10 +14,14 @@ builder.Services.Configure<ValousWorld.Web.Helpers.IntegrationSettings>(
 
 // Read integrations config
 var integrations = builder.Configuration.GetSection("Integrations").Get<ValousWorld.Web.Helpers.IntegrationSettings>() ?? new();
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 // DB
-builder.Services.AddDbContext<AppDbContext>(opt =>
-    opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseMySql(
+        connectionString,
+        ServerVersion.AutoDetect(connectionString)
+    ));
 
 // JWT settings
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
