@@ -83,6 +83,9 @@ public class Order
     [StringLength(100)] public string? TrackingNumber { get; set; }
     public DateTime? ShippedAt { get; set; }
     public DateTime? DeliveredAt { get; set; }
+    [StringLength(50)]  public string? DelhiveryWaybill { get; set; }
+    [StringLength(50)]  public string? DelhiveryStatus { get; set; }
+    public DateTime? LastTrackingSyncAt { get; set; }
 
         // ---- COD ----
     [Column(TypeName = "decimal(10,2)")]
@@ -150,3 +153,4 @@ public static class PaymentMethods
     public const string Razorpay = "Razorpay";
     public const string Cod = "COD";
 }
+

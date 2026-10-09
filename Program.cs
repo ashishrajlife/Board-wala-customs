@@ -66,11 +66,15 @@ if (integrations.WhatsApp.Mode == "Live")
 else
     builder.Services.AddScoped<IWhatsAppService, MockWhatsAppService>();
 
-// Delivery
-if (integrations.Delivery.Mode == "Live")
-    builder.Services.AddScoped<IDeliveryService, MockDeliveryService>();  // replace with real
-else
+// Delivery (Delhivery)
+builder.Services.AddHttpClient<RealDelhiveryService>();
+
+if (integrations.Delivery.IsMock)
     builder.Services.AddScoped<IDeliveryService, MockDeliveryService>();
+else
+    builder.Services.AddScoped<IDeliveryService, RealDelhiveryService>();
+
+builder.Services.AddHostedService<DelhiveryTrackingSyncService>();
 
 // OTP Service
 if (integrations.Otp.Mode == "Live")

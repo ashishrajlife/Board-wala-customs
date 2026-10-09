@@ -480,4 +480,64 @@ public class OrderService : IOrderService
             o.PaymentStatus == PaymentStatus.CodPending);
     }
 
+        // ============================================================
+    // SHIPMENT STATUS SYNC (webhook + poller)
+    // ============================================================
+    public async Task<(bool success, string? error)> SyncShipmentStatusAsync(string waybill, string delhiveryStatus)
+    {
+        if (string.IsNullOrWhiteSpace(waybill))
+            return (false, "Waybill missing.");
+
+        var order = await _db.Orders
+            .FirstOrDefaultAsync(o => o.DelhiveryWaybill == waybill || o.TrackingNumber == waybill);
+
+        if (order == null)
+            return (false, $"Order not found for waybill {waybill}.");
+
+        order.DelhiveryStatus = delhiveryStatus;
+        order.LastTrackingSyncAt = DateTime.UtcNow;
+        order.UpdatedAt = DateTime.UtcNow;
+
+        var mapped = DelhiveryStatusMapper.Map(delhiveryStatus);
+
+        // Never downgrade terminal states
+        if (order.Status == OrderStatus.Cancelled || order.Status == OrderStatus.Refunded)
+        {
+            await _db.SaveChangesAsync();
+            return (true, null);
+        }
+        if (order.Status == OrderStatus.Delivered && mapped != OrderStatus.Delivered)
+        {
+            await _db.SaveChangesAsync();
+            return (true, null);
+        }
+
+        if (order.Status != mapped)
+        {
+            order.Status = mapped;
+
+            if (mapped == OrderStatus.Shipped && order.ShippedAt == null)
+                order.ShippedAt = DateTime.UtcNow;
+
+            if (mapped == OrderStatus.Delivered && order.DeliveredAt == null)
+                order.DeliveredAt = DateTime.UtcNow;
+
+            // COD delivered → mark paid
+            if (mapped == OrderStatus.Delivered &&
+                order.PaymentMethod == PaymentMethods.Cod &&
+                order.PaymentStatus == PaymentStatus.CodPending)
+            {
+                order.PaymentStatus = PaymentStatus.Paid;
+                order.CodCollectedAt = DateTime.UtcNow;
+                order.PaidAt = DateTime.UtcNow;
+            }
+
+            _logger.LogInformation("[ORDER] {OrderNumber} status → {Status} (Delhivery: {Raw})",
+                order.OrderNumber, mapped, delhiveryStatus);
+        }
+
+        await _db.SaveChangesAsync();
+        return (true, null);
+    }
+
 }
