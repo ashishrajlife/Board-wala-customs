@@ -331,4 +331,47 @@ public class CheckoutController : Controller
             successUrl = Url.Action(nameof(Success), new { id })
         });
     }
+
+        // ============================================================
+    // PINCODE SERVICEABILITY (AJAX from checkout page)
+    // ============================================================
+    [HttpGet, Route("check-serviceability")]
+    public async Task<IActionResult> CheckServiceability(string pincode)
+    {
+        if (string.IsNullOrWhiteSpace(pincode) || pincode.Length != 6 || !pincode.All(char.IsDigit))
+            return Json(new { serviceable = false, cod = false, message = "Invalid pincode." });
+
+        try
+        {
+            var (ok, serviceable, cod, error) = await _delivery.CheckServiceabilityAsync(pincode);
+
+            if (!ok)
+            {
+                // Fail-open: don't block a sale if Delhivery API hiccups
+                return Json(new
+                {
+                    serviceable = true,
+                    cod = true,
+                    warning = true,
+                    message = "Could not verify pincode — proceeding with default options."
+                });
+            }
+
+            return Json(new
+            {
+                serviceable,
+                cod,
+                message = serviceable
+                    ? (cod ? "Delivery available with Cash on Delivery." : "Delivery available. COD not supported here.")
+                    : "Sorry, we don't deliver to this pincode yet."
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[CHECKOUT] Serviceability failed for {Pin}", pincode);
+            return Json(new { serviceable = true, cod = true, warning = true });
+        }
+    }
+
+
 }

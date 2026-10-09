@@ -37,6 +37,7 @@ public interface IOrderService
     Task<(bool success, string? error, bool refundInitiated)> CancelOrderAsAdminAsync(int orderId, string reason);
     Task<int> GetOrderCountAsync(string? status, string? paymentMethod, string? search);
     Task<int> GetCodPendingCountAsync();
+        Task<(bool success, string? error)> SyncShipmentStatusAsync(string waybill, string delhiveryStatus);
 
 
 }

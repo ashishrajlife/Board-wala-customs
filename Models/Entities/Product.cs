@@ -70,6 +70,15 @@ public class Product
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
 
+    // ====================== Shipping (Delhivery) ======================
+    public int WeightGrams { get; set; } = 500;
+    public int? LengthCm { get; set; }
+    public int? WidthCm { get; set; }
+    public int? HeightCm { get; set; }
+    // =================================================================
+
+
+
     // ---------------- Compatibility helpers ----------------
     [NotMapped]
     public string PrimaryImageUrl

@@ -1,13 +1,19 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ValousWorld.Web.Data;
+using ValousWorld.Web.Services;
 
 namespace ValousWorld.Web.Controllers;
 
 public class ShopController : Controller
 {
     private readonly AppDbContext _db;
-    public ShopController(AppDbContext db) => _db = db;
+    private readonly IDeliveryService _delivery;
+    public ShopController(AppDbContext db, IDeliveryService delivery)
+    {
+        _db = db;
+        _delivery = delivery;
+    }
 
     // ============================================================
     // CATEGORY PAGE
@@ -146,5 +152,67 @@ public async Task<IActionResult> Shop(
 
     return View("~/Views/Shop/Shop.cshtml", products);
 }
+
+    // ============================================================
+    // PINCODE SERVICEABILITY (AJAX from PDP)
+    // ============================================================
+    [HttpGet, Route("shop/check-pincode")]
+    public async Task<IActionResult> CheckPincode(string pincode)
+    {
+        if (string.IsNullOrWhiteSpace(pincode)
+            || pincode.Length != 6
+            || !pincode.All(char.IsDigit))
+        {
+            return Json(new
+            {
+                serviceable = false,
+                cod = false,
+                etaDays = (string?)null,
+                message = "Please enter a valid 6-digit pincode."
+            });
+        }
+
+        try
+        {
+            var (ok, serviceable, cod, error) = await _delivery.CheckServiceabilityAsync(pincode);
+
+            if (!ok)
+            {
+                // Fail-open — don't block the user if the API is down
+                return Json(new
+                {
+                    serviceable = true,
+                    cod = true,
+                    etaDays = "3-5",
+                    warning = true,
+                    message = "Could not verify pincode — proceeding with default options."
+                });
+            }
+
+            return Json(new
+            {
+                serviceable,
+                cod = serviceable && cod,
+                etaDays = serviceable ? "3-5" : (string?)null,
+                message = !serviceable
+                    ? $"Sorry, we don't deliver to {pincode} yet."
+                    : (cod
+                        ? $"Delivers to {pincode}"
+                        : $"Delivers to {pincode} — prepaid only")
+            });
+        }
+        catch
+        {
+            // Fail-open on exception too
+            return Json(new
+            {
+                serviceable = true,
+                cod = true,
+                etaDays = "3-5",
+                warning = true,
+                message = "Could not verify pincode — proceeding with default options."
+            });
+        }
+    }
 
 }

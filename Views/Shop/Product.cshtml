@@ -158,6 +158,27 @@
                 }
             </div>
 
+                        <!-- ================= DELIVERY PINCODE CHECK ================= -->
+            <div class="pdp-delivery" id="pdpDelivery">
+                <label class="pdp-delivery-label">CHECK DELIVERY ?</label>
+                <div class="pdp-delivery-row">
+                    <input type="text"
+                           id="pdpPincodeInput"
+                           class="pdp-pincode-input"
+                           inputmode="numeric"
+                           autocomplete="postal-code"
+                           maxlength="6"
+                           placeholder="Enter pincode"
+                           aria-label="Check delivery pincode" />
+                    <button type="button"
+                            id="pdpPincodeCheck"
+                            class="pdp-pincode-btn">
+                        CHECK
+                    </button>
+                </div>
+                <div class="pdp-delivery-result" id="pdpPincodeResult" aria-live="polite" hidden></div>
+            </div>
+
             @if (!string.IsNullOrWhiteSpace(Model.ShortDescription))
             {
                 <p class="pdp-short">@Model.ShortDescription</p>
@@ -707,6 +728,146 @@
         });
     });
 })();
+    // ============================================================
+    // PDP — DELIVERY PINCODE CHECK
+    // ============================================================
+    (function () {
+        const input    = document.getElementById('pdpPincodeInput');
+        const btn      = document.getElementById('pdpPincodeCheck');
+        const result   = document.getElementById('pdpPincodeResult');
+        if (!input || !btn || !result) return;
+
+        const STORAGE_KEY = 'vw_last_pincode';
+        const cache = {};           // pincode -> response object
+        let debounceTimer = null;
+
+        // ---------- sanitize input ----------
+        input.addEventListener('input', () => {
+            input.value = input.value.replace(/\D/g, '').slice(0, 6);
+
+            // clear stale result when the user starts typing something new
+            if (result.dataset.pin && result.dataset.pin !== input.value) {
+                result.hidden = true;
+                result.className = 'pdp-delivery-result';
+                result.textContent = '';
+                delete result.dataset.pin;
+            }
+
+            // debounce lookup once we hit 6 digits
+            clearTimeout(debounceTimer);
+            if (input.value.length === 6) {
+                debounceTimer = setTimeout(() => check(input.value), 400);
+            }
+        });
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                check(input.value);
+            }
+        });
+
+        btn.addEventListener('click', () => check(input.value));
+
+        // ---------- main check ----------
+        async function check(pincode) {
+            pincode = (pincode || '').trim();
+
+            if (pincode.length !== 6 || !/^\d{6}$/.test(pincode)) {
+                showResult('fail', 'Invalid pincode', 'Please enter a valid 6-digit pincode.', pincode);
+                return;
+            }
+
+            // cache hit
+            if (cache[pincode]) {
+                renderResult(cache[pincode], pincode);
+                return;
+            }
+
+            btn.disabled = true;
+            const originalText = btn.textContent;
+            btn.textContent = 'CHECKING…';
+
+            try {
+                const r = await fetch(
+                    `/shop/check-pincode?pincode=${encodeURIComponent(pincode)}`,
+                    { credentials: 'same-origin', cache: 'no-store' }
+                );
+                const d = await r.json();
+
+                cache[pincode] = d;
+                renderResult(d, pincode);
+
+                // remember last successful lookup
+                try { localStorage.setItem(STORAGE_KEY, pincode); } catch { /* ignore */ }
+            } catch (err) {
+                showResult('warn',
+                    'Could not verify',
+                    'Something went wrong. Please try again.',
+                    pincode);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        }
+
+        // ---------- render ----------
+        function renderResult(d, pincode) {
+            if (d.warning) {
+                showResult('warn',
+                    'Could not verify',
+                    d.message || 'Proceeding with default options.',
+                    pincode);
+                return;
+            }
+
+            if (!d.serviceable) {
+                showResult('fail',
+                    `Sorry, we don't deliver to ${pincode} yet.`,
+                    'Try a different pincode or contact us for help.',
+                    pincode);
+                return;
+            }
+
+            const eta = d.etaDays ? `Usually delivers in ${d.etaDays} days.` : '';
+
+            if (d.cod) {
+                showResult('ok',
+                    `Delivers to ${pincode}`,
+                    `${eta} Cash on Delivery available.`,
+                    pincode);
+            } else {
+                showResult('warn',
+                    `Delivers to ${pincode}`,
+                    `${eta} Prepaid only — COD unavailable at this pincode.`,
+                    pincode);
+            }
+        }
+
+        function showResult(kind, title, sub, pincode) {
+            result.className = 'pdp-delivery-result ' + kind;
+            result.innerHTML =
+                `<span class="pdr-title">${escapeHtml(title)}</span>` +
+                (sub ? `<span class="pdr-sub">${escapeHtml(sub)}</span>` : '');
+            result.hidden = false;
+            result.dataset.pin = pincode;
+        }
+
+        function escapeHtml(s) {
+            return String(s).replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[c]));
+        }
+
+        // ---------- auto-check remembered pincode on load ----------
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved && /^\d{6}$/.test(saved)) {
+                input.value = saved;
+                check(saved);
+            }
+        } catch { /* ignore */ }
+    })();
 
 </script>
 
@@ -1449,5 +1610,119 @@
     .pdp-info h1 { font-size: 30px; }
     .pdp-sale { font-size: 26px; }
 }
+    /* ============================================================
+       PDP — DELIVERY PINCODE CHECK
+       ============================================================ */
+    .pdp-delivery {
+        margin: 0 0 22px;
+        padding: 14px 16px;
+        border: 1px solid var(--gray-200);
+        border-radius: 3px;
+        background: var(--gray-100);
+    }
+
+    .pdp-delivery-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--black);
+        margin-bottom: 10px;
+    }
+
+    .pdp-delivery-row {
+        display: flex;
+        gap: 8px;
+    }
+
+    .pdp-pincode-input {
+        flex: 1;
+        min-width: 0;
+        height: 44px;
+        padding: 0 14px;
+        background: var(--white);
+        border: 1.5px solid var(--gray-200);
+        border-radius: 2px;
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 1px;
+        color: var(--black);
+        outline: none;
+        transition: border-color .15s;
+    }
+    .pdp-pincode-input:focus { border-color: var(--black); }
+    .pdp-pincode-input::placeholder {
+        color: var(--gray-400);
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        text-transform: none;
+    }
+
+    .pdp-pincode-btn {
+        flex: 0 0 auto;
+        height: 44px;
+        padding: 0 22px;
+        background: var(--black);
+        color: var(--white);
+        border: 1.5px solid var(--black);
+        border-radius: 2px;
+        font-family: inherit;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: background .15s, opacity .15s;
+        line-height: 1;
+    }
+    .pdp-pincode-btn:hover:not(:disabled) { background: var(--gray-800); }
+    .pdp-pincode-btn:disabled { opacity: .6; cursor: not-allowed; }
+
+    /* Result panel */
+    .pdp-delivery-result {
+        margin-top: 12px;
+        padding: 10px 12px;
+        font-size: 12.5px;
+        line-height: 1.5;
+        border-radius: 2px;
+        border-left: 3px solid transparent;
+        animation: pdpDeliveryFade .2s ease-out;
+    }
+    .pdp-delivery-result.ok {
+        background: #e8f5e9;
+        color: #1b5e20;
+    }
+    .pdp-delivery-result.warn {
+        background: #fff8e1;
+        color: #7c5700;
+    }
+    .pdp-delivery-result.fail {
+        background: #fdecea;
+        color: #b71c1c;
+    }
+    .pdp-delivery-result .pdr-title {
+        display: block;
+        font-weight: 700;
+        margin-bottom: 2px;
+    }
+    .pdp-delivery-result .pdr-sub {
+        display: block;
+        font-size: 11.5px;
+        opacity: .9;
+    }
+
+    @@keyframes pdpDeliveryFade {
+        from { opacity: 0; transform: translateY(-3px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @@media (max-width: 500px) {
+        .pdp-delivery { padding: 12px 14px; }
+        .pdp-pincode-input { height: 42px; font-size: 13px; }
+        .pdp-pincode-btn { height: 42px; padding: 0 16px; font-size: 10px; }
+        .pdp-delivery-result { font-size: 12px; }
+    }
 
 </style>

@@ -135,17 +135,25 @@ public class PaymentFinalizer : IPaymentFinalizer
     private async Task RunSideEffectsAsync(Order order)
     {
         // Shipment (Delhivery later — mock now)
-        try
+                try
         {
-            var (shipSuccess, courier, tracking, _) = await _delivery.CreateShipmentAsync(order);
+            var (shipSuccess, courier, tracking, shipError) = await _delivery.CreateShipmentAsync(order);
             if (shipSuccess)
             {
                 order.CourierName = courier;
                 order.TrackingNumber = tracking;
-                order.ShippedAt = DateTime.UtcNow;
-                order.Status = OrderStatus.Shipped;
+                order.DelhiveryWaybill = tracking;
                 order.UpdatedAt = DateTime.UtcNow;
+                // NOTE: do NOT flip Status → Shipped here. Delhivery webhook drives that.
                 await _db.SaveChangesAsync();
+
+                _logger.LogInformation("[FINALIZE] Shipment created for {OrderNumber} → {AWB}",
+                    order.OrderNumber, tracking);
+            }
+            else
+            {
+                _logger.LogWarning("[FINALIZE] Shipment creation failed for {OrderNumber}: {Error}",
+                    order.OrderNumber, shipError);
             }
         }
         catch (Exception ex) { _logger.LogError(ex, "[FINALIZE] Shipment failed for {OrderNumber}", order.OrderNumber); }
@@ -157,5 +165,8 @@ public class PaymentFinalizer : IPaymentFinalizer
         // WhatsApp
         try { await _whatsapp.SendOrderConfirmationAsync(order); }
         catch (Exception ex) { _logger.LogError(ex, "[FINALIZE] WhatsApp failed for {OrderNumber}", order.OrderNumber); }
+
+        
+
     }
 }

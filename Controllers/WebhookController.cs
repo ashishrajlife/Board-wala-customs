@@ -216,4 +216,80 @@ public class WebhookController : Controller
             Encoding.UTF8.GetBytes(expected),
             Encoding.UTF8.GetBytes(signature.ToLower()));
     }
+
+        // ============================================================
+    // DELHIVERY TRACKING WEBHOOK
+    // ============================================================
+    [HttpPost, Route("delhivery")]
+    [IgnoreAntiforgeryToken]
+    public async Task<IActionResult> Delhivery()
+    {
+        string raw;
+        using (var reader = new StreamReader(Request.Body, Encoding.UTF8))
+            raw = await reader.ReadToEndAsync();
+
+        _logger.LogInformation("[WEBHOOK/DELHIVERY] Received: {Body}", raw);
+
+        // Persist for audit
+        try
+        {
+            var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(raw)));
+            var evtId = "dhv-" + hash[..32];
+
+            var existing = await _db.WebhookEvents.FirstOrDefaultAsync(e => e.EventId == evtId);
+            if (existing != null) return Ok();
+
+            _db.WebhookEvents.Add(new WebhookEvent
+            {
+                EventId = evtId,
+                EventType = "Delhivery.ShipmentUpdate",
+                Payload = raw,
+                Status = "Received"
+            });
+            await _db.SaveChangesAsync();
+        }
+        catch (Exception ex) { _logger.LogError(ex, "[WEBHOOK/DELHIVERY] Save failed"); }
+
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(raw);
+            var root = doc.RootElement;
+
+            string? waybill = null;
+            string? status = null;
+
+            if (root.TryGetProperty("Shipment", out var sh))
+            {
+                if (sh.TryGetProperty("AWB", out var awb)) waybill = awb.GetString();
+                if (sh.TryGetProperty("Status", out var st) &&
+                    st.TryGetProperty("Status", out var stStr))
+                    status = stStr.GetString();
+            }
+            else if (root.TryGetProperty("AWB", out var awb2))
+            {
+                waybill = awb2.GetString();
+                if (root.TryGetProperty("Status", out var st2))
+                    status = st2.ValueKind == System.Text.Json.JsonValueKind.String
+                        ? st2.GetString()
+                        : st2.TryGetProperty("Status", out var ss) ? ss.GetString() : null;
+            }
+
+            if (string.IsNullOrWhiteSpace(waybill) || string.IsNullOrWhiteSpace(status))
+            {
+                _logger.LogWarning("[WEBHOOK/DELHIVERY] Missing waybill/status.");
+                return Ok(new { received = true });
+            }
+
+            var (ok, err) = await _orders.SyncShipmentStatusAsync(waybill, status);
+            if (!ok) _logger.LogWarning("[WEBHOOK/DELHIVERY] Sync failed: {Err}", err);
+
+            return Ok(new { received = true });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[WEBHOOK/DELHIVERY] Parse failed");
+            return Ok(new { received = true }); // always 200 so Delhivery doesn't retry-storm
+        }
+    }
+
 }
