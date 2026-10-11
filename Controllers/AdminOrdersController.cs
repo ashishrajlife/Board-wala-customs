@@ -30,7 +30,8 @@ public class AdminOrdersController : Controller
     public async Task<IActionResult> Index(
         string? status, string? method, string? q, int page = 1)
     {
-        const int pageSize = 20;
+        const int pageSize = 30;          // 10–15 recommended; change here to resize every page
+        if (page < 1) page = 1;           // guard against ?page=0 / negative values
 
         var (orders, total) = await _orders.GetAllOrdersAsync(
             status, method, q, page, pageSize);
@@ -198,7 +199,7 @@ public class AdminOrdersController : Controller
         }
     }
 
-        // ============================================================
+    // ============================================================
     // ADMIN — INVOICE DOWNLOAD
     // ============================================================
     [HttpGet, Route("{id:int}/invoice")]

@@ -2,11 +2,59 @@
 @{
     ViewData["Title"] = "Admin Orders";
     string StatusClass(string s) => "order-status-" + (s ?? "").ToLower();
+
+    // ---------- Pagination helpers ----------
+    var totalPages = Model.TotalPages < 1 ? 1 : Model.TotalPages;
+    var currentPage = Model.Page < 1 ? 1 : Model.Page;
+    var shownCount = Model.Orders?.Count() ?? 0;
+    var rangeFrom = shownCount == 0 ? 0 : ((currentPage - 1) * Model.PageSize) + 1;
+    var rangeTo = shownCount == 0 ? 0 : rangeFrom + shownCount - 1;
+
+    // Keeps filters in the URL (properly encoded) and skips empty ones
+    string PageUrl(int p)
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(Model.Status))        parts.Add("status=" + Uri.EscapeDataString(Model.Status));
+        if (!string.IsNullOrWhiteSpace(Model.PaymentMethod)) parts.Add("method=" + Uri.EscapeDataString(Model.PaymentMethod));
+        if (!string.IsNullOrWhiteSpace(Model.Search))        parts.Add("q=" + Uri.EscapeDataString(Model.Search));
+        if (p > 1) parts.Add("page=" + p);
+        return "/Admin/Orders" + (parts.Count > 0 ? "?" + string.Join("&", parts) : "");
+    }
+
+    // 1 … 4 5 [6] 7 8 … 20   (-1 = ellipsis)
+    List<int> PageWindow()
+    {
+        var list = new List<int>();
+        if (totalPages <= 7)
+        {
+            for (var i = 1; i <= totalPages; i++) list.Add(i);
+            return list;
+        }
+        list.Add(1);
+        var start = Math.Max(2, currentPage - 1);
+        var end = Math.Min(totalPages - 1, currentPage + 1);
+        if (start > 2) list.Add(-1);
+        for (var i = start; i <= end; i++) list.Add(i);
+        if (end < totalPages - 1) list.Add(-1);
+        list.Add(totalPages);
+        return list;
+    }
+
+    var isFiltered = !string.IsNullOrWhiteSpace(Model.Status)
+                     || !string.IsNullOrWhiteSpace(Model.PaymentMethod)
+                     || !string.IsNullOrWhiteSpace(Model.Search);
+    var plural = Model.TotalCount == 1 ? "" : "s";
+    var countLabel = isFiltered
+        ? $"{Model.TotalCount} matching order{plural}"
+        : $"{Model.TotalCount} order{plural} in total";
 }
 
 <div class="container admin-page">
     <div class="admin-header">
-        <h1>ORDERS</h1>
+        <div>
+            <h1>ORDERS</h1>
+            <p class="adm-sub">@countLabel</p>
+        </div>
         <div class="admin-header-actions">
             <a href="/Admin/Dashboard" class="btn-secondary">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -24,27 +72,27 @@
     <!-- ============ STAT COUNTERS ============ -->
     <div class="ord-stats">
         <a href="/Admin/Orders" class="ord-stat @(string.IsNullOrEmpty(Model.Status) && string.IsNullOrEmpty(Model.PaymentMethod) ? "active" : "")">
-            <span class="ord-stat-label">All</span>
+            <span class="ord-stat-label"><i class="ord-dot dot-all"></i>All</span>
             <span class="ord-stat-value">@Model.CountAll</span>
         </a>
         <a href="/Admin/Orders?status=Confirmed" class="ord-stat @(Model.Status == "Confirmed" ? "active" : "")">
-            <span class="ord-stat-label">Confirmed</span>
+            <span class="ord-stat-label"><i class="ord-dot dot-confirmed"></i>Confirmed</span>
             <span class="ord-stat-value">@Model.CountConfirmed</span>
         </a>
         <a href="/Admin/Orders?status=Shipped" class="ord-stat @(Model.Status == "Shipped" ? "active" : "")">
-            <span class="ord-stat-label">Shipped</span>
+            <span class="ord-stat-label"><i class="ord-dot dot-shipped"></i>Shipped</span>
             <span class="ord-stat-value">@Model.CountShipped</span>
         </a>
         <a href="/Admin/Orders?status=Delivered" class="ord-stat @(Model.Status == "Delivered" ? "active" : "")">
-            <span class="ord-stat-label">Delivered</span>
+            <span class="ord-stat-label"><i class="ord-dot dot-delivered"></i>Delivered</span>
             <span class="ord-stat-value">@Model.CountDelivered</span>
         </a>
         <a href="/Admin/Orders?status=Cancelled" class="ord-stat @(Model.Status == "Cancelled" ? "active" : "")">
-            <span class="ord-stat-label">Cancelled</span>
+            <span class="ord-stat-label"><i class="ord-dot dot-cancelled"></i>Cancelled</span>
             <span class="ord-stat-value">@Model.CountCancelled</span>
         </a>
         <a href="/Admin/Orders?method=COD" class="ord-stat ord-stat-cod @(Model.PaymentMethod == "COD" ? "active" : "")">
-            <span class="ord-stat-label">COD pending</span>
+            <span class="ord-stat-label"><i class="ord-dot dot-cod"></i>COD pending</span>
             <span class="ord-stat-value">@Model.CountCodPending</span>
         </a>
     </div>
@@ -52,9 +100,9 @@
     <!-- ============ FILTERS ============ -->
     <form method="get" action="/Admin/Orders" class="ord-filters">
         <div class="ord-filter">
-            <label>Status</label>
-            <select name="status">
-                <option value="">All</option>
+            <label for="f-status">Status</label>
+            <select id="f-status" name="status">
+                <option value="">All statuses</option>
                 @foreach (var s in new[] { "Created", "PaymentPending", "Confirmed", "Shipped", "Delivered", "Cancelled", "Failed", "Expired", "Refunded" })
                 {
                     <option value="@s" selected="@(Model.Status == s)">@s</option>
@@ -63,18 +111,23 @@
         </div>
 
         <div class="ord-filter">
-            <label>Method</label>
-            <select name="method">
-                <option value="">All</option>
+            <label for="f-method">Payment method</label>
+            <select id="f-method" name="method">
+                <option value="">All methods</option>
                 <option value="Razorpay" selected="@(Model.PaymentMethod == "Razorpay")">Razorpay</option>
                 <option value="COD" selected="@(Model.PaymentMethod == "COD")">COD</option>
             </select>
         </div>
 
         <div class="ord-filter ord-filter-grow">
-            <label>Search</label>
-            <input type="text" name="q" value="@Model.Search"
-                   placeholder="Order # / name / phone / email" />
+            <label for="f-q">Search</label>
+            <div class="ord-search">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input id="f-q" type="text" name="q" value="@Model.Search"
+                       placeholder="Order #, name, phone or email" />
+            </div>
         </div>
 
         <button type="submit" class="btn-primary">APPLY</button>
@@ -82,97 +135,78 @@
     </form>
 
     <!-- ============ LIST ============ -->
-   @if (!Model.Orders.Any())
+    @if (!Model.Orders.Any())
     {
-        <div style="
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            text-align: center;
-            width: 100%;
-        ">
-            <div style="
-                width: 64px;
-                height: 64px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border-radius: 50%;
-                background: #f5f5f5;
-                color: #000000;
-                margin-bottom: 16px;
-            ">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="1.5"
-                    stroke-linecap="round" stroke-linejoin="round">
+        <div class="ord-empty">
+            <div class="ord-empty-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.5"
+                     stroke-linecap="round" stroke-linejoin="round">
                     <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
                     <line x1="3" y1="6" x2="21" y2="6"/>
                     <path d="M16 10a4 4 0 0 1-8 0"/>
                 </svg>
             </div>
-
-            <p style="
-                margin: 0;
-                font-size: 16px;
-                color: black;
-            ">
-                No orders match the current filters.
-            </p>
+            <p class="ord-empty-title">No orders match these filters</p>
+            <p class="ord-empty-sub">Try a different status or search term, or clear the filters to see everything.</p>
+            <a href="/Admin/Orders" class="btn-secondary">CLEAR FILTERS</a>
         </div>
     }
     else
     {
-        <div class="ord-list">
+        <div class="ord-table" role="list">
+            <div class="ord-thead" aria-hidden="true">
+                <span class="c-order">Order</span>
+                <span class="c-cust">Customer</span>
+                <span class="c-items">Items</span>
+                <span class="c-total">Total</span>
+                <span class="c-placed">Placed</span>
+                <span class="c-status">Status</span>
+            </div>
+
             @foreach (var o in Model.Orders)
             {
                 var totalItems = o.Items?.Sum(i => i.Quantity) ?? 0;
-                <a href="/Admin/Orders/@o.OrderId" class="ord-card">
-                    <div class="ord-card-top">
-                        <div class="ord-card-num">
-                            <span class="ord-num-label">Order</span>
-                            <span class="ord-num-value">@o.OrderNumber</span>
-                        </div>
-                        <div class="ord-card-badges">
-                            <span class="order-status @StatusClass(o.Status)">@o.Status</span>
-                            <span class="ord-pay-badge ord-pay-@o.PaymentMethod?.ToLower()">
-                                @(o.PaymentMethod == "COD" ? "COD" : "Razorpay")
-                            </span>
+                var pm = (o.PaymentMethod ?? "").ToLower();
+                <a href="/Admin/Orders/@o.OrderId" class="ord-row" role="listitem">
+                    <div class="c-order">
+                        <span class="ord-num-value">@o.OrderNumber</span>
+                        <span class="ord-pay-line">
+                            <span class="ord-pay-badge ord-pay-@pm">@(o.PaymentMethod == "COD" ? "COD" : "Razorpay")</span>
                             <span class="ord-pay-status">@o.PaymentStatus</span>
-                        </div>
+                        </span>
                     </div>
 
-                    <div class="ord-card-mid">
-                        <div class="ord-info-block">
-                            <div class="ord-info-label">Customer</div>
-                            <div class="ord-info-value">@(o.User?.FullName ?? o.ShippingFullName)</div>
-                            <div class="ord-info-sub">@o.ShippingPhone</div>
-                            @if (!string.IsNullOrWhiteSpace(o.User?.Email))
-                            {
-                                <div class="ord-info-sub">@o.User.Email</div>
-                            }
-                        </div>
+                    <div class="c-cust">
+                        <span class="ord-info-value">@(o.User?.FullName ?? o.ShippingFullName)</span>
+                        <span class="ord-info-sub">@o.ShippingPhone</span>
+                        @if (!string.IsNullOrWhiteSpace(o.User?.Email))
+                        {
+                            <span class="ord-info-sub">@o.User.Email</span>
+                        }
+                    </div>
 
-                        <div class="ord-info-block">
-                            <div class="ord-info-label">Items</div>
-                            <div class="ord-info-value">@totalItems</div>
-                            <div class="ord-info-sub">@o.Items?.Count line(s)</div>
-                        </div>
+                    <div class="c-items" data-label="Items">
+                        <span class="ord-info-value">@totalItems</span>
+                        <span class="ord-info-sub">@o.Items?.Count line(s)</span>
+                    </div>
 
-                        <div class="ord-info-block">
-                            <div class="ord-info-label">Total</div>
-                            <div class="ord-info-value ord-total">₹@o.Total.ToString("0.00")</div>
-                            @if (o.CodFee > 0)
-                            {
-                                <div class="ord-info-sub">incl. ₹@o.CodFee.ToString("0.00") COD</div>
-                            }
-                        </div>
+                    <div class="c-total" data-label="Total">
+                        <span class="ord-info-value ord-total">₹@o.Total.ToString("0.00")</span>
+                        @if (o.CodFee > 0)
+                        {
+                            <span class="ord-info-sub">incl. ₹@o.CodFee.ToString("0.00") COD</span>
+                        }
+                    </div>
 
-                        <div class="ord-info-block">
-                            <div class="ord-info-label">Placed</div>
-                            <div class="ord-info-value">@o.PlacedAt.ToString("dd MMM yyyy")</div>
-                            <div class="ord-info-sub">@o.PlacedAt.ToString("HH:mm")</div>
-                        </div>
+                    <div class="c-placed" data-label="Placed">
+                        <span class="ord-info-value">@o.PlacedAt.ToString("dd MMM yyyy")</span>
+                        <span class="ord-info-sub">@o.PlacedAt.ToString("HH:mm")</span>
+                    </div>
+
+                    <div class="c-status">
+                        <span class="order-status @StatusClass(o.Status)">@o.Status</span>
+                        <svg class="ord-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
                     </div>
 
                     @if (!string.IsNullOrWhiteSpace(o.TrackingNumber) || !string.IsNullOrWhiteSpace(o.RefundId))
@@ -181,13 +215,13 @@
                             @if (!string.IsNullOrWhiteSpace(o.TrackingNumber))
                             {
                                 <span class="ord-foot-item">
-                                    <strong>Tracking:</strong> @o.CourierName — @o.TrackingNumber
+                                    <strong>Tracking</strong> @o.CourierName — @o.TrackingNumber
                                 </span>
                             }
                             @if (!string.IsNullOrWhiteSpace(o.RefundId))
                             {
                                 <span class="ord-foot-item ord-foot-refund">
-                                    <strong>Refund:</strong> ₹@o.RefundedAmount?.ToString("0.00") · @o.RefundStatus
+                                    <strong>Refund</strong> ₹@o.RefundedAmount?.ToString("0.00") · @o.RefundStatus
                                 </span>
                             }
                         </div>
@@ -197,239 +231,381 @@
         </div>
 
         <!-- ============ PAGINATION ============ -->
-        @if (Model.TotalPages > 1)
-        {
-            <div class="ord-pager">
-                @{
-                    var prevPage = Model.Page - 1;
-                    var nextPage = Model.Page + 1;
-                    var qs = $"status={Model.Status}&method={Model.PaymentMethod}&q={Model.Search}";
-                }
+        <nav class="ord-pager" aria-label="Orders pages">
+            <span class="pager-range">
+                Showing <strong>@rangeFrom–@rangeTo</strong> of <strong>@Model.TotalCount</strong>
+            </span>
 
-                @if (Model.Page > 1)
-                {
-                    <a href="/Admin/Orders?@qs&page=@prevPage" class="pager-btn">← Prev</a>
-                }
-                <span class="pager-info">Page @Model.Page of @Model.TotalPages · @Model.TotalCount total</span>
-                @if (Model.Page < Model.TotalPages)
-                {
-                    <a href="/Admin/Orders?@qs&page=@nextPage" class="pager-btn">Next →</a>
-                }
-            </div>
-        }
+            @if (totalPages > 1)
+            {
+                <div class="pager-nav">
+                    @if (currentPage > 1)
+                    {
+                        <a href="@PageUrl(currentPage - 1)" class="pager-btn" rel="prev" aria-label="Previous page">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                            <span class="pager-txt">Prev</span>
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="pager-btn disabled" aria-disabled="true">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                            <span class="pager-txt">Prev</span>
+                        </span>
+                    }
+
+                    @foreach (var p in PageWindow())
+                    {
+                        if (p == -1)
+                        {
+                            <span class="pager-gap">…</span>
+                        }
+                        else if (p == currentPage)
+                        {
+                            <span class="pager-btn current" aria-current="page">@p</span>
+                        }
+                        else
+                        {
+                            <a href="@PageUrl(p)" class="pager-btn pager-num" aria-label="Page @p">@p</a>
+                        }
+                    }
+
+                    @if (currentPage < totalPages)
+                    {
+                        <a href="@PageUrl(currentPage + 1)" class="pager-btn" rel="next" aria-label="Next page">
+                            <span class="pager-txt">Next</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="pager-btn disabled" aria-disabled="true">
+                            <span class="pager-txt">Next</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                        </span>
+                    }
+                </div>
+            }
+        </nav>
     }
 </div>
 
 <style>
+    /* ============ Tokens (scoped to this page) ============ */
+    .admin-page {
+        --a-ink: var(--black, #0e0e10);
+        --a-ink-2: #34343a;
+        --a-muted: #74747c;
+        --a-line: #e7e7eb;
+        --a-line-soft: #f0f0f3;
+        --a-wash: #f7f7f9;
+        --a-surface: var(--white, #fff);
+        --a-gold: #b8860b;
+        --a-gold-soft: #fbf5e4;
+        font-variant-numeric: tabular-nums;
+        padding-bottom: 40px;
+    }
+
+    /* ============ Header ============ */
     .admin-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 16px;
-        flex-wrap: wrap;
-        margin-bottom: 22px;
-        padding-bottom: 16px;
-        border-bottom: 2px solid var(--black);
+        display: flex; justify-content: space-between; align-items: flex-end;
+        gap: 16px; flex-wrap: wrap;
+        margin-bottom: 24px;
     }
     .admin-header h1 {
-        font-size: 22px;
-        font-weight: 900;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        margin: 0;
+        font-size: 28px; font-weight: 900;
+        letter-spacing: 3px; text-transform: uppercase;
+        margin: 0; line-height: 1.1; color: var(--a-ink);
     }
+    .adm-sub { margin: 6px 0 0; font-size: 13px; color: var(--a-muted); }
     .admin-header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .btn-secondary {
-        display: inline-flex; align-items: center; gap: 6px;
-        padding: 9px 14px; font-size: 12px; font-weight: 700;
-        letter-spacing: 0.5px; text-transform: uppercase;
-        border: 1.5px solid var(--gray-200);
-        background: var(--white); color: var(--gray-800);
-        border-radius: 4px; text-decoration: none;
-        cursor: pointer; transition: all 0.15s;
-    }
-    .btn-secondary:hover { border-color: var(--black); background: var(--black); color: var(--white); }
 
-    .alert-success { background:#e8f5e9; color:#2e7d32; border:1px solid #a5d6a7; border-radius:4px; padding:12px 16px; font-size:13px; margin-bottom:14px; }
-    .alert-error   { background:#fdecea; color:#b71c1c; border:1px solid #f5c2c0; border-radius:4px; padding:12px 16px; font-size:13px; margin-bottom:14px; }
+    .btn-secondary, .ord-filters .btn-primary {
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        height: 42px; padding: 0 18px;
+        font-family: inherit; font-size: 11.5px; font-weight: 700;
+        letter-spacing: 1px; text-transform: uppercase;
+        border-radius: 10px; text-decoration: none; cursor: pointer;
+        transition: background .18s, color .18s, border-color .18s, box-shadow .18s;
+    }
+    .btn-secondary {
+        border: 1px solid var(--a-line);
+        background: var(--a-surface); color: var(--a-ink-2);
+    }
+    .btn-secondary:hover { border-color: var(--a-ink); background: var(--a-ink); color: #fff; }
+    .ord-filters .btn-primary {
+        border: 1px solid var(--a-ink);
+        background: var(--a-ink); color: #fff;
+        box-shadow: 0 6px 14px -6px rgba(14,14,16,.5);
+    }
+    .ord-filters .btn-primary:hover { background: #26262b; }
+    .btn-secondary:focus-visible, .btn-primary:focus-visible, .pager-btn:focus-visible, .ord-stat:focus-visible {
+        outline: 2px solid var(--a-gold); outline-offset: 2px;
+    }
+
+    .alert-success, .alert-error {
+        border-radius: 12px; padding: 13px 16px 13px 18px;
+        font-size: 13px; font-weight: 500; margin-bottom: 16px;
+        border: 1px solid; border-left-width: 4px;
+    }
+    .alert-success { background:#f1faf3; color:#1e6b32; border-color:#cfe9d5; border-left-color:#2e9e4f; }
+    .alert-error   { background:#fdf3f2; color:#a3201a; border-color:#f3d0cd; border-left-color:#d6403a; }
 
     /* ============ Stats ============ */
     .ord-stats {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-        gap: 8px;
-        margin-bottom: 18px;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 10px;
+        margin-bottom: 16px;
     }
     .ord-stat {
-        display: flex; flex-direction: column;
-        padding: 12px 14px;
-        border: 1.5px solid var(--gray-200);
-        border-radius: 4px;
-        background: var(--white);
-        text-decoration: none; color: inherit;
-        transition: all .15s;
+        display: flex; flex-direction: column; gap: 8px;
+        padding: 14px 16px 15px;
+        border: 1px solid var(--a-line);
+        border-radius: 12px;
+        background: var(--a-surface);
+        text-decoration: none; color: var(--a-ink);
+        transition: border-color .18s, box-shadow .18s, background .18s;
     }
-    .ord-stat:hover { border-color: var(--black); background: var(--gray-100); }
-    .ord-stat.active { border-color: var(--black); background: var(--black); color: var(--white); }
-    .ord-stat.active .ord-stat-label {
-         color: var(--white);
+    .ord-stat:hover {
+        border-color: #cfcfd6;
+        box-shadow: 0 10px 24px -14px rgba(16,16,24,.25);
     }
     .ord-stat-label {
-    font-size: 10px; font-weight: 700; letter-spacing: 1px;
-    text-transform: uppercase; color: inherit; margin-bottom: 3px;
-   }
-    .ord-stat-value { font-size: 20px; font-weight: 800; }
-    .ord-stat-cod { border-color: #d4af37; }
-    .ord-stat-cod.active { background: #b8860b; border-color: #b8860b; }
+        display: flex; align-items: center; gap: 8px;
+        font-size: 12px; font-weight: 600; color: var(--a-muted);
+    }
+    .ord-stat-value {
+        font-size: 28px; font-weight: 800; letter-spacing: -.02em; line-height: 1;
+    }
+    .ord-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; background: var(--a-muted); }
+    .dot-all       { background: var(--a-ink); }
+    .dot-confirmed { background: #1e63c8; }
+    .dot-shipped   { background: #8a3fb0; }
+    .dot-delivered { background: #2e9e4f; }
+    .dot-cancelled { background: #d6403a; }
+    .dot-cod       { background: var(--a-gold); }
+
+    .ord-stat.active { background: var(--a-ink); border-color: var(--a-ink); color: #fff; box-shadow: 0 14px 28px -16px rgba(14,14,16,.7); }
+    .ord-stat.active .ord-stat-label { color: rgba(255,255,255,.72); }
+    .ord-stat-cod { background: linear-gradient(180deg, var(--a-gold-soft), var(--a-surface)); border-color: #ecdca6; }
+    .ord-stat-cod.active { background: var(--a-gold); border-color: var(--a-gold); box-shadow: 0 14px 28px -16px rgba(184,134,11,.8); }
+    .ord-stat-cod.active .ord-dot { background: #fff; }
 
     /* ============ Filters ============ */
     .ord-filters {
         display: grid;
-        grid-template-columns: 180px 180px 1fr auto auto;
-        gap: 10px;
-        align-items: end;
-        padding: 14px;
-        border: 1px solid var(--gray-200);
-        border-radius: 4px;
-        background: var(--white);
-        margin-bottom: 18px;
+        grid-template-columns: 190px 190px minmax(0, 1fr) auto auto;
+        gap: 12px; align-items: end;
+        padding: 16px;
+        border: 1px solid var(--a-line);
+        border-radius: 14px;
+        background: var(--a-surface);
+        margin-bottom: 20px;
     }
-    .ord-filter { display: flex; flex-direction: column; gap: 4px; }
-    .ord-filter label {
-        font-size: 10px; font-weight: 700; letter-spacing: 1px;
-        text-transform: uppercase; color:black;
-    }
+    .ord-filter { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .ord-filter label { font-size: 12px; font-weight: 600; color: var(--a-ink-2); }
     .ord-filter select,
     .ord-filter input {
-        padding: 9px 10px;
-        border: 1.5px solid darkslategray;
-        border-radius: 3px;
-        font-family: inherit;
-        font-size: 13px;
-        background: var(--white);
+        width: 100%; height: 42px; padding: 0 12px;
+        border: 1px solid var(--a-line); border-radius: 10px;
+        font-family: inherit; font-size: 13.5px; color: var(--a-ink);
+        background: var(--a-wash);
+        transition: border-color .18s, background .18s, box-shadow .18s;
     }
+    .ord-filter select {
+        appearance: none; -webkit-appearance: none; padding-right: 34px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2374747c' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+        background-repeat: no-repeat; background-position: right 12px center;
+    }
+    .ord-search { position: relative; }
+    .ord-search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--a-muted); pointer-events: none; }
+    .ord-search input { padding-left: 38px; }
     .ord-filter select:focus,
-    .ord-filter input:focus { outline: none; border-color: var(--black); }
+    .ord-filter input:focus {
+        outline: none; border-color: var(--a-ink); background: #fff;
+        box-shadow: 0 0 0 4px rgba(14,14,16,.07);
+    }
 
-    /* ============ List ============ */
-    .ord-list { display: flex; flex-direction: column; gap: 10px; }
+    /* ============ Orders table ============ */
+    .ord-table {
+        border: 1px solid var(--a-line);
+        border-radius: 14px;
+        background: var(--a-surface);
+        overflow: hidden;
+        box-shadow: 0 1px 2px rgba(16,16,24,.04), 0 12px 28px -18px rgba(16,16,24,.14);
+    }
 
-    .ord-card {
-        display: block;
-        border: 1px solid black;
-        border-radius: 4px;
-        background: var(--white);
-        padding: 14px 16px;
+    .ord-thead, .ord-row {
+        display: grid;
+        grid-template-columns: minmax(150px, 1.15fr) minmax(0, 2fr) 84px 118px 112px 150px;
+        grid-template-areas: "order cust items total placed status";
+        column-gap: 18px;
+        align-items: center;
+        padding: 0 22px;
+    }
+    .ord-thead {
+        height: 44px;
+        background: var(--a-wash);
+        border-bottom: 1px solid var(--a-line);
+        font-size: 11.5px; font-weight: 700; color: var(--a-muted);
+        letter-spacing: .3px;
+    }
+    .ord-thead .c-status { text-align: right; }
+
+    .c-order  { grid-area: order; }
+    .c-cust   { grid-area: cust; }
+    .c-items  { grid-area: items; }
+    .c-total  { grid-area: total; }
+    .c-placed { grid-area: placed; }
+    .c-status { grid-area: status; }
+
+    .ord-row {
+        position: relative;
+        padding-top: 16px; padding-bottom: 16px;
+        border-bottom: 1px solid var(--a-line-soft);
         text-decoration: none; color: inherit;
-        transition: border-color .15s, background .15s;
+        transition: background .15s;
     }
-    .ord-card:hover, .ord-card:focus-visible {
-        border-color: var(--gray-400);
-        background: var(--gray-100);
-        outline: none;
+    .ord-row:last-child { border-bottom: none; }
+    .ord-row::before {
+        content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+        background: var(--a-ink); opacity: 0; transition: opacity .15s;
     }
+    .ord-row:hover, .ord-row:focus-visible { background: var(--a-wash); outline: none; }
+    .ord-row:hover::before, .ord-row:focus-visible::before { opacity: 1; }
 
-    .ord-card-top {
-        display: flex; align-items: center; justify-content: space-between;
-        gap: 10px; flex-wrap: wrap;
-        padding-bottom: 10px; margin-bottom: 12px;
-        border-bottom: 1px solid black;
+    .ord-row > div { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+    .ord-num-value { font-size: 14px; font-weight: 800; letter-spacing: .3px; color: var(--a-ink); }
+    .ord-pay-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .ord-pay-badge {
+        display: inline-block; font-size: 10px; font-weight: 800;
+        letter-spacing: .6px; text-transform: uppercase;
+        padding: 3px 8px; border-radius: 20px;
     }
-    .ord-card-num { display: flex; align-items: baseline; gap: 8px; }
-    .ord-num-label {
-        font-size: 9px; font-weight: 700; letter-spacing: 1px;
-        text-transform: uppercase; color:black;
-    }
-    .ord-num-value { font-size: 14px; font-weight: 800; letter-spacing: .5px; }
-    .ord-card-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .ord-pay-razorpay { background: #e8f0fd; color: #1a4fa6; }
+    .ord-pay-cod      { background: var(--a-gold-soft); color: #7c5700; }
+    .ord-pay-status   { font-size: 11.5px; font-weight: 500; color: var(--a-muted); }
+
+    .ord-info-value { font-size: 13.5px; font-weight: 700; color: var(--a-ink); overflow-wrap: anywhere; }
+    .ord-info-sub   { font-size: 12px; font-weight: 400; color: var(--a-muted); overflow-wrap: anywhere; }
+    .ord-total { font-size: 14.5px; font-weight: 800; letter-spacing: -.01em; }
+
+    .c-status { flex-direction: row !important; align-items: center; justify-content: flex-end; gap: 10px !important; }
+    .ord-chev { color: #b4b4bc; transition: transform .15s, color .15s; flex-shrink: 0; }
+    .ord-row:hover .ord-chev { color: var(--a-ink); transform: translateX(2px); }
 
     .order-status {
-        display: inline-block; font-size: 9px; font-weight: 700;
-        letter-spacing: .6px; text-transform: uppercase;
-        padding: 4px 9px; border-radius: 20px; white-space: nowrap;
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 10.5px; font-weight: 700;
+        letter-spacing: .5px; text-transform: uppercase;
+        padding: 5px 11px; border-radius: 20px; white-space: nowrap;
     }
-    .order-status-created        { background:#f5f5f5; color:#424242; }
-    .order-status-paymentpending { background:#fff8e1; color:#7c5700; }
-    .order-status-confirmed      { background:#e3f2fd; color:#0d47a1; }
-    .order-status-shipped        { background:#f3e5f5; color:#6a1b9a; }
-    .order-status-delivered      { background:#e8f5e9; color:#2e7d32; }
-    .order-status-cancelled      { background:#fdecea; color:#b71c1c; }
-    .order-status-failed         { background:#fdecea; color:#b71c1c; }
+    .order-status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .85; }
+    .order-status-created        { background:#f2f2f4; color:#4a4a52; }
+    .order-status-paymentpending { background:#fff6dc; color:#7c5700; }
+    .order-status-confirmed      { background:#e8f0fd; color:#1a4fa6; }
+    .order-status-shipped        { background:#f4eafa; color:#7a2fa3; }
+    .order-status-delivered      { background:#e8f6ec; color:#1e6b32; }
+    .order-status-cancelled      { background:#fdeceb; color:#a3201a; }
+    .order-status-failed         { background:#fdeceb; color:#a3201a; }
     .order-status-expired        { background:#eceff1; color:#455a64; }
-    .order-status-refunded       { background:#e0f2f1; color:#00695c; }
-    .order-status-returned       { background:#fff3e0; color:#e65100; }
-
-    .ord-pay-badge {
-        display: inline-block; font-size: 9px; font-weight: 800;
-        letter-spacing: 1px; text-transform: uppercase;
-        padding: 3px 7px; border-radius: 2px;
-    }
-    .ord-pay-razorpay { background: #e3f2fd; color: #0d47a1; }
-    .ord-pay-cod      { background: #fff8e1; color: #7c5700; }
-    .ord-pay-status {
-        font-size: 10px; font-weight: 600;
-        color: var(--gray-600);
-        text-transform: uppercase; letter-spacing: .5px;
-    }
-
-    .ord-card-mid {
-        display: grid;
-        grid-template-columns: 2fr 1fr 1fr 1.2fr;
-        gap: 14px;
-    }
-    .ord-info-block { min-width: 0; }
-    .ord-info-label {
-        font-size: 9px; font-weight: 700; letter-spacing: 1px;
-        text-transform: uppercase; color: black; margin-bottom: 3px;
-    }
-    .ord-info-value {
-        font-size: 13px; font-weight: 700; color: var(--black);
-        overflow-wrap: anywhere;
-    }
-    .ord-info-sub {
-        font-size: 11px; color: black;
-        font-weight: 500;
-        margin-top: 2px; overflow-wrap: anywhere;
-    }
-    .ord-total { color: var(--red); }
+    .order-status-refunded       { background:#e2f4f1; color:#00695c; }
+    .order-status-returned       { background:#fff0e0; color:#c24e00; }
 
     .ord-card-bottom {
-        display: flex; gap: 16px; flex-wrap: wrap;
-        padding-top: 10px; margin-top: 10px;
-        border-top: 1px dashed var(--gray-200);
-        font-size: 11px; color: var(--gray-600);
+        grid-column: 1 / -1;
+        flex-direction: row !important; flex-wrap: wrap;
+        gap: 8px 20px !important;
+        margin-top: 12px; padding: 9px 12px;
+        background: var(--a-wash);
+        border-radius: 8px;
+        font-size: 12px; color: var(--a-muted);
     }
-    .ord-foot-item strong { color: var(--gray-800); }
+    .ord-foot-item strong { color: var(--a-ink-2); font-weight: 700; margin-right: 4px; }
     .ord-foot-refund { color: #00695c; }
+    .ord-foot-refund strong { color: #00695c; }
+
+    /* ============ Empty state ============ */
+    .ord-empty {
+        display: flex; flex-direction: column; align-items: center; text-align: center;
+        padding: 56px 20px;
+        border: 1px dashed #d6d6dc; border-radius: 14px; background: var(--a-surface);
+    }
+    .ord-empty-icon {
+        width: 64px; height: 64px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--a-wash); color: var(--a-ink);
+        margin-bottom: 16px;
+    }
+    .ord-empty-title { margin: 0; font-size: 16px; font-weight: 700; color: var(--a-ink); }
+    .ord-empty-sub { margin: 6px 0 20px; font-size: 13px; color: var(--a-muted); max-width: 340px; line-height: 1.5; }
 
     /* ============ Pagination ============ */
     .ord-pager {
-        display: flex; align-items: center; justify-content: center;
-        gap: 14px; margin-top: 24px;
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 16px; flex-wrap: wrap;
+        margin-top: 20px;
     }
+    .pager-range { font-size: 13px; color: var(--a-muted); }
+    .pager-range strong { color: var(--a-ink); font-weight: 700; }
+    .pager-nav { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
     .pager-btn {
-        padding: 9px 16px;
-        border: 1.5px solid var(--gray-200);
-        background: var(--white); color: var(--gray-800);
-        border-radius: 3px; text-decoration: none;
-        font-size: 12px; font-weight: 700;
-        letter-spacing: .5px; text-transform: uppercase;
-        transition: all .15s;
+        display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+        min-width: 40px; height: 40px; padding: 0 12px;
+        border: 1px solid var(--a-line); border-radius: 10px;
+        background: var(--a-surface); color: var(--a-ink-2);
+        font-size: 13px; font-weight: 700; text-decoration: none;
+        transition: background .15s, color .15s, border-color .15s;
     }
-    .pager-btn:hover { border-color: var(--black); background: var(--black); color: var(--white); }
-    .pager-info { font-size: 12px; color: var(--gray-600); }
+    a.pager-btn:hover { border-color: var(--a-ink); background: var(--a-ink); color: #fff; }
+    .pager-btn.current {
+        background: var(--a-ink); border-color: var(--a-ink); color: #fff;
+        box-shadow: 0 8px 16px -8px rgba(14,14,16,.6);
+    }
+    .pager-btn.disabled { opacity: .4; cursor: not-allowed; }
+    .pager-gap { padding: 0 4px; color: var(--a-muted); }
+    .pager-txt { font-size: 12px; letter-spacing: .5px; text-transform: uppercase; }
 
     /* ============ Responsive ============ */
-    @@media (max-width: 900px) {
+    @@media (max-width: 1000px) {
         .ord-filters { grid-template-columns: 1fr 1fr; }
         .ord-filters .ord-filter-grow { grid-column: 1 / -1; }
-        .ord-filters button, .ord-filters a { justify-content: center; }
-        .ord-card-mid { grid-template-columns: 1fr 1fr; }
+        .ord-filters .btn-primary, .ord-filters .btn-secondary { width: 100%; }
+
+        .ord-thead { display: none; }
+        .ord-row {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-areas:
+                "order order status"
+                "cust  cust  cust"
+                "items total placed";
+            row-gap: 14px;
+            padding: 18px 18px;
+        }
+        .c-status { align-self: start; }
+        .ord-chev { display: none; }
+        .ord-row > div[data-label]::before {
+            content: attr(data-label);
+            font-size: 11px; font-weight: 600; color: var(--a-muted);
+            margin-bottom: 1px;
+        }
     }
-    @@media (max-width: 500px) {
-        .admin-header h1 { font-size: 18px; }
-        .ord-card-mid { grid-template-columns: 1fr; }
-        .ord-card-top { flex-direction: column; align-items: flex-start; }
-        .ord-card-badges { gap: 4px; }
+    @@media (max-width: 560px) {
+        .admin-header h1 { font-size: 22px; letter-spacing: 2px; }
+        .ord-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .ord-filters { grid-template-columns: 1fr; padding: 14px; }
+        .ord-row { grid-template-columns: 1fr 1fr; grid-template-areas:
+                "order status"
+                "cust cust"
+                "items total"
+                "placed placed"; }
+        .ord-pager { flex-direction: column; align-items: stretch; text-align: center; }
+        .pager-nav { justify-content: center; }
+        .pager-num { display: none; }
+        .pager-btn.current { display: inline-flex; }
+    }
+    @@media (prefers-reduced-motion: reduce) {
+        * { transition: none !important; }
     }
 </style>
