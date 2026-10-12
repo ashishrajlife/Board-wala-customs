@@ -25,12 +25,30 @@ public class AdminProductsController : Controller
     // INDEX
     // ============================================================
     [Route("")]
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(int page = 1)
     {
-        var products = await _db.Products
+        const int pageSize = 15;                  // 10–15 recommended
+        if (page < 1) page = 1;
+
+        var query = _db.Products.AsNoTracking();  // read-only list, so no tracking overhead
+
+        var totalCount = await query.CountAsync();
+        var totalPages = Math.Max(1, (int)Math.Ceiling(totalCount / (double)pageSize));
+        if (page > totalPages) page = totalPages; // e.g. you deleted the last item on the last page
+
+        var products = await query
             .Include(p => p.Category)
             .OrderByDescending(p => p.CreatedAt)
+            .ThenByDescending(p => p.ProductId)   // stable order, so products don't jump between pages
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
+
+        ViewBag.Page = page;
+        ViewBag.PageSize = pageSize;
+        ViewBag.TotalCount = totalCount;
+        ViewBag.TotalPages = totalPages;
+
         return View("~/Views/Admin/Products/Index.cshtml", products);
     }
 

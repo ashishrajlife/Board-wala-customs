@@ -3,6 +3,9 @@
     ViewData["Title"] = "Admin · Order " + Model.Order.OrderNumber;
     var o = Model.Order;
     string StatusClass(string s) => "order-status-" + (s ?? "").ToLower();
+
+    var displayName = string.IsNullOrWhiteSpace(Model.DisplayUserName) ? o.ShippingFullName : Model.DisplayUserName;
+    var initial = string.IsNullOrWhiteSpace(displayName) ? "?" : displayName.Trim().Substring(0, 1).ToUpper();
 }
 
 <div class="container admin-page">
@@ -13,14 +16,27 @@
     <!-- ============ HEADER ============ -->
     <div class="admin-header">
         <div>
-            <h1>ORDER @o.OrderNumber</h1>
+            <div class="adm-title-row">
+                <h1>ORDER @o.OrderNumber</h1>
+                <span class="order-status @StatusClass(o.Status)">@o.Status</span>
+            </div>
             <p class="adm-sub">Placed @o.PlacedAt.ToString("dd MMM yyyy, HH:mm") UTC</p>
         </div>
         <div class="admin-header-actions">
-                      <a href="/Admin/Orders/@o.OrderId/invoice" class="btn-secondary" target="_blank" rel="noopener">
+            <a href="/Admin/Orders/@o.OrderId/invoice" class="btn-secondary" target="_blank" rel="noopener">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/>
+                </svg>
                 INVOICE
             </a>
-            <a href="/Admin/Orders" class="btn-secondary">← BACK TO ORDERS</a>
+            <a href="/Admin/Orders" class="btn-secondary">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+                </svg>
+                BACK TO ORDERS
+            </a>
         </div>
     </div>
 
@@ -31,19 +47,18 @@
 
             <!-- CUSTOMER -->
             <div class="adm-card">
-                <h3>CUSTOMER</h3>
-                <div class="adm-kv-grid">
-                    <div class="adm-kv">
-                        <span class="adm-k">Name</span>
-                        <span class="adm-v">@Model.DisplayUserName</span>
+                <h3>Customer</h3>
+                <div class="adm-person">
+                    <span class="adm-avatar" aria-hidden="true">@initial</span>
+                    <div class="adm-person-info">
+                        <span class="adm-person-name">@Model.DisplayUserName</span>
+                        <span class="adm-person-mail">@Model.DisplayEmail</span>
                     </div>
+                </div>
+                <div class="adm-kv-grid">
                     <div class="adm-kv">
                         <span class="adm-k">User ID</span>
                         <span class="adm-v">#@o.UserId</span>
-                    </div>
-                    <div class="adm-kv">
-                        <span class="adm-k">Email</span>
-                        <span class="adm-v">@Model.DisplayEmail</span>
                     </div>
                     <div class="adm-kv">
                         <span class="adm-k">Phone (shipping)</span>
@@ -54,17 +69,24 @@
 
             <!-- SHIPPING -->
             <div class="adm-card">
-                <h3>SHIPPING ADDRESS</h3>
-                <p><strong>@o.ShippingFullName</strong></p>
-                <p>📞 @o.ShippingPhone</p>
-                <p>@o.ShippingLine1</p>
-                @if (!string.IsNullOrWhiteSpace(o.ShippingLine2)) { <p>@o.ShippingLine2</p> }
-                <p>@o.ShippingCity, @o.ShippingState — @o.ShippingPincode</p>
-                <p>@o.ShippingCountry</p>
+                <h3>Shipping address</h3>
+                <div class="adm-address">
+                    <p class="adm-address-name">@o.ShippingFullName</p>
+                    <p class="adm-address-phone">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+                        </svg>
+                        @o.ShippingPhone
+                    </p>
+                    <p>@o.ShippingLine1</p>
+                    @if (!string.IsNullOrWhiteSpace(o.ShippingLine2)) { <p>@o.ShippingLine2</p> }
+                    <p>@o.ShippingCity, @o.ShippingState — @o.ShippingPincode</p>
+                    <p>@o.ShippingCountry</p>
+                </div>
                 @if (!string.IsNullOrWhiteSpace(o.TrackingNumber))
                 {
                     <p class="adm-tracking">
-                        <strong>Tracking:</strong>
+                        <strong>Tracking</strong>
                         <a href="https://www.delhivery.com/track/package/@o.TrackingNumber" target="_blank" rel="noopener">
                             @o.CourierName — @o.TrackingNumber
                         </a>
@@ -78,7 +100,7 @@
 
             <!-- ITEMS -->
             <div class="adm-card">
-                <h3>ITEMS (@o.Items.Count)</h3>
+                <h3>Items <span class="adm-count">@o.Items.Count</span></h3>
                 @foreach (var i in o.Items)
                 {
                     <div class="adm-item">
@@ -93,11 +115,10 @@
                         <div class="adm-item-info">
                             <p class="adm-item-name">@i.ProductName</p>
                             <p class="adm-item-meta">
-                                @if (!string.IsNullOrWhiteSpace(i.Size)) { <span>Size: @i.Size</span> }
-                                @if (!string.IsNullOrWhiteSpace(i.Color)) { <span>Color: @i.Color</span> }
-                                <span>Qty: @i.Quantity</span>
-                                <span>·</span>
-                                <span>Unit ₹@i.UnitPrice.ToString("0.00")</span>
+                                @if (!string.IsNullOrWhiteSpace(i.Size)) { <span class="adm-chip">Size @i.Size</span> }
+                                @if (!string.IsNullOrWhiteSpace(i.Color)) { <span class="adm-chip">@i.Color</span> }
+                                <span class="adm-chip">Qty @i.Quantity</span>
+                                <span class="adm-unit">₹@i.UnitPrice.ToString("0.00") each</span>
                             </p>
                         </div>
                         <div class="adm-item-price">₹@i.LineTotal.ToString("0.00")</div>
@@ -109,7 +130,7 @@
             @if (o.PaymentAttemptLog != null && o.PaymentAttemptLog.Any())
             {
                 <div class="adm-card">
-                    <h3>PAYMENT ATTEMPTS (@o.PaymentAttemptLog.Count)</h3>
+                    <h3>Payment attempts <span class="adm-count">@o.PaymentAttemptLog.Count</span></h3>
                     <div class="adm-table-wrap">
                         <table class="adm-table">
                             <thead>
@@ -125,7 +146,7 @@
                                 {
                                     <tr>
                                         <td>@a.AttemptedAt.ToString("dd MMM HH:mm:ss")</td>
-                                        <td>@a.Status</td>
+                                        <td><span class="order-status @StatusClass(a.Status)">@a.Status</span></td>
                                         <td>₹@a.Amount.ToString("0.00")</td>
                                         <td>@(string.IsNullOrWhiteSpace(a.ErrorCode) ? "—" : a.ErrorCode) @a.ErrorDescription</td>
                                     </tr>
@@ -143,7 +164,7 @@
 
             <!-- STATUS + TIMELINE -->
             <div class="adm-card">
-                <h3>STATUS</h3>
+                <h3>Status</h3>
                 <div class="adm-status-row">
                     <span class="order-status @StatusClass(o.Status)">@o.Status</span>
                     <span class="order-status @StatusClass(o.PaymentStatus)">@o.PaymentStatus</span>
@@ -151,18 +172,18 @@
 
                 <div class="adm-timeline">
                     <div class="adm-tl-row"><span>Placed</span><span>@o.PlacedAt.ToString("dd MMM yyyy HH:mm")</span></div>
-                    @if (o.PaidAt.HasValue)      { <div class="adm-tl-row"><span>Paid</span><span>@o.PaidAt.Value.ToString("dd MMM yyyy HH:mm")</span></div> }
-                    @if (o.ShippedAt.HasValue)   { <div class="adm-tl-row"><span>Shipped</span><span>@o.ShippedAt.Value.ToString("dd MMM yyyy HH:mm")</span></div> }
-                    @if (o.DeliveredAt.HasValue) { <div class="adm-tl-row"><span>Delivered</span><span>@o.DeliveredAt.Value.ToString("dd MMM yyyy HH:mm")</span></div> }
-                    @if (o.CodCollectedAt.HasValue) { <div class="adm-tl-row"><span>COD collected</span><span>@o.CodCollectedAt.Value.ToString("dd MMM yyyy HH:mm")</span></div> }
-                    @if (o.CancelledAt.HasValue) { <div class="adm-tl-row"><span>Cancelled</span><span>@o.CancelledAt.Value.ToString("dd MMM yyyy HH:mm") · @o.CancelledBy</span></div> }
-                    @if (o.RefundedAt.HasValue)  { <div class="adm-tl-row"><span>Refunded</span><span>@o.RefundedAt.Value.ToString("dd MMM yyyy HH:mm")</span></div> }
+                    @if (o.PaidAt.HasValue)        { <div class="adm-tl-row"><span>Paid</span><span>@o.PaidAt.Value.ToString("dd MMM yyyy HH:mm")</span></div> }
+                    @if (o.ShippedAt.HasValue)     { <div class="adm-tl-row"><span>Shipped</span><span>@o.ShippedAt.Value.ToString("dd MMM yyyy HH:mm")</span></div> }
+                    @if (o.DeliveredAt.HasValue)   { <div class="adm-tl-row tl-good"><span>Delivered</span><span>@o.DeliveredAt.Value.ToString("dd MMM yyyy HH:mm")</span></div> }
+                    @if (o.CodCollectedAt.HasValue){ <div class="adm-tl-row tl-good"><span>COD collected</span><span>@o.CodCollectedAt.Value.ToString("dd MMM yyyy HH:mm")</span></div> }
+                    @if (o.CancelledAt.HasValue)   { <div class="adm-tl-row tl-bad"><span>Cancelled</span><span>@o.CancelledAt.Value.ToString("dd MMM yyyy HH:mm") · @o.CancelledBy</span></div> }
+                    @if (o.RefundedAt.HasValue)    { <div class="adm-tl-row tl-good"><span>Refunded</span><span>@o.RefundedAt.Value.ToString("dd MMM yyyy HH:mm")</span></div> }
                 </div>
             </div>
 
             <!-- PAYMENT SUMMARY -->
             <div class="adm-card">
-                <h3>PAYMENT</h3>
+                <h3>Payment</h3>
                 <div class="os-row"><span>Subtotal</span><span>₹@o.Subtotal.ToString("0.00")</span></div>
                 @if (o.Discount > 0)
                 {
@@ -173,7 +194,9 @@
                 {
                     <div class="os-row"><span>COD handling</span><span>₹@o.CodFee.ToString("0.00")</span></div>
                 }
-                <div class="os-row os-total"><span>TOTAL</span><span>₹@o.Total.ToString("0.00")</span></div>
+                <div class="os-row os-total"><span>Total</span><span>₹@o.Total.ToString("0.00")</span></div>
+
+                <div class="os-divider"></div>
                 <div class="os-row os-meta"><span>Method</span><span>@(o.PaymentMethod == "COD" ? "Cash on Delivery" : o.PaymentMethod)</span></div>
                 <div class="os-row os-meta"><span>Status</span><span>@o.PaymentStatus</span></div>
                 @if (!string.IsNullOrWhiteSpace(o.RazorpayPaymentId))
@@ -192,7 +215,7 @@
 
             <!-- ADMIN ACTIONS -->
             <div class="adm-card adm-actions-card">
-                <h3>ADMIN ACTIONS</h3>
+                <h3>Admin actions</h3>
 
                 @if (Model.CanMarkDelivered)
                 {
@@ -239,8 +262,8 @@
 
 <!-- ============ CANCEL MODAL ============ -->
 <div class="confirm-overlay" id="cancelModal" hidden>
-    <div class="confirm-box" role="dialog" aria-modal="true">
-        <h4>Cancel order @o.OrderNumber?</h4>
+    <div class="confirm-box" role="dialog" aria-modal="true" aria-labelledby="cancelTitle">
+        <h4 id="cancelTitle">Cancel order @o.OrderNumber?</h4>
         <form method="post" action="/Admin/Orders/@o.OrderId/cancel">
             @Html.AntiForgeryToken()
             <p>This action cannot be undone. If the order is paid, a refund will be initiated automatically.</p>
@@ -263,8 +286,8 @@
 
 <!-- ============ REFUND MODAL ============ -->
 <div class="confirm-overlay" id="refundModal" hidden>
-    <div class="confirm-box" role="dialog" aria-modal="true">
-        <h4>Refund ₹@o.Total.ToString("0.00")?</h4>
+    <div class="confirm-box" role="dialog" aria-modal="true" aria-labelledby="refundTitle">
+        <h4 id="refundTitle">Refund ₹@o.Total.ToString("0.00")?</h4>
         <form method="post" action="/Admin/Orders/@o.OrderId/refund">
             @Html.AntiForgeryToken()
             <p>Full refund will be issued to the customer's original payment method via Razorpay.</p>
@@ -278,202 +301,330 @@
 </div>
 
 <style>
+    /* ============ Tokens (scoped to this page) ============ */
+    .admin-page {
+        --a-ink: var(--black, #0e0e10);
+        --a-ink-2: #34343a;
+        --a-muted: #74747c;
+        --a-line: #e7e7eb;
+        --a-line-soft: #f0f0f3;
+        --a-wash: #f7f7f9;
+        --a-surface: var(--white, #fff);
+        --a-gold: #b8860b;
+        font-variant-numeric: tabular-nums;
+        padding-bottom: 40px;
+    }
+
+    /* ============ Header ============ */
     .admin-header {
-        display: flex; justify-content: space-between; align-items: center;
+        display: flex; justify-content: space-between; align-items: flex-end;
         gap: 16px; flex-wrap: wrap;
-        margin-bottom: 22px; padding-bottom: 16px;
-        border-bottom: 2px solid var(--black);
+        margin-bottom: 24px;
     }
+    .adm-title-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
     .admin-header h1 {
-        font-size: 22px; font-weight: 900;
-        letter-spacing: 2px; text-transform: uppercase;
-        margin: 0;
+        font-size: 26px; font-weight: 900;
+        letter-spacing: 2.5px; text-transform: uppercase;
+        margin: 0; line-height: 1.15; color: var(--a-ink);
+        overflow-wrap: anywhere;
     }
-    .adm-sub { font-size: 12px; color: var(--gray-600); margin: 4px 0 0; }
-    .admin-header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .adm-sub { font-size: 13px; color: var(--a-muted); margin: 6px 0 0; }
+    .admin-header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
     .btn-secondary {
-        display: inline-flex; align-items: center; gap: 6px;
-        padding: 9px 14px; font-size: 11px; font-weight: 700;
-        letter-spacing: .5px; text-transform: uppercase;
-        border: 1.5px solid var(--gray-200);
-        background: var(--white); color: var(--gray-800);
-        border-radius: 4px; text-decoration: none;
-        transition: all .15s;
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        height: 42px; padding: 0 18px;
+        font-family: inherit; font-size: 11.5px; font-weight: 700;
+        letter-spacing: 1px; text-transform: uppercase;
+        border: 1px solid var(--a-line);
+        background: var(--a-surface); color: var(--a-ink-2);
+        border-radius: 10px; text-decoration: none; cursor: pointer;
+        transition: background .18s, color .18s, border-color .18s;
     }
-    .btn-secondary:hover { border-color: var(--black); background: var(--black); color: var(--white); }
+    .btn-secondary:hover { border-color: var(--a-ink); background: var(--a-ink); color: #fff; }
+    .btn-secondary:focus-visible, .adm-action-btn:focus-visible, .confirm-btn:focus-visible {
+        outline: 2px solid var(--a-gold); outline-offset: 2px;
+    }
 
-    .alert-success { background:#e8f5e9; color:#2e7d32; border:1px solid #a5d6a7; border-radius:4px; padding:12px 16px; font-size:13px; margin-bottom:14px; }
-    .alert-error   { background:#fdecea; color:#b71c1c; border:1px solid #f5c2c0; border-radius:4px; padding:12px 16px; font-size:13px; margin-bottom:14px; }
+    .alert-success, .alert-error {
+        border-radius: 12px; padding: 13px 16px 13px 18px;
+        font-size: 13px; font-weight: 500; margin-bottom: 16px;
+        border: 1px solid; border-left-width: 4px;
+    }
+    .alert-success { background:#f1faf3; color:#1e6b32; border-color:#cfe9d5; border-left-color:#2e9e4f; }
+    .alert-error   { background:#fdf3f2; color:#a3201a; border-color:#f3d0cd; border-left-color:#d6403a; }
 
+    /* ============ Layout ============ */
     .adm-grid {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 380px;
-        gap: 16px;
+        grid-template-columns: minmax(0, 1fr) 390px;
+        gap: 20px;
         align-items: start;
     }
-    .adm-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+    .adm-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 
     .adm-card {
-        border: 1px solid black;
-        border-radius: 4px;
-        padding: 14px 16px;
-        background: var(--white);
+        border: 1px solid var(--a-line);
+        border-radius: 14px;
+        padding: 20px 22px;
+        background: var(--a-surface);
+        box-shadow: 0 1px 2px rgba(16,16,24,.04), 0 12px 28px -20px rgba(16,16,24,.14);
     }
     .adm-card h3 {
-        font-size: 10px; font-weight: 700;
-        letter-spacing: .8px; text-transform: uppercase;
-        color: var(--gray-600);
-        margin: 0 0 10px; padding-bottom: 10px;
-        border-bottom: 1px solid black;
+        display: flex; align-items: center; gap: 8px;
+        font-size: 14px; font-weight: 800; letter-spacing: .2px;
+        color: var(--a-ink);
+        margin: 0 0 14px; padding-bottom: 14px;
+        border-bottom: 1px solid var(--a-line-soft);
+    }
+    .adm-count {
+        display: inline-flex; align-items: center; justify-content: center;
+        min-width: 22px; height: 22px; padding: 0 7px;
+        font-size: 11.5px; font-weight: 700;
+        background: var(--a-ink); color: #fff; border-radius: 20px;
     }
     .adm-card p {
-        font-size: 12.5px; line-height: 1.55;
-        margin: 3px 0; color: var(--gray-800);
+        font-size: 13.5px; line-height: 1.6;
+        margin: 2px 0; color: var(--a-ink-2);
         overflow-wrap: anywhere;
     }
 
+    /* ---- Customer ---- */
+    .adm-person { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+    .adm-avatar {
+        width: 46px; height: 46px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        border-radius: 50%; background: var(--a-ink); color: #fff;
+        font-size: 18px; font-weight: 800;
+    }
+    .adm-person-info { display: flex; flex-direction: column; min-width: 0; }
+    .adm-person-name { font-size: 15px; font-weight: 700; color: var(--a-ink); overflow-wrap: anywhere; }
+    .adm-person-mail { font-size: 13px; color: var(--a-muted); overflow-wrap: anywhere; }
+
     .adm-kv-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px 14px;
+        display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px;
+        padding: 14px 16px; background: var(--a-wash); border-radius: 10px;
     }
     .adm-kv { min-width: 0; }
-    .adm-k { display: block; font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--gray-600); margin-bottom: 2px; }
-    .adm-v { font-size: 13px; font-weight: 600; color: var(--black); overflow-wrap: anywhere; }
+    .adm-k { display: block; font-size: 11.5px; font-weight: 600; color: var(--a-muted); margin-bottom: 2px; }
+    .adm-v { font-size: 13.5px; font-weight: 700; color: var(--a-ink); overflow-wrap: anywhere; }
 
-    .adm-tracking { margin-top: 10px !important; padding: 8px 10px; background: var(--gray-100); border-radius: 3px; font-size: 12px !important; }
-    .adm-tracking a { color: inherit; text-decoration: underline; }
-    .adm-substatus { color: var(--gray-600); font-size: 11px; margin-left: 4px; }
+    /* ---- Shipping ---- */
+    .adm-address-name { font-size: 14.5px !important; font-weight: 700; color: var(--a-ink) !important; margin-bottom: 4px !important; }
+    .adm-address-phone { display: flex; align-items: center; gap: 7px; color: var(--a-muted) !important; margin-bottom: 8px !important; }
+    .adm-tracking {
+        margin-top: 14px !important; padding: 11px 14px;
+        background: var(--a-wash); border-radius: 10px;
+        font-size: 13px !important; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center;
+    }
+    .adm-tracking strong { color: var(--a-muted); font-size: 12px; font-weight: 600; }
+    .adm-tracking a { color: var(--a-ink); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: #c9c9d0; }
+    .adm-tracking a:hover { text-decoration-color: var(--a-ink); }
+    .adm-substatus { color: var(--a-muted); font-size: 11px; margin-left: 4px; }
 
+    /* ---- Items ---- */
     .adm-item {
-        display: grid; grid-template-columns: 48px minmax(0, 1fr) auto;
-        gap: 12px; align-items: center;
-        padding: 10px 0;
-        border-bottom: 1px solid var(--gray-200);
+        display: grid; grid-template-columns: 60px minmax(0, 1fr) auto;
+        gap: 16px; align-items: center;
+        padding: 14px 0;
+        border-bottom: 1px solid var(--a-line-soft);
     }
     .adm-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .adm-item:first-of-type { padding-top: 0; }
     .adm-item img, .adm-noimg {
-        width: 48px; height: 60px; object-fit: cover;
-        border-radius: 3px; background: var(--gray-100);
+        width: 60px; height: 76px; object-fit: cover;
+        border-radius: 10px; background: var(--a-wash);
+        border: 1px solid var(--a-line-soft);
     }
-    .adm-item-name { font-size: 11.5px; font-weight: 700; text-transform: uppercase; margin: 0 0 3px !important; line-height: 1.35; }
-    .adm-item-meta { display: flex; flex-wrap: wrap; gap: 2px 8px; font-size: 10.5px !important; color: var(--gray-600) !important; margin: 0 !important; }
-    .adm-item-price { font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+    .adm-item-name { font-size: 13.5px !important; font-weight: 700; color: var(--a-ink) !important; margin: 0 0 6px !important; line-height: 1.35 !important; }
+    .adm-item-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 !important; }
+    .adm-chip {
+        font-size: 11.5px; font-weight: 600; color: var(--a-ink-2);
+        background: var(--a-wash); border: 1px solid var(--a-line);
+        padding: 2px 9px; border-radius: 20px;
+    }
+    .adm-unit { font-size: 12px; color: var(--a-muted); margin-left: 2px; }
+    .adm-item-price { font-size: 14px; font-weight: 800; color: var(--a-ink); white-space: nowrap; }
 
-    .adm-status-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-    .order-status { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; }
-    .order-status-created        { background:#f5f5f5; color:#424242; }
-    .order-status-paymentpending { background:#fff8e1; color:#7c5700; }
-    .order-status-confirmed      { background:#e3f2fd; color:#0d47a1; }
-    .order-status-shipped        { background:#f3e5f5; color:#6a1b9a; }
-    .order-status-delivered      { background:#e8f5e9; color:#2e7d32; }
-    .order-status-cancelled      { background:#fdecea; color:#b71c1c; }
-    .order-status-failed         { background:#fdecea; color:#b71c1c; }
+    /* ---- Status badges ---- */
+    .adm-status-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+    .order-status {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 10.5px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
+        padding: 5px 11px; border-radius: 20px; white-space: nowrap;
+    }
+    .order-status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .85; }
+    .order-status-created        { background:#f2f2f4; color:#4a4a52; }
+    .order-status-paymentpending { background:#fff6dc; color:#7c5700; }
+    .order-status-confirmed      { background:#e8f0fd; color:#1a4fa6; }
+    .order-status-shipped        { background:#f4eafa; color:#7a2fa3; }
+    .order-status-delivered      { background:#e8f6ec; color:#1e6b32; }
+    .order-status-cancelled      { background:#fdeceb; color:#a3201a; }
+    .order-status-failed         { background:#fdeceb; color:#a3201a; }
     .order-status-expired        { background:#eceff1; color:#455a64; }
-    .order-status-refunded       { background:#e0f2f1; color:#00695c; }
-    .order-status-returned       { background:#fff3e0; color:#e65100; }
-    .order-status-codpending     { background:#fff8e1; color:#7c5700; }
-    .order-status-paid           { background:#e8f5e9; color:#2e7d32; }
-    .order-status-pending        { background:#fff8e1; color:#7c5700; }
+    .order-status-refunded       { background:#e2f4f1; color:#00695c; }
+    .order-status-returned       { background:#fff0e0; color:#c24e00; }
+    .order-status-codpending     { background:#fff6dc; color:#7c5700; }
+    .order-status-paid           { background:#e8f6ec; color:#1e6b32; }
+    .order-status-pending        { background:#fff6dc; color:#7c5700; }
+    .order-status-success        { background:#e8f6ec; color:#1e6b32; }
+    .order-status-captured       { background:#e8f6ec; color:#1e6b32; }
+    .order-status-authorized     { background:#e8f0fd; color:#1a4fa6; }
 
-    .adm-timeline { display: flex; flex-direction: column; gap: 4px; }
-    .adm-tl-row { display: flex; justify-content: space-between; gap: 14px; font-size: 12px; padding: 4px 0; border-bottom: 1px dashed var(--gray-200); }
-    .adm-tl-row:last-child { border-bottom: none; }
-    .adm-tl-row span:first-child { color: var(--gray-600); }
-    .adm-tl-row span:last-child { font-weight: 600; text-align: right; }
+    /* ---- Timeline ---- */
+    .adm-timeline { display: flex; flex-direction: column; }
+    .adm-tl-row {
+        position: relative;
+        display: flex; justify-content: space-between; align-items: baseline; gap: 14px;
+        padding: 0 0 16px 24px; font-size: 13px;
+    }
+    .adm-tl-row:last-child { padding-bottom: 0; }
+    .adm-tl-row::before {
+        content: ""; position: absolute; left: 0; top: 4px;
+        width: 10px; height: 10px; border-radius: 50%;
+        background: var(--a-surface); border: 2px solid var(--a-ink);
+        box-sizing: border-box; z-index: 1;
+    }
+    .adm-tl-row::after {
+        content: ""; position: absolute; left: 4px; top: 16px; bottom: -4px;
+        width: 2px; background: var(--a-line);
+    }
+    .adm-tl-row:last-child::after { display: none; }
+    .adm-tl-row span:first-child { color: var(--a-ink); font-weight: 700; }
+    .adm-tl-row span:last-child { color: var(--a-muted); font-weight: 500; text-align: right; font-size: 12.5px; }
+    .tl-good::before { background: #2e9e4f; border-color: #2e9e4f; }
+    .tl-bad::before  { background: #d6403a; border-color: #d6403a; }
 
-    .os-row { display: flex; justify-content: space-between; gap: 16px; padding: 5px 0; font-size: 12.5px; }
-    .os-save { color: #2e7d32; font-weight: 600; }
-    .os-total { padding-top: 10px; margin-top: 6px; border-top: 1px solid black; font-size: 14px; font-weight: 800; }
-    .os-meta { font-size: 11.5px; color: var(--gray-600); }
-    .os-refund { color: #00695c; }
+    /* ---- Payment summary ---- */
+    .os-row { display: flex; justify-content: space-between; gap: 16px; padding: 6px 0; font-size: 13.5px; color: var(--a-ink-2); }
+    .os-row span:last-child { font-weight: 600; color: var(--a-ink); text-align: right; overflow-wrap: anywhere; }
+    .os-save, .os-save span:last-child { color: #1e6b32 !important; }
+    .os-total {
+        align-items: center;
+        margin-top: 10px; padding: 14px 16px !important;
+        background: var(--a-ink); border-radius: 12px;
+        font-size: 13px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
+        color: rgba(255,255,255,.8);
+    }
+    .os-total span:last-child { color: #fff !important; font-size: 20px; font-weight: 800; letter-spacing: -.01em; text-transform: none; }
+    .os-divider { height: 1px; background: var(--a-line-soft); margin: 14px 0 8px; }
+    .os-meta { font-size: 12.5px; padding: 4px 0; color: var(--a-muted); }
+    .os-meta span:last-child { font-weight: 600; color: var(--a-ink-2); }
+    .os-refund, .os-refund span:last-child { color: #00695c !important; }
 
-    .adm-actions-card { border: 1.5px solid black; }
-    .adm-action-form { display: block; margin-bottom: 8px; }
+    /* ---- Admin actions ---- */
+    .adm-actions-card { display: flex; flex-direction: column; gap: 10px; }
+    .adm-actions-card h3 { margin-bottom: 4px; }
+    .adm-action-form { display: block; margin: 0; }
     .adm-action-btn {
         display: block; width: 100%;
-        padding: 12px 14px;
-        border: 1.5px solid var(--black);
-        background: var(--white); color: var(--black);
-        font-family: inherit; font-size: 11px; font-weight: 800;
+        height: 46px; padding: 0 16px;
+        border: 1px solid var(--a-line);
+        background: var(--a-surface); color: var(--a-ink);
+        font-family: inherit; font-size: 11.5px; font-weight: 800;
         letter-spacing: 1px; text-transform: uppercase;
-        border-radius: 3px; cursor: pointer;
-        transition: all .15s;
-        margin-bottom: 8px;
+        border-radius: 10px; cursor: pointer;
+        transition: background .18s, color .18s, border-color .18s, box-shadow .18s;
     }
-    .adm-action-btn:hover { background: var(--black); color: var(--white); }
-    .adm-action-primary { background: #2e7d32; border-color: #2e7d32; color: var(--white); }
-    .adm-action-primary:hover { background: #1b5e20; border-color: #1b5e20; }
-    .adm-action-danger { border-color: #b71c1c; color: #b71c1c; }
-    .adm-action-danger:hover { background: #b71c1c; color: var(--white); }
-    .adm-noactions { font-size: 12px; color: var(--gray-600); margin: 0; text-align: center; }
+    .adm-action-btn:hover { background: var(--a-ink); border-color: var(--a-ink); color: #fff; }
+    .adm-action-primary {
+        background: #1f7a3d; border-color: #1f7a3d; color: #fff;
+        box-shadow: 0 10px 20px -10px rgba(31,122,61,.7);
+    }
+    .adm-action-primary:hover { background: #17622f; border-color: #17622f; }
+    .adm-action-danger { border-color: #efc9c6; color: #a3201a; background: #fff; }
+    .adm-action-danger:hover { background: #a3201a; border-color: #a3201a; color: #fff; }
+    .adm-noactions { font-size: 13px !important; color: var(--a-muted) !important; margin: 0 !important; text-align: center; padding: 6px 0; }
 
+    /* ---- Modals ---- */
     .confirm-overlay {
-        position: fixed; inset: 0; background: rgba(0,0,0,.6);
+        position: fixed; inset: 0;
+        background: rgba(14,14,16,.55);
+        -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
         display: flex; align-items: center; justify-content: center;
         padding: 20px; z-index: 9999;
     }
     .confirm-overlay[hidden] { display: none; }
     .confirm-box {
-        background: var(--white); border: 1px solid var(--black); border-radius: 4px;
-        width: 100%; max-width: 440px; overflow: hidden;
-        box-shadow: 0 20px 50px rgba(0,0,0,.25);
+        background: var(--a-surface, #fff); border-radius: 18px;
+        width: 100%; max-width: 460px; overflow: hidden;
+        box-shadow: 0 30px 70px -20px rgba(0,0,0,.45);
     }
     .confirm-box h4 {
-        margin: 0; padding: 14px 20px;
-        font-size: 12px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
-        background: var(--gray-100); border-bottom: 1px solid var(--gray-200);
+        margin: 0; padding: 22px 24px 0;
+        font-size: 18px; font-weight: 800; letter-spacing: -.01em; color: #0e0e10;
     }
-    .confirm-box p { margin: 0; padding: 12px 20px 0; font-size: 13px; line-height: 1.6; }
+    .confirm-box p { margin: 0; padding: 8px 24px 0; font-size: 13.5px; line-height: 1.6; color: #5a5a62; }
     .adm-reason {
-        display: block; width: calc(100% - 40px);
-        margin: 12px 20px 0;
-        padding: 10px 12px; font-family: inherit; font-size: 13px;
-        border: 1.5px solid var(--gray-200); border-radius: 3px;
+        display: block; width: calc(100% - 48px);
+        margin: 18px 24px 0;
+        height: 46px; padding: 0 14px; font-family: inherit; font-size: 13.5px; color: #0e0e10;
+        border: 1px solid #e7e7eb; border-radius: 10px; background: #f7f7f9;
+        transition: border-color .18s, box-shadow .18s, background .18s;
     }
-    .confirm-actions { display: flex; gap: 10px; justify-content: flex-end; padding: 16px 20px 20px; }
+    .adm-reason:focus { outline: none; border-color: #0e0e10; background: #fff; box-shadow: 0 0 0 4px rgba(14,14,16,.07); }
+    .confirm-actions { display: flex; gap: 10px; justify-content: flex-end; padding: 22px 24px 24px; }
     .confirm-btn {
-        min-width: 110px; height: 38px; padding: 0 14px;
-        font-family: inherit; font-size: 11px; font-weight: 700;
+        min-width: 120px; height: 42px; padding: 0 16px;
+        font-family: inherit; font-size: 11.5px; font-weight: 700;
         letter-spacing: 1px; text-transform: uppercase;
-        border: 1.5px solid var(--black); border-radius: 3px; cursor: pointer;
-        transition: background .2s, color .2s;
+        border: 1px solid #0e0e10; border-radius: 10px; cursor: pointer;
+        transition: background .18s, color .18s, opacity .18s;
     }
-    .confirm-btn-ghost { background: transparent; color: var(--black); }
-    .confirm-btn-ghost:hover { background: var(--black); color: var(--white); }
-    .confirm-btn-danger { background: #b71c1c; border-color: #b71c1c; color: var(--white); }
-    .confirm-btn-danger:hover { opacity: .85; }
+    .confirm-btn-ghost { background: transparent; color: #0e0e10; border-color: #e7e7eb; }
+    .confirm-btn-ghost:hover { background: #0e0e10; border-color: #0e0e10; color: #fff; }
+    .confirm-btn-danger { background: #a3201a; border-color: #a3201a; color: #fff; }
+    .confirm-btn-danger:hover { background: #8a1914; border-color: #8a1914; }
 
-    .adm-table-wrap { width: 100%; overflow-x: auto; }
-    .adm-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+    /* ---- Payment attempts table ---- */
+    .adm-table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--a-line); border-radius: 10px; }
+    .adm-table { width: 100%; border-collapse: collapse; font-size: 13px; }
     .adm-table th {
-        text-align: left; padding: 6px 8px;
-        background: var(--gray-100);
-        font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
-        border-bottom: 1px solid var(--gray-200);
+        text-align: left; padding: 11px 14px;
+        background: var(--a-wash);
+        font-size: 11.5px; font-weight: 700; color: var(--a-muted);
+        border-bottom: 1px solid var(--a-line); white-space: nowrap;
     }
     .adm-table td {
-        padding: 6px 8px;
-        border-bottom: 1px solid var(--gray-200);
+        padding: 12px 14px; color: var(--a-ink-2);
+        border-bottom: 1px solid var(--a-line-soft);
     }
+    .adm-table tbody tr:last-child td { border-bottom: none; }
+    .adm-table tbody tr:hover td { background: var(--a-wash); }
 
-    @@media (max-width: 900px) {
+    /* ============ Responsive ============ */
+    @@media (max-width: 960px) {
         .adm-grid { grid-template-columns: minmax(0, 1fr); }
-        .adm-kv-grid { grid-template-columns: 1fr; }
     }
-    @@media (max-width: 500px) {
-        .admin-header h1 { font-size: 16px; }
+    @@media (max-width: 560px) {
+        .admin-header h1 { font-size: 20px; letter-spacing: 1.5px; }
         .admin-header-actions { flex-direction: column; width: 100%; }
-        .admin-header-actions .btn-secondary { width: 100%; justify-content: center; }
-        .adm-item { grid-template-columns: 44px minmax(0, 1fr); }
+        .admin-header-actions .btn-secondary { width: 100%; }
+        .adm-card { padding: 16px; }
+        .adm-kv-grid { grid-template-columns: 1fr; }
+        .adm-item { grid-template-columns: 52px minmax(0, 1fr); gap: 12px; }
+        .adm-item img, .adm-noimg { width: 52px; height: 66px; }
         .adm-item-price { grid-column: 2; }
+        .confirm-actions { flex-direction: column-reverse; }
+        .confirm-btn { width: 100%; }
+    }
+    @@media (prefers-reduced-motion: reduce) {
+        * { transition: none !important; }
     }
 </style>
 
 <script>
     (function () {
-        function openModal(id) { document.getElementById(id).removeAttribute('hidden'); }
-        function closeModal(id) { document.getElementById(id).setAttribute('hidden', ''); }
+        function openModal(id) {
+            var el = document.getElementById(id);
+            el.removeAttribute('hidden');
+            var first = el.querySelector('select, input[type="text"]');
+            if (first) first.focus();
+        }
+        function closeModal(id) {
+            var el = document.getElementById(id);
+            if (el) el.setAttribute('hidden', '');
+        }
 
         var openCancel = document.getElementById('openCancelBtn');
         var openRefund = document.getElementById('openRefundBtn');

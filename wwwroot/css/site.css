@@ -327,7 +327,7 @@ main { display: block; min-height: 40vh; }
     letter-spacing: 1.5px;
     cursor: pointer;
 }
-.product-count { color: var(--gray-600); }
+.product-count { color: black; }
 
 /* ================= PRODUCTS GRID ================= */
 .products-section { padding: var(--space-lg) 0 var(--space-xl); }
@@ -734,7 +734,7 @@ h1 {
     .nav-left { gap: 14px; }
     .nav-right { gap: 12px; }
 
-    .hero-banner { min-height: 400px; }
+    .hero-banner { min-height: 300px; }
     .hero-overlay { padding: var(--space-lg) var(--space-md); }
     .hero-overlay h1 { margin-bottom: var(--space-md); }
     .hero-tags { gap: var(--space-sm) var(--space-md); font-size: 12px; }
@@ -760,7 +760,7 @@ h1 {
     .header-inner {
         grid-template-columns: auto 1fr auto;
         padding: 0 var(--container-pad);
-        height: 68px;
+        height: 50px;
         gap: 8px;
     }
     .menu-toggle { display: inline-flex; }
@@ -799,7 +799,7 @@ h1 {
     .nav-right .icon-link[title="Store"],
     .nav-right .icon-link[title="Wishlist"] { display: none; }
 
-    .hero-banner { min-height: 320px; }
+    .hero-banner { min-height: 220px; }
     .hero-overlay h1 { font-size: clamp(32px, 10vw, 60px); }
     .hero-tags { gap: 10px var(--space-md); }
 
@@ -866,7 +866,7 @@ h1 {
     .nav-right .icon-link svg { width: 19px; height: 19px; }
     .cart-count { font-size: 9px; min-width: 14px; height: 14px; }
 
-    .hero-banner { min-height: 260px; }
+    .hero-banner { min-height: 100px; }
     .hero-overlay h1 { font-size: clamp(28px, 12vw, 48px); margin-bottom: var(--space-md); }
     .hero-tags { display: none; }
 

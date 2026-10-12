@@ -811,37 +811,57 @@
             }
         }
 
-        // ---------- render ----------
-        function renderResult(d, pincode) {
-            if (d.warning) {
-                showResult('warn',
-                    'Could not verify',
-                    d.message || 'Proceeding with default options.',
-                    pincode);
-                return;
-            }
+                // ---------- render ----------
+                function renderResult(d, pincode) {
+                    if (d.warning) {
+                        showResult('warn',
+                            'Could not verify',
+                            'Something went wrong. Please try again.',
+                            pincode);
+                        return;
+                    }
 
-            if (!d.serviceable) {
-                showResult('fail',
-                    `Sorry, we don't deliver to ${pincode} yet.`,
-                    'Try a different pincode or contact us for help.',
-                    pincode);
-                return;
-            }
+                    // ---------- State 3: NOT SERVICEABLE ----------
+                    if (!d.serviceable) {
+                        showResult('fail',
+                            `❌ Sorry, we don't deliver to ${pincode} yet`,
+                            'Try a different pincode or contact us for help.',
+                            pincode);
+                        return;
+                    }
 
-            const eta = d.etaDays ? `Usually delivers in ${d.etaDays} days.` : '';
+                    // ---------- State 2: SERVICEABLE, NO COD ----------
+                    if (!d.cod) {
+                        showResultMulti('warn',
+                            `✅ Delivers to ${pincode}`,
+                            [
+                                { icon: '🚚', text: `Usually delivers in ${d.etaDays || '2-4'} days` },
+                                { icon: '💳', text: 'Prepaid only — COD unavailable at this pincode' }
+                            ],
+                            pincode);
+                        return;
+                    }
 
-            if (d.cod) {
-                showResult('ok',
-                    `Delivers to ${pincode}`,
-                    `${eta} Cash on Delivery available.`,
-                    pincode);
-            } else {
-                showResult('warn',
-                    `Delivers to ${pincode}`,
-                    `${eta} Prepaid only — COD unavailable at this pincode.`,
-                    pincode);
-            }
+                    // ---------- State 1: SERVICEABLE + COD ----------
+                    showResultMulti('ok',
+                        `✅ Delivers to ${pincode}`,
+                        [
+                            { icon: '🚚', text: `Usually delivers in ${d.etaDays || '2-4'} days` },
+                            { icon: '💰', text: 'Cash on Delivery available' }
+                        ],
+                        pincode);
+                }
+
+        // ---------- Multi-line renderer ----------
+        function showResultMulti(kind, title, lines, pincode) {
+            result.className = 'pdp-delivery-result ' + kind;
+            var html = `<span class="pdr-title">${escapeHtml(title)}</span>`;
+            lines.forEach(function (line) {
+                html += `<span class="pdr-line"><span class="pdr-icon">${line.icon}</span><span class="pdr-text">${escapeHtml(line.text)}</span></span>`;
+            });
+            result.innerHTML = html;
+            result.hidden = false;
+            result.dataset.pin = pincode;
         }
 
         function showResult(kind, title, sub, pincode) {
@@ -1702,10 +1722,55 @@
         background: #fdecea;
         color: #b71c1c;
     }
+        /* Multi-line delivery result (structured) */
     .pdp-delivery-result .pdr-title {
         display: block;
         font-weight: 700;
-        margin-bottom: 2px;
+        margin-bottom: 6px;
+        font-size: 13px;
+    }
+    .pdp-delivery-result .pdr-line {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 3px 0;
+        font-size: 12px;
+        line-height: 1.5;
+    }
+    .pdp-delivery-result .pdr-icon {
+        flex-shrink: 0;
+        width: 18px;
+        text-align: center;
+        font-size: 13px;
+    }
+    .pdp-delivery-result .pdr-text {
+        flex: 1;
+    }
+
+    /* Improve existing state colors */
+    .pdp-delivery-result.ok {
+        background: #999a99;
+        color: black;
+        border-left-color: black;
+        padding: 12px 14px;
+    }
+    .pdp-delivery-result.warn {
+        background: #999a99;
+        color: black;
+        border-left-color: #f9a825;
+        padding: 12px 14px;
+    }
+    .pdp-delivery-result.fail {
+        background: #999a99;
+         color: black;
+        border-left-color: #b71c1c;
+        padding: 12px 14px;
+    }
+
+    @@media (max-width: 500px) {
+        .pdp-delivery-result .pdr-title { font-size: 12px; }
+        .pdp-delivery-result .pdr-line { font-size: 11.5px; }
+        .pdp-delivery-result .pdr-icon { font-size: 12px; width: 16px; }
     }
     .pdp-delivery-result .pdr-sub {
         display: block;
