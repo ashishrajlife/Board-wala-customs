@@ -1,3 +1,4 @@
+@using ValousWorld.Web.Helpers
 @model ValousWorld.Web.ViewModels.Admin.AdminOrderListVm
 @{
     ViewData["Title"] = "Admin Orders";
@@ -200,8 +201,8 @@
                     </div>
 
                     <div class="c-placed" data-label="Placed">
-                        <span class="ord-info-value">@o.PlacedAt.ToString("dd MMM yyyy")</span>
-                        <span class="ord-info-sub">@o.PlacedAt.ToString("HH:mm")</span>
+                        <span class="ord-info-value">@DateTimeHelper.ToIndianTime(o.PlacedAt).ToString("dd MMM yyyy")</span>
+                        <span class="ord-info-sub">@DateTimeHelper.ToIndianTime(o.PlacedAt).ToString("HH:mm") IST</span>
                     </div>
 
                     <div class="c-status">

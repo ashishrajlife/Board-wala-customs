@@ -1,3 +1,4 @@
+@using ValousWorld.Web.Helpers
 @model List<ValousWorld.Web.Models.Entities.Order>
 @{
     ViewData["Title"] = "My Orders";
@@ -32,7 +33,9 @@
                     <div class="order-card-body">
                         <div>
                             <p class="order-card-label">Placed</p>
-                            <p class="order-card-value">@o.PlacedAt.ToString("dd MMM yyyy")</p>
+                            <p class="order-card-value">
+                                @DateTimeHelper.ToIndianTime(o.PlacedAt).ToString("dd MMM yyyy")
+                            </p>
                         </div>
                         <div>
                             <p class="order-card-label">Items</p>

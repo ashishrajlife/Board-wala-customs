@@ -1,3 +1,4 @@
+@using ValousWorld.Web.Helpers
 @model ValousWorld.Web.Models.Entities.Order
 @{
     ViewData["Title"] = "Order " + Model.OrderNumber;
@@ -52,7 +53,9 @@
                 <h3>ORDER STATUS</h3>
                 <div class="order-detail-status-row">
                     <span class="order-status order-status-@Model.Status.ToLower()">@Model.Status</span>
-                    <span class="order-detail-placed">Placed on @Model.PlacedAt.ToString("dd MMM yyyy, HH:mm")</span>
+                   <span class="order-detail-placed">
+                    Placed on @DateTimeHelper.ToIndianTime(Model.PlacedAt).ToString("dd MMM yyyy, HH:mm") IST
+                </span>
                 </div>
                 @if (!string.IsNullOrWhiteSpace(Model.TrackingNumber))
                 {
@@ -61,7 +64,14 @@
                 @if (Model.Status == "Cancelled")
                 {
                     <p class="order-detail-tracking order-detail-cancel">
-                        <strong>Cancelled:</strong> @Model.CancelledAt?.ToString("dd MMM yyyy, HH:mm") by @Model.CancelledBy
+                       <strong>Cancelled:</strong>
+                    @(
+                        Model.CancelledAt.HasValue
+                            ? DateTimeHelper.ToIndianTime(Model.CancelledAt.Value)
+                                .ToString("dd MMM yyyy, HH:mm") + " IST"
+                            : ""
+                    )
+                    by @Model.CancelledBy
                         @if (!string.IsNullOrWhiteSpace(Model.CancellationReason))
                         {
                             <br /><strong>Reason:</strong> @Model.CancellationReason
