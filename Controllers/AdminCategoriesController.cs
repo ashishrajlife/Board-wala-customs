@@ -73,7 +73,7 @@ public class AdminCategoriesController : Controller
 
     [HttpPost, Route("Edit/{id:int}")]
     [ValidateAntiForgeryToken]
-    [RequestSizeLimit(130 * 1024 * 1024)]
+    [RequestSizeLimit(150 * 1024 * 1024)]
     public async Task<IActionResult> Edit(int id, Category model, IFormFile? imageFile)
     {
         if (id != model.CategoryId) return BadRequest();

@@ -1,5 +1,4 @@
 using System.Data;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using ValousWorld.Web.Data;
 using ValousWorld.Web.Models.Entities;
@@ -10,8 +9,7 @@ public enum FinalizeResult { Finalized, AlreadyPaid, AmountMismatch, NotFound, I
 
 public interface IPaymentFinalizer
 {
-    Task<FinalizeResult> FinalizeAsync(int orderId, string razorpayPaymentId,
-        string signature, decimal? paidAmount, string source);
+    Task<FinalizeResult> FinalizeAsync(int orderId, string razorpayPaymentId, string signature, decimal? paidAmount, string source);
 
     Task<FinalizeResult> FinalizeCodAsync(int orderId, string source);
 }
@@ -32,17 +30,22 @@ public class PaymentFinalizer : IPaymentFinalizer
         _whatsapp = whatsapp; _cart = cart; _logger = logger;
     }
 
-    public async Task<FinalizeResult> FinalizeAsync(int orderId, string razorpayPaymentId,
-        string signature, decimal? paidAmount, string source)
-    {
-        await using var tx = await _db.Database.BeginTransactionAsync();
+   public async Task<FinalizeResult> FinalizeAsync(int orderId, string razorpayPaymentId,
+    string signature, decimal? paidAmount, string source)
+{
+    await using var tx = await _db.Database.BeginTransactionAsync();
 
-        var lockResult = new SqlParameter("@result", SqlDbType.Int) { Direction = ParameterDirection.Output };
-        await _db.Database.ExecuteSqlRawAsync(
-            "EXEC @result = sp_getapplock @Resource = @res, @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 15000",
-            lockResult, new SqlParameter("@res", $"order-pay-{orderId}"));
-        if ((int)lockResult.Value < 0)
-            throw new InvalidOperationException($"Could not lock order {orderId}");
+    var lockName = $"order-pay-{orderId}";
+    var lockResult = await _db.Database
+        .SqlQueryRaw<int>("SELECT GET_LOCK({0}, 15) AS Value", lockName)
+        .FirstOrDefaultAsync();
+
+    if (lockResult != 1)
+        throw new InvalidOperationException($"Could not lock order {orderId}");
+
+    try
+    {
+        // ----- all existing logic yahan, same as before -----
 
         var fresh = await _db.Orders.AsNoTracking()
             .Where(o => o.OrderId == orderId)
@@ -83,17 +86,35 @@ public class PaymentFinalizer : IPaymentFinalizer
 
         return FinalizeResult.Finalized;
     }
-
-    public async Task<FinalizeResult> FinalizeCodAsync(int orderId, string source)
+    finally
     {
-        await using var tx = await _db.Database.BeginTransactionAsync();
+        // Release the MySQL lock no matter what
+        try
+        {
+            await _db.Database.ExecuteSqlRawAsync("SELECT RELEASE_LOCK({0})", lockName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "[FINALIZE] Failed to release lock {LockName}", lockName);
+        }
+    }
+}
 
-        var lockResult = new SqlParameter("@result", SqlDbType.Int) { Direction = ParameterDirection.Output };
-        await _db.Database.ExecuteSqlRawAsync(
-            "EXEC @result = sp_getapplock @Resource = @res, @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 15000",
-            lockResult, new SqlParameter("@res", $"order-pay-{orderId}"));
-        if ((int)lockResult.Value < 0)
-            throw new InvalidOperationException($"Could not lock order {orderId}");
+   public async Task<FinalizeResult> FinalizeCodAsync(int orderId, string source)
+{
+    await using var tx = await _db.Database.BeginTransactionAsync();
+
+    var lockName = $"order-pay-{orderId}";
+    var lockResult = await _db.Database
+        .SqlQueryRaw<int>("SELECT GET_LOCK({0}, 15) AS Value", lockName)
+        .FirstOrDefaultAsync();
+
+    if (lockResult != 1)
+        throw new InvalidOperationException($"Could not lock order {orderId}");
+
+    try
+    {
+        // ----- all existing logic yahan, same as before -----
 
         var fresh = await _db.Orders.AsNoTracking()
             .Where(o => o.OrderId == orderId)
@@ -130,7 +151,18 @@ public class PaymentFinalizer : IPaymentFinalizer
 
         return FinalizeResult.Finalized;
     }
-
+    finally
+    {
+        try
+        {
+            await _db.Database.ExecuteSqlRawAsync("SELECT RELEASE_LOCK({0})", lockName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "[FINALIZE] Failed to release lock {LockName}", lockName);
+        }
+    }
+}
     // Shared side effects for both flows
     private async Task RunSideEffectsAsync(Order order)
     {
