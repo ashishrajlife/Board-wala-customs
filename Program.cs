@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using ValousWorld.Web.Data;
 using ValousWorld.Web.Helpers;
+using MySql.EntityFrameworkCore.Extensions;
 using ValousWorld.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,8 +17,9 @@ builder.Services.Configure<ValousWorld.Web.Helpers.IntegrationSettings>(
 var integrations = builder.Configuration.GetSection("Integrations").Get<ValousWorld.Web.Helpers.IntegrationSettings>() ?? new();
 
 // DB
-builder.Services.AddDbContext<AppDbContext>(opt =>
-    opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+// DB (MySQL)
+var connStr = builder.Configuration.GetConnectionString("DefaultConnection")!;
+builder.Services.AddDbContext<AppDbContext>(opt => opt.UseMySQL(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // JWT settings
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));

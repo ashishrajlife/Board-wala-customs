@@ -15,20 +15,17 @@ public interface IOrderService
     Task<List<Order>> GetUserOrdersAsync(int userId);
     Task<string> GenerateOrderNumberAsync();
 
-    // -------- Production-grade methods --------
     Task<Order?> GetOrderForRetryAsync(int orderId, int userId);
     Task MarkPaymentFailedAsync(Order order, string? errorCode, string? errorDesc, string? reason = null);
     Task MarkPaymentPaidAsync(Order order, string razorpayPaymentId, string signature);
     Task LogPaymentAttemptAsync(Order order, string status, string? errorCode = null, string? errorDesc = null, string? reason = null, string? step = null);
     Task<int> ExpireAbandonedOrdersAsync();
 
-    // -------- COD + Cancel --------
     Task<(bool success, string? error, bool refundInitiated)> CancelOrderAsync(
         int orderId, int userId, string reason, string cancelledBy);
 
     Task MarkCodCollectedAsync(Order order);
 
-        // -------- Admin --------
     Task<(List<Order> Orders, int TotalCount)> GetAllOrdersAsync(
         string? status, string? paymentMethod, string? search, int page, int pageSize);
 
@@ -37,7 +34,5 @@ public interface IOrderService
     Task<(bool success, string? error, bool refundInitiated)> CancelOrderAsAdminAsync(int orderId, string reason);
     Task<int> GetOrderCountAsync(string? status, string? paymentMethod, string? search);
     Task<int> GetCodPendingCountAsync();
-        Task<(bool success, string? error)> SyncShipmentStatusAsync(string waybill, string delhiveryStatus);
-
-
+    Task<(bool success, string? error)> SyncShipmentStatusAsync(string waybill, string delhiveryStatus);
 }

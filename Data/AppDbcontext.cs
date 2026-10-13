@@ -134,12 +134,12 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<User>(e =>
         {
             e.HasIndex(u => u.Email)
-            .IsUnique()
-            .HasFilter("[Email] IS NOT NULL");   // ← unique only when not null
+                .IsUnique()
+                .HasFilter("`Email` IS NOT NULL"); 
 
             e.HasIndex(u => u.Phone)
-            .IsUnique()
-            .HasFilter("[Phone] IS NOT NULL");   // ← phone unique
+                .IsUnique()
+                .HasFilter("`Phone` IS NOT NULL");
 
             e.HasOne(u => u.Role)
             .WithMany(r => r.Users)

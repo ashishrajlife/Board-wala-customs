@@ -1,3 +1,4 @@
+@using ValousWorld.Web.Helpers
 @model ValousWorld.Web.ViewModels.Admin.AdminOrderDetailVm
 @{
     ViewData["Title"] = "Admin · Order " + Model.Order.OrderNumber;
@@ -20,7 +21,7 @@
                 <h1>ORDER @o.OrderNumber</h1>
                 <span class="order-status @StatusClass(o.Status)">@o.Status</span>
             </div>
-            <p class="adm-sub">Placed @o.PlacedAt.ToString("dd MMM yyyy, HH:mm") UTC</p>
+          <p class="adm-sub"> Placed @DateTimeHelper.ToIndianTime(o.PlacedAt).ToString("dd MMM yyyy, HH:mm") IST </p>
         </div>
         <div class="admin-header-actions">
             <a href="/Admin/Orders/@o.OrderId/invoice" class="btn-secondary" target="_blank" rel="noopener">
@@ -145,7 +146,7 @@
                                 @foreach (var a in o.PaymentAttemptLog.OrderByDescending(x => x.AttemptedAt))
                                 {
                                     <tr>
-                                        <td>@a.AttemptedAt.ToString("dd MMM HH:mm:ss")</td>
+                                       <td>@DateTimeHelper.ToIndianTime(a.AttemptedAt).ToString("dd MMM HH:mm:ss")</td>
                                         <td><span class="order-status @StatusClass(a.Status)">@a.Status</span></td>
                                         <td>₹@a.Amount.ToString("0.00")</td>
                                         <td>@(string.IsNullOrWhiteSpace(a.ErrorCode) ? "—" : a.ErrorCode) @a.ErrorDescription</td>
@@ -170,15 +171,60 @@
                     <span class="order-status @StatusClass(o.PaymentStatus)">@o.PaymentStatus</span>
                 </div>
 
-                <div class="adm-timeline">
-                    <div class="adm-tl-row"><span>Placed</span><span>@o.PlacedAt.ToString("dd MMM yyyy HH:mm")</span></div>
-                    @if (o.PaidAt.HasValue)        { <div class="adm-tl-row"><span>Paid</span><span>@o.PaidAt.Value.ToString("dd MMM yyyy HH:mm")</span></div> }
-                    @if (o.ShippedAt.HasValue)     { <div class="adm-tl-row"><span>Shipped</span><span>@o.ShippedAt.Value.ToString("dd MMM yyyy HH:mm")</span></div> }
-                    @if (o.DeliveredAt.HasValue)   { <div class="adm-tl-row tl-good"><span>Delivered</span><span>@o.DeliveredAt.Value.ToString("dd MMM yyyy HH:mm")</span></div> }
-                    @if (o.CodCollectedAt.HasValue){ <div class="adm-tl-row tl-good"><span>COD collected</span><span>@o.CodCollectedAt.Value.ToString("dd MMM yyyy HH:mm")</span></div> }
-                    @if (o.CancelledAt.HasValue)   { <div class="adm-tl-row tl-bad"><span>Cancelled</span><span>@o.CancelledAt.Value.ToString("dd MMM yyyy HH:mm") · @o.CancelledBy</span></div> }
-                    @if (o.RefundedAt.HasValue)    { <div class="adm-tl-row tl-good"><span>Refunded</span><span>@o.RefundedAt.Value.ToString("dd MMM yyyy HH:mm")</span></div> }
+            <div class="adm-timeline">
+                <div class="adm-tl-row">
+                    <span>Placed</span>
+                    <span>@DateTimeHelper.ToIndianTime(o.PlacedAt).ToString("dd MMM yyyy HH:mm") IST</span>
                 </div>
+
+                @if (o.PaidAt.HasValue)
+                {
+                    <div class="adm-tl-row">
+                        <span>Paid</span>
+                        <span>@DateTimeHelper.ToIndianTime(o.PaidAt.Value).ToString("dd MMM yyyy HH:mm") IST</span>
+                    </div>
+                }
+
+                @if (o.ShippedAt.HasValue)
+                {
+                    <div class="adm-tl-row">
+                        <span>Shipped</span>
+                        <span>@DateTimeHelper.ToIndianTime(o.ShippedAt.Value).ToString("dd MMM yyyy HH:mm") IST</span>
+                    </div>
+                }
+
+                @if (o.DeliveredAt.HasValue)
+                {
+                    <div class="adm-tl-row tl-good">
+                        <span>Delivered</span>
+                        <span>@DateTimeHelper.ToIndianTime(o.DeliveredAt.Value).ToString("dd MMM yyyy HH:mm") IST</span>
+                    </div>
+                }
+
+                @if (o.CodCollectedAt.HasValue)
+                {
+                    <div class="adm-tl-row tl-good">
+                        <span>COD collected</span>
+                        <span>@DateTimeHelper.ToIndianTime(o.CodCollectedAt.Value).ToString("dd MMM yyyy HH:mm") IST</span>
+                    </div>
+                }
+
+                @if (o.CancelledAt.HasValue)
+                {
+                    <div class="adm-tl-row tl-bad">
+                        <span>Cancelled</span>
+                        <span>@DateTimeHelper.ToIndianTime(o.CancelledAt.Value).ToString("dd MMM yyyy HH:mm") IST · @o.CancelledBy</span>
+                    </div>
+                }
+
+                @if (o.RefundedAt.HasValue)
+                {
+                    <div class="adm-tl-row tl-good">
+                        <span>Refunded</span>
+                        <span>@DateTimeHelper.ToIndianTime(o.RefundedAt.Value).ToString("dd MMM yyyy HH:mm") IST</span>
+                    </div>
+                }
+            </div>
             </div>
 
             <!-- PAYMENT SUMMARY -->

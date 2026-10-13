@@ -7,8 +7,8 @@ public class FileService : IFileService
 
     private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
     private static readonly string[] AllowedVideoExtensions = { ".mp4", ".webm" };
-    private const long MaxVideoSizeBytes = 100 * 1024 * 1024; // 15 MB
-    private const long MaxFileSizeBytes = 5 * 1024 * 1024; // 5 MB
+    private const long MaxVideoSizeBytes = 100 * 1024 * 1024; // 50 MB
+    private const long MaxFileSizeBytes = 100 * 1024 * 1024; // 50 MB
 
     public FileService(IWebHostEnvironment env, ILogger<FileService> logger)
     {
@@ -22,7 +22,7 @@ public class FileService : IFileService
             throw new ArgumentException("File is empty.");
 
         if (file.Length > MaxFileSizeBytes)
-            throw new InvalidOperationException("File is too large. Max 5 MB allowed.");
+            throw new InvalidOperationException("File is too large. Max 50 MB allowed.");
 
         var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
         if (!AllowedExtensions.Contains(ext))
