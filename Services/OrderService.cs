@@ -12,6 +12,7 @@ public class OrderService : IOrderService
     private readonly ICartService _cart;
     private readonly IVoucherService _vouchers;
     private readonly IRazorpayService _razorpay;
+    private readonly IDeliveryService _delivery;
     private readonly ILogger<OrderService> _logger;
 
     public OrderService(
@@ -19,12 +20,14 @@ public class OrderService : IOrderService
         ICartService cart,
         IVoucherService vouchers,
         IRazorpayService razorpay,
+        IDeliveryService delivery,
         ILogger<OrderService> logger)
     {
         _db = db;
         _cart = cart;
         _vouchers = vouchers;
         _razorpay = razorpay;
+        _delivery = delivery;
         _logger = logger;
     }
 
@@ -264,7 +267,7 @@ public class OrderService : IOrderService
     }
 
     // ============================================================
-    // CANCEL ORDER
+    // CANCEL ORDER (with Delhivery shipment cancellation)
     // ============================================================
     public async Task<(bool success, string? error, bool refundInitiated)> CancelOrderAsync(
         int orderId, int userId, string reason, string cancelledBy)
@@ -275,8 +278,7 @@ public class OrderService : IOrderService
 
         if (order == null) return (false, "Order not found.", false);
 
-        // Only cancellable before shipment
-                // Block only the terminal states
+        // Block only the terminal states
         var blocked = order.Status == OrderStatus.Cancelled
                    || order.Status == OrderStatus.Delivered
                    || order.Status == OrderStatus.Refunded
@@ -294,7 +296,7 @@ public class OrderService : IOrderService
         order.CancellationReason = string.IsNullOrWhiteSpace(reason) ? "Not specified" : reason;
         order.UpdatedAt = DateTime.UtcNow;
 
-        // ---- Refund logic ----
+        // ---- Refund logic (Razorpay paid orders only) ----
         if (order.PaymentStatus == PaymentStatus.Paid &&
             !string.IsNullOrWhiteSpace(order.RazorpayPaymentId))
         {
@@ -330,6 +332,7 @@ public class OrderService : IOrderService
         }
         else if (order.PaymentStatus == PaymentStatus.CodPending)
         {
+            // COD order — no refund, just cancel
             order.PaymentStatus = PaymentStatus.Cancelled;
         }
         else if (order.PaymentStatus == PaymentStatus.Pending ||
@@ -337,6 +340,39 @@ public class OrderService : IOrderService
                  order.PaymentStatus == PaymentStatus.Failed)
         {
             order.PaymentStatus = PaymentStatus.Cancelled;
+        }
+
+        // ============================================================
+        // ---- Cancel Delhivery shipment (if waybill exists) ----
+        // ============================================================
+        if (!string.IsNullOrWhiteSpace(order.TrackingNumber))
+        {
+            try
+            {
+                var (cancelled, cancelErr) = await _delivery.CancelShipmentAsync(order.TrackingNumber);
+
+                if (cancelled)
+                {
+                    _logger.LogInformation("[CANCEL] Delhivery shipment cancelled for {AWB} (order {OrderNumber})",
+                        order.TrackingNumber, order.OrderNumber);
+                }
+                else
+                {
+                    _logger.LogWarning("[CANCEL] Delhivery cancel FAILED for {AWB}: {Err} — order still cancelled locally",
+                        order.TrackingNumber, cancelErr);
+                    // Still keep the order cancelled — user shouldn't be blocked
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[CANCEL] Delhivery cancel threw for {OrderNumber}",
+                    order.OrderNumber);
+            }
+        }
+        else
+        {
+            _logger.LogInformation("[CANCEL] No tracking number for {OrderNumber} — skipping Delhivery cancel",
+                order.OrderNumber);
         }
 
         await _db.SaveChangesAsync();
@@ -360,7 +396,7 @@ public class OrderService : IOrderService
     }
 
     // ============================================================
-    // MARK COD COLLECTED (Delhivery webhook will call this later)
+    // MARK COD COLLECTED
     // ============================================================
     public async Task MarkCodCollectedAsync(Order order)
     {
@@ -379,7 +415,7 @@ public class OrderService : IOrderService
             order.OrderNumber, order.Total);
     }
 
-        // ============================================================
+    // ============================================================
     // ADMIN — LIST
     // ============================================================
     public async Task<(List<Order> Orders, int TotalCount)> GetAllOrdersAsync(
@@ -433,7 +469,7 @@ public class OrderService : IOrderService
     }
 
     // ============================================================
-    // ADMIN — CANCEL (as Admin, on behalf of the customer)
+    // ADMIN — CANCEL
     // ============================================================
     public async Task<(bool success, string? error, bool refundInitiated)> CancelOrderAsAdminAsync(
         int orderId, string reason)
@@ -444,12 +480,10 @@ public class OrderService : IOrderService
 
         if (order == null) return (false, "Order not found.", false);
 
-        // Reuse the same core cancel logic but with CancelledBy="Admin"
-        // and by looking up the order's own UserId (the customer).
         return await CancelOrderAsync(orderId, order.UserId, reason, "Admin");
     }
 
-        public async Task<int> GetOrderCountAsync(string? status, string? paymentMethod, string? search)
+    public async Task<int> GetOrderCountAsync(string? status, string? paymentMethod, string? search)
     {
         var q = _db.Orders.AsQueryable();
 
@@ -480,7 +514,7 @@ public class OrderService : IOrderService
             o.PaymentStatus == PaymentStatus.CodPending);
     }
 
-        // ============================================================
+    // ============================================================
     // SHIPMENT STATUS SYNC (webhook + poller)
     // ============================================================
     public async Task<(bool success, string? error)> SyncShipmentStatusAsync(string waybill, string delhiveryStatus)
@@ -539,5 +573,4 @@ public class OrderService : IOrderService
         await _db.SaveChangesAsync();
         return (true, null);
     }
-
 }
