@@ -1,7 +1,15 @@
 
-  "DefaultConnection": "Server=ASHISH-PC;Database=valousworlddatabase;User Id=sa;Password=1234;TrustServerCertificate=True;Encrypt=False;"
+// my-sql-localhost
 
-  "DefaultConnection": "Server=COMPUTER\\MSSQLSERVER02;Database=valousworlddatabase;Trusted_Connection=True;TrustServerCertificate=True;Encrypt=False;"
+"ConnectionStrings": {
+"DefaultConnection": "Server=localhost;Port=3306;Database=valousworlddatabase;User Id=root;Password=1234;CharSet=utf8mb4;"
+},
+
+ // mysql-prod
+
+ "ConnectionStrings": {
+  "DefaultConnection": "Server=mysql5050.site4now.net;Port=3306;Database=db_acf39e_valousworlddb;User Id=acf39e_valousworlddb;Password=8962178595Ark$;CharSet=utf8mb4;"
+},
 
 // if db have some issue then you can use these things : 
 RESTORE DATABASE [valousworlddatabase]

@@ -23,7 +23,7 @@ public class AddressController : Controller
 
     // GET /address — list
     [Route("")]
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string? returnUrl = null)
     {
         var userId = GetUserId();
         var list = await _db.Addresses
@@ -31,13 +31,16 @@ public class AddressController : Controller
             .OrderByDescending(a => a.IsDefault)
             .ThenByDescending(a => a.UpdatedAt ?? a.CreatedAt)
             .ToListAsync();
+
+        ViewBag.ReturnUrl = SafeReturnUrl(returnUrl);
         return View("~/Views/Address/Index.cshtml", list);
     }
 
     // GET /address/add
     [Route("add")]
-    public IActionResult Add()
+    public IActionResult Add(string? returnUrl = null)
     {
+        ViewBag.ReturnUrl = SafeReturnUrl(returnUrl);
         return View("~/Views/Address/Form.cshtml", new Address());
     }
 
@@ -49,17 +52,18 @@ public class AddressController : Controller
         ModelState.Remove(nameof(Address.User));
 
         if (!ModelState.IsValid)
+        {
+            ViewBag.ReturnUrl = SafeReturnUrl(returnUrl);
             return View("~/Views/Address/Form.cshtml", model);
+        }
 
         var userId = GetUserId();
         model.UserId = userId;
         model.CreatedAt = DateTime.UtcNow;
 
-        // If this is user's first address, make it default
         var hasAny = await _db.Addresses.AnyAsync(a => a.UserId == userId);
         if (!hasAny) model.IsDefault = true;
 
-        // If set as default, unset others
         if (model.IsDefault)
         {
             var others = await _db.Addresses
@@ -73,34 +77,38 @@ public class AddressController : Controller
 
         TempData["AddressSuccess"] = "Address added.";
 
-        if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
-            return Redirect(returnUrl);
+        var safe = SafeReturnUrl(returnUrl);
+        if (safe != null) return Redirect(safe);
 
         return RedirectToAction(nameof(Index));
     }
 
     // GET /address/edit/5
     [Route("edit/{id:int}")]
-    public async Task<IActionResult> Edit(int id)
+    public async Task<IActionResult> Edit(int id, string? returnUrl = null)
     {
         var userId = GetUserId();
         var address = await _db.Addresses
             .FirstOrDefaultAsync(a => a.AddressId == id && a.UserId == userId);
         if (address == null) return NotFound();
 
+        ViewBag.ReturnUrl = SafeReturnUrl(returnUrl);
         return View("~/Views/Address/Form.cshtml", address);
     }
 
     // POST /address/edit/5
     [HttpPost, Route("edit/{id:int}")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, Address model)
+    public async Task<IActionResult> Edit(int id, Address model, string? returnUrl = null)
     {
         ModelState.Remove(nameof(Address.User));
 
         if (id != model.AddressId) return BadRequest();
         if (!ModelState.IsValid)
+        {
+            ViewBag.ReturnUrl = SafeReturnUrl(returnUrl);
             return View("~/Views/Address/Form.cshtml", model);
+        }
 
         var userId = GetUserId();
         var existing = await _db.Addresses
@@ -128,27 +136,33 @@ public class AddressController : Controller
 
         await _db.SaveChangesAsync();
         TempData["AddressSuccess"] = "Address updated.";
+
+        var safe = SafeReturnUrl(returnUrl);
+        if (safe != null) return Redirect(safe);
+
         return RedirectToAction(nameof(Index));
     }
 
     // POST /address/delete/5
     [HttpPost, Route("delete/{id:int}")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete(int id, string? returnUrl = null)
     {
         var userId = GetUserId();
         var address = await _db.Addresses
             .FirstOrDefaultAsync(a => a.AddressId == id && a.UserId == userId);
+
+        var safe = SafeReturnUrl(returnUrl);
+
         if (address == null)
         {
             TempData["AddressError"] = "Address not found.";
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Index), new { returnUrl = safe });
         }
 
         _db.Addresses.Remove(address);
         await _db.SaveChangesAsync();
 
-        // If we deleted default, set a new one
         if (address.IsDefault)
         {
             var next = await _db.Addresses
@@ -163,13 +177,13 @@ public class AddressController : Controller
         }
 
         TempData["AddressSuccess"] = "Address removed.";
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Index), new { returnUrl = safe });
     }
 
     // POST /address/set-default/5
     [HttpPost, Route("set-default/{id:int}")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SetDefault(int id)
+    public async Task<IActionResult> SetDefault(int id, string? returnUrl = null)
     {
         var userId = GetUserId();
         var all = await _db.Addresses.Where(a => a.UserId == userId).ToListAsync();
@@ -179,6 +193,14 @@ public class AddressController : Controller
 
         await _db.SaveChangesAsync();
         TempData["AddressSuccess"] = "Default address updated.";
-        return RedirectToAction(nameof(Index));
+
+        var safe = SafeReturnUrl(returnUrl);
+        return RedirectToAction(nameof(Index), new { returnUrl = safe });
     }
+
+    // --- helper: only allow local return URLs ---
+    private string? SafeReturnUrl(string? returnUrl)
+        => !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl)
+            ? returnUrl
+            : null;
 }
