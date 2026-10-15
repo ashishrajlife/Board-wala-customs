@@ -1,6 +1,15 @@
 @model List<ValousWorld.Web.Models.Entities.Address>
 @{
     ViewData["Title"] = "My Addresses";
+
+    var returnUrl = ViewBag.ReturnUrl as string;
+    var backUrl = string.IsNullOrWhiteSpace(returnUrl) ? "/User/Dashboard" : returnUrl;
+    var addUrl = string.IsNullOrWhiteSpace(returnUrl)
+        ? "/address/add"
+        : $"/address/add?returnUrl={Uri.EscapeDataString(returnUrl)}";
+    var qs = string.IsNullOrWhiteSpace(returnUrl)
+        ? string.Empty
+        : $"?returnUrl={Uri.EscapeDataString(returnUrl)}";
 }
 
 <div class="container address-page">
@@ -8,9 +17,9 @@
     <h1>MY ADDRESSES</h1>
 
     <div class="address-header-actions">
-        <a href="/User/Dashboard" class="btn-outline">← Back</a>
-
-        <a href="/address/add" class="btn-primary">
+        <a href="@backUrl" class="btn-outline">← Back</a>
+        
+       <a href="@addUrl" class="btn-primary">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                 <line x1="12" y1="5" x2="12" y2="19"/>
                 <line x1="5" y1="12" x2="19" y2="12"/>
@@ -24,7 +33,7 @@
     {
         <div class="address-empty">
             <p>No addresses saved yet.</p>
-            <a href="/address/add">Add your first address →</a>
+           <a href="@addUrl">Add your first address →</a>
         </div>
     }
     else
@@ -53,17 +62,16 @@
                     <p class="address-line">@a.Country</p>
 
                    <div class="address-actions">
-                        <a href="/address/edit/@a.AddressId" class="addr-btn addr-btn-edit">Edit</a>
-
+                      <a href="/address/edit/@a.AddressId@qs" class="addr-btn addr-btn-edit">Edit</a>
                         @if (!a.IsDefault)
                         {
-                            <form method="post" action="/address/set-default/@a.AddressId">
+                            <form method="post" action="/address/set-default/@a.AddressId@qs">
                                 @Html.AntiForgeryToken()
                                 <button type="submit" class="addr-btn addr-btn-ghost">Set Default</button>
                             </form>
                         }
 
-                        <form method="post" action="/address/delete/@a.AddressId"
+                        <form method="post" action="/address/delete/@a.AddressId@qs"
                             class="js-delete-form addr-delete-form" data-name="@a.FullName">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="addr-btn addr-btn-danger">Delete</button>

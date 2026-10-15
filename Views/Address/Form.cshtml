@@ -1,22 +1,26 @@
 @model ValousWorld.Web.Models.Entities.Address
 @{
-     var isEdit = Model.AddressId > 0;
+    var isEdit = Model.AddressId > 0;
     ViewData["Title"] = isEdit ? "Edit Address" : "Add Address";
     if (string.IsNullOrWhiteSpace(Model.Country)) { Model.Country = "India"; }
+
+    var returnUrl = ViewBag.ReturnUrl as string;
+    var backUrl = string.IsNullOrWhiteSpace(returnUrl) ? "/address" : returnUrl;
 }
 
 <div class="container address-form-page">
     <div class="address-form-header">
         <h1>@(isEdit ? "EDIT ADDRESS" : "ADD ADDRESS")</h1>
-        <a href="/address" class="btn-outline">← BACK</a>
+        <a href="@backUrl" class="btn-outline">← BACK</a>
     </div>
 
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
     <form method="post" action="@(isEdit ? $"/address/edit/{Model.AddressId}" : "/address/add")"
-          class="address-form">
-        @Html.AntiForgeryToken()
-        <input type="hidden" asp-for="AddressId" />
+      class="address-form">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="AddressId" />
+    <input type="hidden" name="returnUrl" value="@returnUrl" />
 
         <div class="form-row">
             <div>
@@ -66,7 +70,7 @@
             <button type="submit" class="btn-primary">
                 @(isEdit ? "UPDATE ADDRESS" : "SAVE ADDRESS")
             </button>
-            <a href="/address" class="btn-outline">CANCEL</a>
+           <a href="@backUrl" class="btn-outline">CANCEL</a>
         </div>
     </form>
 </div>

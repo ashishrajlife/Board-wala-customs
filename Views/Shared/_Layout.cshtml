@@ -84,8 +84,8 @@
     }
 
     .header-logo-image img {
-        width: 58px;
-        height: 58px;
+        height: 70px;
+        width: auto;
         object-fit: contain;
         display: block;
     }
@@ -162,16 +162,43 @@
    MOBILE HEADER
    Keep existing mobile behaviour
    ============================================================ */
-
 @@media (max-width: 900px) {
 
-    .header-logo-image {
-        display: none;
+    /* Layout: logo image left, brand text center, icons right */
+    .site-header .header-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: relative;
+        min-height: 60px;
+        padding-left: 16px;
+        padding-right: 16px;
     }
 
-    .site-header .brand-logo {
+    /* LEFT — image logo */
+    .header-logo-image {
+        display: flex;
         position: static;
         transform: none;
+        align-items: center;
+        z-index: 5;
+    }
+
+    .header-logo-image img {
+        height: 42px;
+        width: auto;
+        object-fit: contain;
+    }
+
+    /* CENTER — text logo (absolutely positioned so it's truly centered) */
+    .site-header .brand-logo {
+        display: flex;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%) scaleX(1.1);
+        z-index: 4;
+        pointer-events: none;   /* let clicks pass through if needed */
     }
 
     .site-header .search-box {
@@ -183,6 +210,60 @@
     }
 }
 
+/* Smaller phones — shrink both logos */
+@@media (max-width: 500px) {
+    .header-logo-image img {
+        height: 36px;
+    }
+    .site-header .brand-logo {
+        transform: translate(-50%, -50%) scaleX(1);
+    }
+    .site-header .brand-logo .logo-line-1,
+    .site-header .brand-logo .logo-line-2 {
+        font-size: 13px;
+        letter-spacing: 1px;
+    }
+}
+
+@@media (max-width: 380px) {
+    .header-logo-image img {
+        height: 30px;
+    }
+    .site-header .brand-logo .logo-line-1,
+    .site-header .brand-logo .logo-line-2 {
+        font-size: 11px;
+    }
+}display: flex;
+        position: static;
+        transform: none;
+        align-items: center;
+    }
+
+    .header-logo-image img {
+        height: 44px;          /* smaller for mobile */
+        width: auto;
+        object-fit: contain;
+    }
+
+    .site-header .search-box {
+        display: none;
+    }
+
+    .site-header .mobile-search-btn {
+        display: inline-flex;
+    }
+}
+@@media (max-width: 500px) {
+    .header-logo-image img {
+        height: 38px;
+    }
+}
+
+@@media (max-width: 380px) {
+    .header-logo-image img {
+        height: 34px;
+    }
+}
         /* ============================================================
    MOBILE SEARCH — Icon + Overlay
    ============================================================ */
@@ -463,7 +544,7 @@
             <!-- CENTER LOGO -->
            <!-- LEFT LOGO IMAGE -->
                 <a href="/" class="header-logo-image" aria-label="VALOUSWORLD">
-                     <img src="~/images/logo.gif" alt="VALOUSWORLD Logo" />
+                     <img src="~/images/valous-logo.svg" alt="VALOUSWORLD Logo" />
                 </a>
 
                 <!-- CENTER TEXT LOGO -->
@@ -587,8 +668,6 @@
 
             <div class="footer-col brand-col">
 
-                <div class="footer-logo">VALOUSWORLD</div>
-
                 <div class="socials">
 
                     <!-- INSTAGRAM -->
@@ -618,6 +697,11 @@
 
                 </div>
 
+                <div>
+                    <a href="/" class="footer-brand" aria-label="VALOUSWORLD">
+                    <img class="footer-wordmark" src="~/images/valous-world-animated.svg" alt="VALOUS WORLD" />
+                </a>
+                </div>
 
             </div>
 
