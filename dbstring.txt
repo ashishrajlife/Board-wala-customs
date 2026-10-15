@@ -6,9 +6,8 @@
 },
 
  // mysql-prod
-
- "ConnectionStrings": {
-  "DefaultConnection": "Server=mysql5050.site4now.net;Port=3306;Database=db_acf39e_valousworlddb;User Id=acf39e_valousworlddb;Password=8962178595Ark$;CharSet=utf8mb4;"
+  "ConnectionStrings": {
+  "DefaultConnection": "Server=mysql5050.site4now.net;Port=3306;Database=db_acfaad_valousworlddb;User Id=acfaad_valousworlddb;Password=8962178595Ark$;CharSet=utf8mb4;"
 },
 
 // if db have some issue then you can use these things : 

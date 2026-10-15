@@ -1034,3 +1034,47 @@ h1 {
         overscroll-behavior: contain;
     }
 }
+
+/* ================= FOOTER BRAND (logo + animated wordmark) ================= */
+.footer-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 22px;
+}
+.footer-logo-mark {
+    height: 64px;
+    width: auto;
+    display: block;
+}
+.footer-wordmark {
+    padding-top: 35px;
+    width: 100%;
+    max-width: 240px;
+    height: auto;
+    display: block;
+}
+/* ===== FOOTER BRAND — PHONE VIEW: logo on the right, socials on the left ===== */
+@media (max-width: 600px) {
+
+    .footer-col.brand-col {
+        display: flex;
+        flex-direction: row-reverse;   /* logo goes to the right, socials to the left */
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+    }
+
+    .footer-brand {
+        align-items: flex-end;         /* right-align the mark and wordmark */
+        margin-bottom: 0;
+        gap: 10px;
+    }
+
+    .footer-logo-mark { height: 48px; }
+
+    .footer-wordmark {
+        max-width: 150px;              /* smaller so it fits next to the icons */
+    }
+}
