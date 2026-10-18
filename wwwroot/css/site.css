@@ -792,7 +792,7 @@ h1 {
     }
 
     .nav-right { gap: 12px; }
-    .nav-right .icon-link svg { width: 20px; height: 20px; }
+    .nav-right .icon-link svg { width: 30px; height: 30px; }
     .brand-logo .logo-line-1,
     .brand-logo .logo-line-2 { font-size: 17px; letter-spacing: 1px; }
 
@@ -863,7 +863,7 @@ h1 {
     .brand-logo .logo-line-1,
     .brand-logo .logo-line-2 { font-size: 15px; }
     .nav-right { gap: 10px; }
-    .nav-right .icon-link svg { width: 19px; height: 19px; }
+    .nav-right .icon-link svg { width: 27px; height: 27px; }
     .cart-count { font-size: 9px; min-width: 14px; height: 14px; }
 
     .hero-banner { min-height: 100px; }
@@ -1076,5 +1076,74 @@ h1 {
 
     .footer-wordmark {
         max-width: 150px;              /* smaller so it fits next to the icons */
+    }
+}
+@media (max-width: 900px) {
+    /* Layout ko flex-start karo taaki logo left me aaye */
+    .site-header .header-inner {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important; /* Center hataya */
+        position: relative !important;
+        min-height: 60px !important;
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+        gap: 12px !important; /* Logo aur text ke beech gap */
+    }
+
+    /* Logo ki position fix karo */
+    .header-logo-image {
+        display: flex !important;
+        position: static !important;
+        transform: none !important;
+        align-items: center !important;
+        z-index: 5 !important;
+        flex-shrink: 0 !important; /* Logo squeeze na ho */
+    }
+
+    .header-logo-image img {
+        height: 36px !important; /* Logo chhota kiya taaki text adjust ho */
+        width: auto !important;
+        object-fit: contain !important;
+    }
+
+    /* Text logo ko logo ke turant baad set karo */
+    .site-header .brand-logo {
+        display: flex !important;
+        flex-direction: column !important;
+        position: static !important; /* Absolute position hataya */
+        transform: none !important;  /* Scale hataya */
+        z-index: 4 !important;
+        pointer-events: none !important;
+        margin-right: auto !important; /* Icons ko right push karega */
+        line-height: 1.1 !important; /* Text compact hoga */
+        margin-left: 0 !important;
+    }
+
+    .site-header .brand-logo .logo-line-1,
+    .site-header .brand-logo .logo-line-2 {
+        font-size: 15px !important;
+        letter-spacing: 1px !important;
+        text-align: left !important;
+    }
+
+    .site-header .search-box {
+        display: none !important;
+    }
+
+    .site-header .mobile-search-btn {
+        display: inline-flex !important;
+    }
+}
+
+@media (max-width: 500px) {
+    .header-logo-image img {
+        height: 32px !important;
+    }
+    
+    .site-header .brand-logo .logo-line-1,
+    .site-header .brand-logo .logo-line-2 {
+        font-size: 13px !important;
+        letter-spacing: 0.5px !important;
     }
 }
