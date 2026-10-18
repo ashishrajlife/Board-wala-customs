@@ -17,11 +17,12 @@ public class InvoiceService : IInvoiceService
     private const string CompanyPin     = "492001";
     private const string CompanyWeb     = "www.valousworld.com";
 
-    // Brand accent (near-black). Change here to re-skin the invoice.
-    private const string AccentHex   = "#0A0A0A";
+    // ---------------- Vintage Theme Colors ----------------
+    private const string PaperHex    = "#FDFCF8"; // Vintage Cream Paper
+    private const string InkHex      = "#2C2A27"; // Dark Vintage Ink
     private const string MutedHex    = "#6B6B6B";
-    private const string SoftHex     = "#F5F5F5";
-    private const string LineHex     = "#E5E5E5";
+    private const string LineHex     = "#D1CEC5"; // Vintage Border Line
+    private const string SoftHex     = "#F4F1EA"; // Vintage Table Header
     private const string SuccessHex  = "#1B5E20";
     private const string DangerHex   = "#B71C1C";
 
@@ -42,8 +43,7 @@ public class InvoiceService : IInvoiceService
         var invoiceNo   = $"INV-{order.OrderNumber}";
         var invoiceDate = order.PlacedAt.ToString("dd MMM yyyy");
 
-        // GST split (India) — CGST+SGST for intra-state (Chhattisgarh = 22), else IGST.
-        // NOTE: We treat Total as GST-INCLUSIVE. Breakout shown for compliance.
+        // GST split (India) — CGST+SGST for intra-state, else IGST.
         const decimal gstRate = 0.18m;
         var gstTotal   = Math.Round(order.Total - (order.Total / (1 + gstRate)), 2);
         var taxable    = Math.Round(order.Total - gstTotal, 2);
@@ -52,39 +52,42 @@ public class InvoiceService : IInvoiceService
         var sgst       = isIntra ? Math.Round(gstTotal / 2, 2) : 0m;
         var igst       = isIntra ? 0m : gstTotal;
 
+        // Delhivery Tracking Link
+        var trackingUrl = !string.IsNullOrWhiteSpace(order.TrackingNumber) 
+            ? $"https://www.delhivery.com/track/package/{order.TrackingNumber}" 
+            : null;
+
         var document = Document.Create(container =>
         {
             container.Page(page =>
             {
                 page.Size(PageSizes.A4);
-                page.Margin(36);
-                page.DefaultTextStyle(x => x.FontSize(10).FontColor("#111111"));
-                page.PageColor(Colors.White);
+                page.Margin(30); // Thoda kam margin vintage look ke liye
+                page.DefaultTextStyle(x => x.FontSize(10).FontColor(InkHex));
+                page.PageColor(PaperHex); // Vintage paper background
 
                 // ============================================================
-                // HEADER — brand mark left, invoice meta right
+                // HEADER — Vintage Border + Brand mark
                 // ============================================================
                 page.Header().Column(header =>
                 {
                     header.Item().Row(row =>
                     {
-                        // Brand mark
                         row.RelativeItem().Column(c =>
                         {
                             c.Item().Text("VALOUSWORLD")
-                                .FontSize(22).Bold().FontColor(AccentHex).LetterSpacing(0.15f);
+                                .FontSize(24).Bold().FontColor(InkHex).LetterSpacing(0.15f);
 
                             c.Item().Text("Streetwear · Unisex · India")
                                 .FontSize(9).FontColor(MutedHex).LetterSpacing(0.05f);
                         });
 
-                        // Invoice meta
                         row.ConstantItem(210).Column(c =>
                         {
                             c.Item().AlignRight().Text(isCancelled ? "TAX INVOICE (CANCELLED)" : "TAX INVOICE")
-                                .FontSize(12).Bold().FontColor(isCancelled ? DangerHex : AccentHex).LetterSpacing(0.1f);
+                                .FontSize(14).Bold().FontColor(isCancelled ? DangerHex : InkHex).LetterSpacing(0.1f);
 
-                            c.Item().PaddingTop(2).AlignRight().Text($"Invoice No: {invoiceNo}")
+                            c.Item().PaddingTop(4).AlignRight().Text($"Invoice No: {invoiceNo}")
                                 .FontSize(9).FontColor(MutedHex);
                             c.Item().AlignRight().Text($"Invoice Date: {invoiceDate}")
                                 .FontSize(9).FontColor(MutedHex);
@@ -93,26 +96,24 @@ public class InvoiceService : IInvoiceService
                         });
                     });
 
-                    header.Item().PaddingTop(10).LineHorizontal(1.5f).LineColor(AccentHex);
+                    header.Item().PaddingTop(8).LineHorizontal(1.5f).LineColor(InkHex);
+                    header.Item().PaddingTop(2).LineHorizontal(0.5f).LineColor(InkHex); // Double border vintage look
 
-                    // ========================================================
                     // COMPANY BLOCK
-                    // ========================================================
                     header.Item().PaddingTop(10).Row(row =>
                     {
                         row.RelativeItem().Column(c =>
                         {
                             c.Item().Text("BILLED BY").FontSize(8).Bold().FontColor(MutedHex).LetterSpacing(0.15f);
-                            c.Item().PaddingTop(2).Text(CompanyName).FontSize(11).Bold().FontColor(AccentHex);
-                            c.Item().Text($"GSTIN: {CompanyGstin}").FontSize(9).FontColor("#111111");
-                            c.Item().Text(CompanyAddress).FontSize(9).FontColor("#111111");
-                            c.Item().Text($"{CompanyState} — PIN {CompanyPin}").FontSize(9).FontColor("#111111");
-                            c.Item().Text($"Contact: {CompanyPhone}  ·  Mail: {CompanyEmail}").FontSize(9).FontColor("#111111");
-                            c.Item().Text($"Web: {CompanyWeb}").FontSize(9).FontColor("#111111");
+                            c.Item().PaddingTop(2).Text(CompanyName).FontSize(11).Bold().FontColor(InkHex);
+                            c.Item().Text($"GSTIN: {CompanyGstin}").FontSize(9);
+                            c.Item().Text(CompanyAddress).FontSize(9);
+                            c.Item().Text($"{CompanyState} — PIN {CompanyPin}").FontSize(9);
+                            c.Item().Text($"Contact: {CompanyPhone}  ·  Mail: {CompanyEmail}").FontSize(9);
+                            c.Item().Text($"Web: {CompanyWeb}").FontSize(9);
                         });
                     });
 
-                    // Cancelled ribbon
                     if (isCancelled)
                     {
                         header.Item().PaddingTop(10)
@@ -158,7 +159,7 @@ public class InvoiceService : IInvoiceService
                             c.Item().Row(r =>
                             {
                                 r.RelativeItem().Text("Placed On").FontSize(9.5f).FontColor(MutedHex);
-                                r.RelativeItem().AlignRight().Text(order.PlacedAt.ToString("dd MMM yyyy, HH:mm")).FontSize(9.5f);
+                                r.RelativeItem().AlignRight().Text(order.PlacedAt.ToString("dd MMM yyyy")).FontSize(9.5f);
                             });
                             c.Item().Row(r =>
                             {
@@ -170,7 +171,7 @@ public class InvoiceService : IInvoiceService
                                 r.RelativeItem().Text("Payment Status").FontSize(9.5f).FontColor(MutedHex);
                                 r.RelativeItem().AlignRight().Text(order.PaymentStatus)
                                     .FontSize(9.5f).Bold()
-                                    .FontColor(isPaid ? SuccessHex : (isCancelled ? DangerHex : "#111111"));
+                                    .FontColor(isPaid ? SuccessHex : (isCancelled ? DangerHex : InkHex));
                             });
                         });
                     });
@@ -180,23 +181,22 @@ public class InvoiceService : IInvoiceService
                     {
                         table.ColumnsDefinition(columns =>
                         {
-                            columns.ConstantColumn(24);   // #
-                            columns.RelativeColumn(4);    // Item
-                            columns.ConstantColumn(52);   // Size
-                            columns.ConstantColumn(60);   // Color
-                            columns.ConstantColumn(40);   // Qty
-                            columns.ConstantColumn(72);   // Unit
-                            columns.ConstantColumn(84);   // Total
+                            columns.ConstantColumn(24);
+                            columns.RelativeColumn(4);
+                            columns.ConstantColumn(52);
+                            columns.ConstantColumn(60);
+                            columns.ConstantColumn(40);
+                            columns.ConstantColumn(72);
+                            columns.ConstantColumn(84);
                         });
 
-                        // Header — soft gray, not heavy black
                         table.Header(h =>
                         {
                             void Head(IContainer cell, string text, bool right = false)
                             {
-                                var c = cell.Background(SoftHex).Padding(7);
+                                var c = cell.Background(SoftHex).BorderTop(1).BorderBottom(1).BorderColor(LineHex).Padding(7);
                                 if (right) c = c.AlignRight();
-                                c.Text(text).FontSize(9).Bold().FontColor(AccentHex).LetterSpacing(0.05f);
+                                c.Text(text).FontSize(9).Bold().FontColor(InkHex).LetterSpacing(0.05f);
                             }
 
                             Head(h.Cell(), "#");
@@ -211,7 +211,7 @@ public class InvoiceService : IInvoiceService
                         var index = 1;
                         foreach (var item in order.Items)
                         {
-                            var bg = index % 2 == 0 ? "#FAFAFA" : "#FFFFFF";
+                            var bg = PaperHex; // Flat vintage look
 
                             void Cell(IContainer c, string text, bool bold = false, bool right = false)
                             {
@@ -233,27 +233,25 @@ public class InvoiceService : IInvoiceService
                         }
                     });
 
-                    // ---------- TOTALS (right aligned block) ----------
+                    // ---------- TOTALS ----------
                     col.Item().PaddingTop(8).Row(row =>
                     {
-                        // Left column: notes
                         row.RelativeItem().Column(c =>
                         {
                             c.Item().Text("NOTES").FontSize(8).Bold().FontColor(MutedHex).LetterSpacing(0.15f);
-                            c.Item().PaddingTop(3).Text("Thank you for your order. All prices are inclusive of GST. Retain this invoice for warranty and returns within 7 days of delivery.")
-                                .FontSize(9).FontColor(MutedHex).LineHeight(1.4f);
+                            c.Item().PaddingTop(3).Text("Thank you for your order. All prices are inclusive of GST. \nRetain this invoice for warranty and returns within 7 days of delivery.")
+                            .FontSize(9).FontColor(MutedHex).LineHeight(1.4f);
                         });
 
-                        // Right column: totals
                         row.ConstantItem(240).Column(c =>
                         {
-                          void Row(string label, string value, bool bold = false, string? color = null)
+                            void Row(string label, string value, bool bold = false, string? color = null)
                             {
-                                var textColor = color ?? "#111111";
+                                var textColor = color ?? InkHex;
 
                                 c.Item().Row(r =>
                                 {
-                                    r.RelativeItem().Text(label).FontSize(9.5f).FontColor(bold ? AccentHex : MutedHex);
+                                    r.RelativeItem().Text(label).FontSize(9.5f).FontColor(bold ? InkHex : MutedHex);
                                     var val = r.ConstantItem(110).AlignRight().Text(value)
                                         .FontSize(bold ? 10.5f : 9.5f)
                                         .FontColor(textColor);
@@ -269,12 +267,12 @@ public class InvoiceService : IInvoiceService
                             if (order.CodFee > 0)
                                 Row("COD Handling", $"₹{order.CodFee:0.00}");
 
-                            c.Item().PaddingTop(6).LineHorizontal(1).LineColor(AccentHex);
+                            c.Item().PaddingTop(6).LineHorizontal(1).LineColor(InkHex);
                             c.Item().PaddingTop(6).Row(r =>
                             {
-                                r.RelativeItem().Text("TOTAL").FontSize(11).Bold().FontColor(AccentHex).LetterSpacing(0.1f);
+                                r.RelativeItem().Text("TOTAL").FontSize(11).Bold().FontColor(InkHex).LetterSpacing(0.1f);
                                 r.ConstantItem(110).AlignRight().Text($"₹{order.Total:0.00}")
-                                    .FontSize(13).Bold().FontColor(AccentHex);
+                                    .FontSize(13).Bold().FontColor(InkHex);
                             });
 
                             c.Item().PaddingTop(6).LineHorizontal(0.5f).LineColor(LineHex);
@@ -299,7 +297,7 @@ public class InvoiceService : IInvoiceService
                     col.Item().PaddingTop(8).Row(row =>
                     {
                         // Payment box
-                        row.RelativeItem().Background("#FAFAFA").Border(0.5f).BorderColor(LineHex).Padding(10).Column(c =>
+                        row.RelativeItem().Background(SoftHex).Border(0.5f).BorderColor(LineHex).Padding(10).Column(c =>
                         {
                             c.Item().Text("PAYMENT DETAILS").FontSize(8).Bold().FontColor(MutedHex).LetterSpacing(0.15f);
                             c.Item().PaddingTop(3);
@@ -312,7 +310,7 @@ public class InvoiceService : IInvoiceService
 
                             if (isCod && !isCancelled)
                                 c.Item().PaddingTop(3).Text($"Amount to collect: ₹{order.Total:0.00}")
-                                    .FontSize(9.5f).Bold().FontColor(AccentHex);
+                                    .FontSize(9.5f).Bold().FontColor(InkHex);
 
                             if (!string.IsNullOrWhiteSpace(order.RefundId))
                                 c.Item().PaddingTop(3).Text($"Refund: ₹{order.RefundedAmount:0.00} ({order.RefundStatus})")
@@ -322,19 +320,34 @@ public class InvoiceService : IInvoiceService
                         row.ConstantItem(12);
 
                         // Shipping box
-                        row.RelativeItem().Background("#FAFAFA").Border(0.5f).BorderColor(LineHex).Padding(10).Column(c =>
+                        row.RelativeItem().Background(SoftHex).Border(0.5f).BorderColor(LineHex).Padding(10).Column(c =>
                         {
                             c.Item().Text("SHIPPING DETAILS").FontSize(8).Bold().FontColor(MutedHex).LetterSpacing(0.15f);
                             c.Item().PaddingTop(3);
 
                             if (!string.IsNullOrWhiteSpace(order.TrackingNumber))
                             {
-                                c.Item().Text($"Courier: {order.CourierName ?? "—"}").FontSize(9.5f);
-                                c.Item().Text($"AWB / Tracking: {order.TrackingNumber}").FontSize(9.5f);
+                                c.Item().Text($"Courier: {order.CourierName ?? "Delhivery"}").FontSize(9.5f);
+                                
+                                if (!string.IsNullOrWhiteSpace(order.DelhiveryStatus))
+                                {
+                                    c.Item().Text($"Status: {order.DelhiveryStatus}").FontSize(9.5f).Bold().FontColor(SuccessHex);
+                                }
+
+                                // Clickable Tracking URL
+                                if (trackingUrl != null)
+                                {
+                                    c.Item().PaddingTop(4).Text(text => 
+                                    {
+                                        text.Span("Track: ").FontSize(9.5f);
+                                        text.Hyperlink(order.TrackingNumber, trackingUrl).FontSize(9.5f).FontColor("#0D47A1").Underline();
+                                    });
+                                }
+
                                 if (order.ShippedAt.HasValue)
                                     c.Item().Text($"Shipped: {order.ShippedAt.Value:dd MMM yyyy}").FontSize(9.5f);
                                 if (order.DeliveredAt.HasValue)
-                                    c.Item().Text($"Delivered: {order.DeliveredAt.Value:dd MMM yyyy}").FontSize(9.5f);
+                                    c.Item().Text($"Delivered: {order.DeliveredAt.Value:dd MMM yyyy}").FontSize(9.5f).Bold();
                             }
                             else
                             {
