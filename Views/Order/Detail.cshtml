@@ -59,24 +59,21 @@
                 </div>
                 @if (!string.IsNullOrWhiteSpace(Model.TrackingNumber))
                 {
-                    <p class="order-detail-tracking"><strong>Tracking:</strong> @Model.CourierName — @Model.TrackingNumber</p>
-                }
-                @if (Model.Status == "Cancelled")
-                {
-                    <p class="order-detail-tracking order-detail-cancel">
-                       <strong>Cancelled:</strong>
-                    @(
-                        Model.CancelledAt.HasValue
-                            ? DateTimeHelper.ToIndianTime(Model.CancelledAt.Value)
-                                .ToString("dd MMM yyyy, HH:mm") + " IST"
-                            : ""
-                    )
-                    by @Model.CancelledBy
-                        @if (!string.IsNullOrWhiteSpace(Model.CancellationReason))
-                        {
-                            <br /><strong>Reason:</strong> @Model.CancellationReason
-                        }
-                    </p>
+                    <div class="order-detail-tracking" style="background: var(--gray-100); padding: 10px; border-radius: 4px; margin-top: 10px;">
+                        <strong>Tracking Details:</strong><br/>
+                        <span style="font-size: 13px; color: var(--gray-600);">@Model.CourierName</span> — 
+                        <span style="font-weight: 700; font-size: 14px; color: var(--black);">Awaiting Pickup</span>
+                        
+                        <div style="margin-top: 8px;">
+                            <a href="https://www.delhivery.com/track/package/@Model.TrackingNumber" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            class="btn-outline" 
+                            style="padding: 8px 14px; font-size: 11px; display: inline-block;">
+                            TRACK ORDER ↗
+                            </a>
+                        </div>
+                    </div>
                 }
             </div>
 
@@ -84,7 +81,7 @@
                 <h3>ITEMS (@Model.Items.Count)</h3>
                 @foreach (var i in Model.Items)
                 {
-                    <div class="order-detail-item">
+                    <a href="/product/@i.ProductId" class="order-detail-item" style="text-decoration: none; color: inherit; transition: background 0.2s;" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background='transparent'">
                         @if (!string.IsNullOrWhiteSpace(i.ProductImage))
                         {
                             <img src="@i.ProductImage" alt="@i.ProductName" loading="lazy" />
@@ -102,7 +99,7 @@
                             </p>
                         </div>
                         <div class="order-detail-item-price">₹@i.LineTotal.ToString("0.00")</div>
-                    </div>
+                    </a>
                 }
             </div>
         </div>
