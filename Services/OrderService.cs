@@ -108,6 +108,12 @@ public class OrderService : IOrderService
                 OriginalMRP = ci.OriginalMRP,
                 LineTotal = ci.UnitPrice * ci.Quantity
             });
+            var product = await _db.Products.FindAsync(ci.ProductId);
+            if (product != null)
+            {
+                product.Stock -= ci.Quantity;
+                if (product.Stock < 0) product.Stock = 0; 
+            }
         }
 
         _db.Orders.Add(order);
@@ -295,6 +301,15 @@ public class OrderService : IOrderService
         order.CancelledBy = cancelledBy;
         order.CancellationReason = string.IsNullOrWhiteSpace(reason) ? "Not specified" : reason;
         order.UpdatedAt = DateTime.UtcNow;
+
+        foreach (var item in order.Items)
+        {
+            var product = await _db.Products.FindAsync(item.ProductId);
+            if (product != null)
+            {
+                product.Stock += item.Quantity; // Stock wapas badha diya
+            }
+        }
 
         // ---- Refund logic (Razorpay paid orders only) ----
         if (order.PaymentStatus == PaymentStatus.Paid &&
