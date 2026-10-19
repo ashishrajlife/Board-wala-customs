@@ -52,36 +52,49 @@
         }
         else
         {
-                        <div class="products-grid">
-                    @foreach (var p in Model)
-                    {
-                        <div class="product-card" data-href="/product/@p.ProductId">
-                            <div class="product-image">
+               <div class="products-grid">
+                @foreach (var p in Model)
+                {
+                    var isOutOfStock = p.IsActive == false || p.Stock <= 0;
+        
+                    <div class="product-card @(isOutOfStock ? "is-unavailable" : "")" 
+                         data-href="@(isOutOfStock ? "" : "/product/" + p.ProductId)">
+             
+                        <div class="product-image">
+                            @if (isOutOfStock)
+                            {
+                                <span class="unavailable-badge">UNAVAILABLE</span>
+                            }
+                            else if (p.SavePercent > 0 && p.SalePrice.HasValue && p.SalePrice.Value > 0)
+                            {
+                                <span class="save-badge">SAVE @p.SavePercent%</span>
+                            }
+
+                            <img src="@p.PrimaryImageUrl" alt="@p.Name" loading="lazy" />
+                
+                            @if (!isOutOfStock)
+                            {
+                                <button type="button" class="quick-add">ADD TO CART</button>
+                            }
+                        </div>
+                        <div class="product-info">
+                            <h3>@p.Name</h3>
+                            <div class="price-row">
                                 @if (p.SavePercent > 0 && p.SalePrice.HasValue && p.SalePrice.Value > 0)
                                 {
-                                    <span class="save-badge">SAVE @p.SavePercent%</span>
+                                    <span class="mrp">Rs.@p.MRP.ToString("0")</span>
+                                    <span class="sale">Rs.@p.SalePrice.Value.ToString("0.00")</span>
                                 }
-                                <img src="@p.PrimaryImageUrl" alt="@p.Name" loading="lazy" />
-                                <button type="button" class="quick-add">ADD TO CART</button>
-                            </div>
-                            <div class="product-info">
-                                <h3>@p.Name</h3>
-                                <div class="price-row">
-                                    @if (p.SavePercent > 0 && p.SalePrice.HasValue && p.SalePrice.Value > 0)
-                                    {
-                                        <span class="mrp">Rs.@p.MRP.ToString("0")</span>
-                                        <span class="sale">Rs.@p.SalePrice.Value.ToString("0.00")</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="price-normal">Rs.@p.MRP.ToString("0")</span>
-                                    }
-                                </div>
+                                else
+                                {
+                                    <span class="price-normal">Rs.@p.MRP.ToString("0")</span>
+                                }
                             </div>
                         </div>
-                    }
-                </div>
+                    </div>
                 }
+            </div>
+         }
             </div>
     </div>
 </section>
@@ -209,6 +222,39 @@
 .product-card {
     cursor: pointer;
     display: block;
+}
+/* Unavailable Product Card Styles */
+.product-card.is-unavailable {
+    cursor: not-allowed !important; /* Click rok dega */
+    pointer-events: none; /* Kisi bhi link ya button ko kaam nahi karne dega */
+}
+
+/* Image ko black & white aur thoda transparent karega */
+.product-card.is-unavailable .product-image {
+    opacity: 0.5;
+    filter: grayscale(100%);
+}
+
+.product-card.is-unavailable .product-info {
+    opacity: 0.5;
+}
+
+/* UNAVAILABLE Badge */
+.unavailable-badge {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: var(--white);
+    padding: 8px 16px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    border-radius: 2px;
+    z-index: 10;
+    white-space: nowrap;
 }
 </style>
 <script>

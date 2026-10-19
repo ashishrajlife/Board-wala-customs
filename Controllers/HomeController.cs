@@ -9,12 +9,12 @@ public class HomeController : Controller
     private readonly AppDbContext _db;
     public HomeController(AppDbContext db) => _db = db;
 
-   public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index()
     {
-        // Products for landing
+        // Products for landing (IsActive filter hataya gaya hai)
         var products = await _db.Products
             .Include(p => p.Category)
-            .Where(p => p.IsActive && p.Category.IsActive && p.IsNewArrival)
+            .Where(p => p.Category.IsActive && p.IsNewArrival)
             .OrderByDescending(p => p.CreatedAt)
             .Take(12)
             .ToListAsync();
@@ -26,7 +26,7 @@ public class HomeController : Controller
             .ToListAsync();
 
         ViewBag.TotalProducts = await _db.Products
-        .CountAsync(p => p.IsActive && p.Category.IsActive);
+            .CountAsync(p => p.IsActive && p.Category.IsActive);
 
         return View("~/Views/Home/Index.cshtml", products);
     }
