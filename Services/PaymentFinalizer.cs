@@ -166,6 +166,25 @@ public class PaymentFinalizer : IPaymentFinalizer
     // Shared side effects for both flows
     private async Task RunSideEffectsAsync(Order order)
     {
+        try
+        {
+            foreach (var item in order.Items)
+            {
+                var product = await _db.Products.FindAsync(item.ProductId);
+                if (product != null)
+                {
+                    product.Stock -= item.Quantity;
+                    if (product.Stock < 0) product.Stock = 0;
+                }
+            }
+            await _db.SaveChangesAsync();
+            _logger.LogInformation("[FINALIZE] Stock deducted for {OrderNumber}", order.OrderNumber);
+        }
+        catch (Exception ex) 
+        { 
+            _logger.LogError(ex, "[FINALIZE] Stock deduct failed for {OrderNumber}", order.OrderNumber); 
+        }
+
         // Shipment (Delhivery later — mock now)
                 try
         {

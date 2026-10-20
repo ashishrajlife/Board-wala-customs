@@ -504,7 +504,7 @@ main { display: block; min-height: 40vh; }
 .site-footer {
     background: var(--black);
     color: var(--white);
-    padding: 25px;
+    padding: 15px;
     margin-top: var(--space-xl);
 }
 .footer-grid {
@@ -746,6 +746,11 @@ h1 {
     .price-row.big { font-size: 17px; }
 
     .footer-grid { grid-template-columns: repeat(2, 1fr); gap: var(--space-md); }
+    .site-footer {
+    background: var(--black);
+    color: var(--white);
+    margin-top: var(--space-xl);
+}
 }
 
 /* ---- Mobile large (≤ 768px) ---- */
@@ -856,6 +861,11 @@ h1 {
     .admin-page { padding: 20px; }
     .admin-header { margin-bottom: var(--space-sm); }
     .admin-header h1 { font-size: 22px; }
+    .site-footer {
+    background: var(--black);
+    color: var(--white);
+    margin-top: var(--space-xl);
+}
 }
 
 /* ---- Mobile (≤ 500px) ---- */
@@ -1054,13 +1064,16 @@ h1 {
     max-width: 240px;
     height: auto;
     display: block;
+    
+    /* White glow effect */
     filter: brightness(0) invert(1) drop-shadow(0px 0px 1px rgba(255,255,255,0.5));
     opacity: 0.85;
     transition: opacity 0.3s ease, filter 0.3s ease;
-    .footer-brand:hover .footer-wordmark {
+}
+
+.footer-brand:hover .footer-wordmark {
     opacity: 1;
     filter: brightness(0) invert(1) drop-shadow(0px 0px 4px rgba(255,255,255,0.8));
-}
 }
 /* ===== FOOTER BRAND — PHONE VIEW: logo on the right, socials on the left ===== */
 @media (max-width: 600px) {
@@ -1078,6 +1091,11 @@ h1 {
         margin-bottom: 0;
         gap: 10px;
     }
+    .site-footer {
+    background: var(--black);
+    color: var(--white);
+    margin-top: var(--space-xl);
+}
 
     .footer-logo-mark { height: 48px; }
 
