@@ -30,4 +30,8 @@ public class HomeController : Controller
 
         return View("~/Views/Home/Index.cshtml", products);
     }
+    public IActionResult Privacy() => View();
+    public IActionResult Terms() => View();
+    public IActionResult Returns() => View();
+    public IActionResult About() => View();
 }
