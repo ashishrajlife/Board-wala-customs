@@ -53,6 +53,24 @@ public class OrderService : IOrderService
         var address = await _db.Addresses
             .FirstOrDefaultAsync(a => a.AddressId == addressId && a.UserId == userId)
             ?? throw new InvalidOperationException("Address not found.");
+            
+        foreach (var item in cart.Items)
+        {
+            // Product database se fetch karo
+            var product = await _db.Products.FindAsync(item.ProductId);
+            
+            // Agar product delete ho gaya ya inactive ho gaya
+            if (product == null || !product.IsActive)
+            {
+                throw new InvalidOperationException($"Product '{item.Product?.Name ?? "Unknown"}' is no longer available.");
+            }
+            
+            // Agar stock kam hai
+            if (product.Stock < item.Quantity)
+            {
+                throw new InvalidOperationException($"Only {product.Stock} units of '{item.Product?.Name ?? "Unknown"}' are left in stock. Please update your cart.");
+            }
+        }
 
         var subtotal = cart.Items.Sum(i => i.UnitPrice * i.Quantity);
         var savings = cart.Items.Sum(i => (i.OriginalMRP - i.UnitPrice) * i.Quantity);
@@ -295,6 +313,24 @@ public class OrderService : IOrderService
         order.CancelledBy = cancelledBy;
         order.CancellationReason = string.IsNullOrWhiteSpace(reason) ? "Not specified" : reason;
         order.UpdatedAt = DateTime.UtcNow;
+
+         try
+        {
+            foreach (var item in order.Items)
+            {
+                var product = await _db.Products.FindAsync(item.ProductId);
+                if (product != null)
+                {
+                    product.Stock += item.Quantity;
+                }
+            }
+            await _db.SaveChangesAsync();
+            _logger.LogInformation("[CANCEL] Stock restored for {OrderNumber}", order.OrderNumber);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[CANCEL] Stock restore failed for {OrderNumber}", order.OrderNumber);
+        }
 
         // ---- Refund logic (Razorpay paid orders only) ----
         if (order.PaymentStatus == PaymentStatus.Paid &&

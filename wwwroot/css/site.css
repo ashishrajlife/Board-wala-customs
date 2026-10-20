@@ -746,6 +746,11 @@ h1 {
     .price-row.big { font-size: 17px; }
 
     .footer-grid { grid-template-columns: repeat(2, 1fr); gap: var(--space-md); }
+    .site-footer {
+    background: var(--black);
+    color: var(--white);
+    margin-top: var(--space-xl);
+}
 }
 
 /* ---- Mobile large (≤ 768px) ---- */
@@ -856,6 +861,11 @@ h1 {
     .admin-page { padding: 20px; }
     .admin-header { margin-bottom: var(--space-sm); }
     .admin-header h1 { font-size: 22px; }
+    .site-footer {
+    background: var(--black);
+    color: var(--white);
+    margin-top: var(--space-xl);
+}
 }
 
 /* ---- Mobile (≤ 500px) ---- */
@@ -1078,6 +1088,11 @@ h1 {
         margin-bottom: 0;
         gap: 10px;
     }
+    .site-footer {
+    background: var(--black);
+    color: var(--white);
+    margin-top: var(--space-xl);
+}
 
     .footer-logo-mark { height: 48px; }
 
