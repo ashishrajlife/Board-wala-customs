@@ -504,7 +504,7 @@ main { display: block; min-height: 40vh; }
 .site-footer {
     background: var(--black);
     color: var(--white);
-    padding: 25px;
+    padding: 15px;
     margin-top: var(--space-xl);
 }
 .footer-grid {
@@ -1064,13 +1064,16 @@ h1 {
     max-width: 240px;
     height: auto;
     display: block;
+    
+    /* White glow effect */
     filter: brightness(0) invert(1) drop-shadow(0px 0px 1px rgba(255,255,255,0.5));
     opacity: 0.85;
     transition: opacity 0.3s ease, filter 0.3s ease;
-    .footer-brand:hover .footer-wordmark {
+}
+
+.footer-brand:hover .footer-wordmark {
     opacity: 1;
     filter: brightness(0) invert(1) drop-shadow(0px 0px 4px rgba(255,255,255,0.8));
-}
 }
 /* ===== FOOTER BRAND — PHONE VIEW: logo on the right, socials on the left ===== */
 @media (max-width: 600px) {
