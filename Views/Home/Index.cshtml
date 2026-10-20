@@ -53,33 +53,58 @@
         else
         {
                         <div class="products-grid">
-                    @foreach (var p in Model)
-                    {
-                        <div class="product-card" data-href="/product/@p.ProductId">
-                            <div class="product-image">
-                                @if (p.SavePercent > 0 && p.SalePrice.HasValue && p.SalePrice.Value > 0)
-                                {
-                                    <span class="save-badge">SAVE @p.SavePercent%</span>
-                                }
-                                <img src="@p.PrimaryImageUrl" alt="@p.Name" loading="lazy" />
-                                <button type="button" class="quick-add">ADD TO CART</button>
-                            </div>
-                            <div class="product-info">
-                                <h3>@p.Name</h3>
-                                <div class="price-row">
-                                    @if (p.SavePercent > 0 && p.SalePrice.HasValue && p.SalePrice.Value > 0)
-                                    {
-                                        <span class="mrp">Rs.@p.MRP.ToString("0")</span>
-                                        <span class="sale">Rs.@p.SalePrice.Value.ToString("0.00")</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="price-normal">Rs.@p.MRP.ToString("0")</span>
-                                    }
-                                </div>
-                            </div>
-                        </div>
-                    }
+                  @foreach (var p in Model)
+{
+    var isOutOfStock = p.Stock <= 0 || !p.IsActive;
+    var isLowStock = !isOutOfStock && p.Stock <= 10;
+
+    <div class="product-card @(isOutOfStock ? "is-unavailable" : "")" 
+         data-href="@(isOutOfStock ? "" : "/product/" + p.ProductId)">
+         
+        <div class="product-image">
+            @if (isOutOfStock)
+            {
+                <div class="ribbon ribbon-red">UNAVAILABLE</div>
+            }
+            else if (isLowStock)
+            {
+                <div class="ribbon ribbon-orange">ONLY @p.Stock LEFT</div>
+            }
+            else if (p.SavePercent > 0 && p.SalePrice.HasValue && p.SalePrice.Value > 0)
+            {
+                <span class="save-badge">SAVE @p.SavePercent%</span>
+            }
+
+            <img src="@p.PrimaryImageUrl" alt="@p.Name" loading="lazy" />
+            
+            @if (!isOutOfStock)
+            {
+                <button type="button" class="quick-add">ADD TO CART</button>
+            }
+        </div>
+        
+        <div class="product-info">
+            <h3>@p.Name</h3>
+            <div class="price-row">
+                @if (p.SavePercent > 0 && p.SalePrice.HasValue && p.SalePrice.Value > 0)
+                {
+                    <span class="mrp">Rs.@p.MRP.ToString("0")</span>
+                    <span class="sale">Rs.@p.SalePrice.Value.ToString("0.00")</span>
+                }
+                else
+                {
+                    <span class="price-normal">Rs.@p.MRP.ToString("0")</span>
+                }
+            </div>
+            
+            <!-- Low stock text -->
+            @if (isLowStock)
+            {
+                <p class="low-stock-text">Only @p.Stock left in stock!</p>
+            }
+        </div>
+    </div>
+}
                 </div>
                 }
             </div>
@@ -210,6 +235,57 @@
     cursor: pointer;
     display: block;
 }
+    /* ---------- Diagonal Ribbons ---------- */
+    .ribbon {
+        position: absolute;
+        top: 15px;
+        right: -35px;
+        width: 140px;
+        text-align: center;
+        transform: rotate(45deg);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        padding: 5px 0;
+        z-index: 10;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .ribbon-orange {
+        background-color: #ff6b00;
+        color: #fff;
+    }
+
+    .ribbon-red {
+        background-color: #e63946;
+        color: #fff;
+    }
+
+    /* ---------- Low Stock Text ---------- */
+    .low-stock-text {
+        color: #ff6b00;
+        font-size: 11px;
+        font-weight: 700;
+        margin-top: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* ---------- Unavailable State ---------- */
+    .product-card.is-unavailable {
+        pointer-events: none; /* pura card unclickable */
+        user-select: none;
+    }
+
+    .product-card.is-unavailable .product-image img {
+        opacity: 0.3; /* image halki ho jaye */
+        filter: grayscale(100%);
+    }
+
+    .product-card.is-unavailable .product-info {
+        opacity: 0.4; /* text bhi halka dikhe */
+    }
 </style>
 <script>
     (function () {
