@@ -9,12 +9,11 @@ public class HomeController : Controller
     private readonly AppDbContext _db;
     public HomeController(AppDbContext db) => _db = db;
 
-   public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index()
     {
-        // Products for landing
         var products = await _db.Products
             .Include(p => p.Category)
-            .Where(p => p.IsActive && p.Category.IsActive && p.IsNewArrival)
+            .Where(p => p.Category.IsActive && p.IsNewArrival)
             .OrderByDescending(p => p.CreatedAt)
             .Take(12)
             .ToListAsync();
