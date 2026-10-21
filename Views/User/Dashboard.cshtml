@@ -5,11 +5,17 @@
     var totalOrders = Model?.Count ?? 0;
     var activeOrders = Model?.Count(o => o.Status != "Delivered" && o.Status != "Cancelled") ?? 0;
 }
+  
+<div class="main" style="padding: 20px;">
 
     <div class="container dashboard-page">
-        <div class="dashboard-top">
-        <h1>Hi, @User.Identity?.Name</h1>
-        <a href="/" class="btn-outline dashboard-back">← BACK</a>
+     <div class="dashboard-top">
+        <h1>Hi,</h1>
+        <div style="display: flex; gap: 10px;">
+            <a href="/User/EditProfile" class="btn-primary" style="font-size: 11px; padding: 6px 12px;">EDIT PROFILE</a>
+            <a href="/" class="btn-outline dashboard-back">← BACK</a>
+        </div>
+    </div>
     </div>
 
     <!-- ============ QUICK STATS ============ -->
