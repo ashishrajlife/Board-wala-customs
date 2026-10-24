@@ -27,7 +27,7 @@
 }
 
 html { scroll-behavior: smooth; }
-html, body { height: 100%; }
+html { height: 100%; }
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -36,6 +36,16 @@ body {
     font-size: 14px;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex: 1 0 auto;
 }
 
 a { color: inherit; text-decoration: none; }
@@ -134,7 +144,11 @@ img { max-width: 100%; display: block; }
     text-transform: uppercase;
 }
 .brand-logo .logo-line-2 { font-weight: 900; }
-
+.brand-logo-img .brand-logo-center {
+    display: block;
+    height: 60px;
+    width: auto;
+}
 .nav-right {
     display: flex;
     align-items: center;
@@ -221,7 +235,7 @@ body.nav-open .nav-overlay { display: block; }
 .breadcrumb-bar span { color: var(--black); }
 
 /* ================= MAIN SPACING ================= */
-main { display: block; min-height: 40vh; }
+main { display: block; min-height: 0; }
 
 /* ================= HERO ================= */
 .hero-banner {
@@ -506,6 +520,7 @@ main { display: block; min-height: 40vh; }
     color: var(--white);
     padding: 15px;
     margin-top: var(--space-xl);
+    flex-shrink: 0;
 }
 .footer-grid {
     display: grid;
