@@ -2,6 +2,13 @@
 @{
     ViewData["Title"] = "New Arrivals";
     ViewData["Breadcrumb"] = Html.Raw("<a href='/'>Home</a> / <a href='/'>Shop</a> / <span>New Arrivals</span>");
+
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages  = ViewBag.TotalPages  ?? 1;
+    int totalCount  = ViewBag.TotalCount  ?? 0;
+    int pageSize    = ViewBag.PageSize    ?? 24;
+    int startItem   = totalCount == 0 ? 0 : (currentPage - 1) * pageSize + 1;
+    int endItem     = Math.Min(currentPage * pageSize, totalCount);
 }
 
 <section class="hero-banner">
@@ -38,7 +45,12 @@
             </svg>
             FILTER PRODUCTS
         </a>
-        @* <span class="product-count">@ViewBag.TotalProducts PRODUCTS</span> *@
+        @if (totalCount > 0)
+        {
+            <span class="product-count">
+                SHOWING @startItem–@endItem OF @totalCount
+            </span>
+        }
     </div>
 </div>
 
@@ -52,67 +64,132 @@
         }
         else
         {
-                        <div class="products-grid">
-                  @foreach (var p in Model)
-{
-    var isOutOfStock = p.Stock <= 0 || !p.IsActive;
-    var isLowStock = !isOutOfStock && p.Stock <= 10;
-
-    <div class="product-card @(isOutOfStock ? "is-unavailable" : "")" 
-         data-href="@(isOutOfStock ? "" : "/product/" + p.ProductId)">
-         
-        <div class="product-image">
-            @if (isOutOfStock)
-            {
-                <div class="ribbon ribbon-red">UNAVAILABLE</div>
-            }
-            else if (isLowStock)
-            {
-                <div class="ribbon ribbon-orange">ONLY @p.Stock LEFT</div>
-            }
-            else if (p.SavePercent > 0 && p.SalePrice.HasValue && p.SalePrice.Value > 0)
-            {
-                <span class="save-badge">SAVE @p.SavePercent%</span>
-            }
-
-            <img src="@p.PrimaryImageUrl" alt="@p.Name" loading="lazy" />
-            
-            @if (!isOutOfStock)
-            {
-                <button type="button" class="quick-add">ADD TO CART</button>
-            }
-        </div>
-        
-        <div class="product-info">
-            <h3>@p.Name</h3>
-            <div class="price-row">
-                @if (p.SavePercent > 0 && p.SalePrice.HasValue && p.SalePrice.Value > 0)
+            <div class="products-grid">
+                @foreach (var p in Model)
                 {
-                    <span class="mrp">Rs.@p.MRP.ToString("0")</span>
-                    <span class="sale">Rs.@p.SalePrice.Value.ToString("0.00")</span>
-                }
-                else
-                {
-                    <span class="price-normal">Rs.@p.MRP.ToString("0")</span>
+                    var isOutOfStock = p.Stock <= 0 || !p.IsActive;
+                    var isLowStock   = !isOutOfStock && p.Stock <= 10;
+
+                    <div class="product-card @(isOutOfStock ? "is-unavailable" : "")"
+                         data-href="@(isOutOfStock ? "" : "/product/" + p.ProductId)">
+
+                        <div class="product-image">
+                            @if (isOutOfStock)
+                            {
+                                <div class="ribbon ribbon-red">UNAVAILABLE</div>
+                            }
+                            else if (isLowStock)
+                            {
+                                <div class="ribbon ribbon-orange">ONLY @p.Stock LEFT</div>
+                            }
+                            else if (p.SavePercent > 0 && p.SalePrice.HasValue && p.SalePrice.Value > 0)
+                            {
+                                <span class="save-badge">SAVE @p.SavePercent%</span>
+                            }
+
+                            <img src="@p.PrimaryImageUrl" alt="@p.Name" loading="lazy" />
+
+                            @if (!isOutOfStock)
+                            {
+                                <button type="button" class="quick-add">ADD TO CART</button>
+                            }
+                        </div>
+
+                        <div class="product-info">
+                            <h3>@p.Name</h3>
+                            <div class="price-row">
+                                @if (p.SavePercent > 0 && p.SalePrice.HasValue && p.SalePrice.Value > 0)
+                                {
+                                    <span class="mrp">Rs.@p.MRP.ToString("0")</span>
+                                    <span class="sale">Rs.@p.SalePrice.Value.ToString("0.00")</span>
+                                }
+                                else
+                                {
+                                    <span class="price-normal">Rs.@p.MRP.ToString("0")</span>
+                                }
+                            </div>
+
+                            @if (isLowStock)
+                            {
+                                <p class="low-stock-text">Only @p.Stock left in stock!</p>
+                            }
+                        </div>
+                    </div>
                 }
             </div>
-            
-            <!-- Low stock text -->
-            @if (isLowStock)
+
+            @* ---------- PAGINATION ---------- *@
+            @if (totalPages > 1)
             {
-                <p class="low-stock-text">Only @p.Stock left in stock!</p>
+                <nav class="pagination" aria-label="Product pagination">
+                    @* Previous *@
+                    @if (currentPage > 1)
+                    {
+                        <a href="?page=@(currentPage - 1)#products-top"
+                           class="page-btn page-arrow" aria-label="Previous page">« Prev</a>
+                    }
+                    else
+                    {
+                        <span class="page-btn page-arrow disabled">« Prev</span>
+                    }
+
+                    @* Page numbers — with ellipsis for long ranges *@
+                    @{
+                        int showFrom = Math.Max(1, currentPage - 2);
+                        int showTo   = Math.Min(totalPages, currentPage + 2);
+
+                        if (showFrom > 1)
+                        {
+                            <a href="?page=1#products-top" class="page-btn">1</a>
+                            if (showFrom > 2)
+                            {
+                                <span class="page-dots">…</span>
+                            }
+                        }
+
+                        for (int i = showFrom; i <= showTo; i++)
+                        {
+                            if (i == currentPage)
+                            {
+                                <span class="page-btn active">@i</span>
+                            }
+                            else
+                            {
+                                <a href="?page=@i#products-top" class="page-btn">@i</a>
+                            }
+                        }
+
+                        if (showTo < totalPages)
+                        {
+                            if (showTo < totalPages - 1)
+                            {
+                                <span class="page-dots">…</span>
+                            }
+                            <a href="?page=@totalPages#products-top" class="page-btn">@totalPages</a>
+                        }
+                    }
+
+                    @* Next *@
+                    @if (currentPage < totalPages)
+                    {
+                        <a href="?page=@(currentPage + 1)#products-top"
+                           class="page-btn page-arrow" aria-label="Next page">Next »</a>
+                    }
+                    else
+                    {
+                        <span class="page-btn page-arrow disabled">Next »</span>
+                    }
+                </nav>
             }
-        </div>
-    </div>
-}
-                </div>
-                }
-            </div>
+        }
     </div>
 </section>
+
+<!-- Anchor to scroll back to top of grid on page change -->
+<div id="products-top"></div>
+
 <!-- ============ FLOATING WHATSAPP BUTTON ============ -->
 <a href="https://wa.me/8349442756?text=Hello%20VALOUSWORLD!%20I%27d%20like%20to%20know%20more%20about%20your%20products.%20Could%20you%20please%20assist%20me%3F"
-
    class="whatsapp-float"
    target="_blank"
    rel="noopener noreferrer"
@@ -123,118 +200,96 @@
     </svg>
     <span class="whatsapp-tooltip">Chat with us</span>
 </a>
+
 <style>
     .price-normal {
-    font-weight: 700;
-    color: var(--black);
-    font-size: 13px;
-}
-/* ---------- Floating WhatsApp Button ---------- */
-.whatsapp-float {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: #08e65b;;   /* WhatsApp green */
-    color: ;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4),
-                0 2px 8px rgba(0, 0, 0, 0.15);
-    z-index: 999;
-    transition: all 0.3s ease;
-    animation: whatsapp-pulse 2s infinite;
-}
-
-.whatsapp-float:hover {
-    background: #128C7E;   /* Darker WhatsApp green */
-    transform: scale(1.08);
-    box-shadow: 0 8px 28px rgba(37, 211, 102, 0.5),
-                0 4px 12px rgba(0, 0, 0, 0.2);
-    animation-play-state: paused;
-}
-
-.whatsapp-float svg {
-    display: block;
-}
-
-/* Tooltip that appears on hover */
-.whatsapp-tooltip {
-    position: absolute;
-    right: 70px;
-    top: 50%;
-    transform: translateY(-50%) translateX(8px);
-    background: #000000;
-    color: #ffffff;
-    padding: 8px 14px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.whatsapp-tooltip::after {
-    content: "";
-    position: absolute;
-    left: 100%;
-    top: 50%;
-    transform: translateY(-50%);
-    border: 6px solid transparent;
-    border-left-color: #000000;
-}
-
-.whatsapp-float:hover .whatsapp-tooltip {
-    opacity: 1;
-    transform: translateY(-50%) translateX(0);
-}
-
-/* Pulse animation — subtle ring */
-@@keyframes whatsapp-pulse {
-    0% {
-        box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4),
-                    0 2px 8px rgba(0, 0, 0, 0.15),
-                    0 0 0 0 rgba(37, 211, 102, 0.7);
+        font-weight: 700;
+        color: var(--black);
+        font-size: 13px;
     }
-    70% {
-        box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4),
-                    0 2px 8px rgba(0, 0, 0, 0.15),
-                    0 0 0 16px rgba(37, 211, 102, 0);
-    }
-    100% {
-        box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4),
-                    0 2px 8px rgba(0, 0, 0, 0.15),
-                    0 0 0 0 rgba(37, 211, 102, 0);
-    }
-}
 
-/* ---------- Mobile ---------- */
-@@media (max-width: 500px) {
+    /* ---------- Floating WhatsApp Button ---------- */
     .whatsapp-float {
-        width: 50px;
-        height: 50px;
-        bottom: 50px;
-        right: 25px;
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: #08e65b;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4),
+                    0 2px 8px rgba(0, 0, 0, 0.15);
+        z-index: 999;
+        transition: all 0.3s ease;
+        animation: whatsapp-pulse 2s infinite;
     }
-    .whatsapp-float svg {
-        width: 24px;
-        height: 24px;
+    .whatsapp-float:hover {
+        background: #128C7E;
+        transform: scale(1.08);
+        box-shadow: 0 8px 28px rgba(37, 211, 102, 0.5),
+                    0 4px 12px rgba(0, 0, 0, 0.2);
+        animation-play-state: paused;
     }
+    .whatsapp-float svg { display: block; }
+
     .whatsapp-tooltip {
-        display: none;   /* No hover on mobile */
+        position: absolute;
+        right: 70px;
+        top: 50%;
+        transform: translateY(-50%) translateX(8px);
+        background: #000000;
+        color: #ffffff;
+        padding: 8px 14px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease, transform 0.2s ease;
     }
-}
-.product-card {
-    cursor: pointer;
-    display: block;
-}
+    .whatsapp-tooltip::after {
+        content: "";
+        position: absolute;
+        left: 100%;
+        top: 50%;
+        transform: translateY(-50%);
+        border: 6px solid transparent;
+        border-left-color: #000000;
+    }
+    .whatsapp-float:hover .whatsapp-tooltip {
+        opacity: 1;
+        transform: translateY(-50%) translateX(0);
+    }
+
+    @@keyframes whatsapp-pulse {
+        0%   { box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4), 0 2px 8px rgba(0,0,0,0.15), 0 0 0 0 rgba(37, 211, 102, 0.7); }
+        70%  { box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4), 0 2px 8px rgba(0,0,0,0.15), 0 0 0 16px rgba(37, 211, 102, 0); }
+        100% { box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4), 0 2px 8px rgba(0,0,0,0.15), 0 0 0 0 rgba(37, 211, 102, 0); }
+    }
+
+    @@media (max-width: 500px) {
+        .whatsapp-float {
+            width: 50px;
+            height: 50px;
+            bottom: 50px;
+            right: 25px;
+        }
+        .whatsapp-float svg { width: 24px; height: 24px; }
+        .whatsapp-tooltip { display: none; }
+    }
+
+    .product-card {
+        cursor: pointer;
+        display: block;
+    }
+
     /* ---------- Diagonal Ribbons ---------- */
     .ribbon {
         position: absolute;
@@ -251,16 +306,8 @@
         z-index: 10;
         box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
-
-    .ribbon-orange {
-        background-color: #ff6b00;
-        color: #fff;
-    }
-
-    .ribbon-red {
-        background-color: #e63946;
-        color: #fff;
-    }
+    .ribbon-orange { background-color: #ff6b00; color: #fff; }
+    .ribbon-red    { background-color: #e63946; color: #fff; }
 
     /* ---------- Low Stock Text ---------- */
     .low-stock-text {
@@ -274,19 +321,86 @@
 
     /* ---------- Unavailable State ---------- */
     .product-card.is-unavailable {
-        pointer-events: none; /* pura card unclickable */
+        pointer-events: none;
+        user-select: none;
+    }
+    .product-card.is-unavailable .product-image img {
+        opacity: 0.3;
+        filter: grayscale(100%);
+    }
+    .product-card.is-unavailable .product-info {
+        opacity: 0.4;
+    }
+
+    /* ---------- PAGINATION ---------- */
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 48px;
+        padding: 20px 0;
+    }
+
+    .page-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        height: 40px;
+        padding: 0 14px;
+        border: 1.5px solid #d1cec5;
+        background: #fff;
+        color: #2c2a27;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        line-height: 1;
+    }
+    .page-btn:hover:not(.active):not(.disabled) {
+        background: #2c2a27;
+        color: #fff;
+        border-color: #2c2a27;
+    }
+    .page-btn.active {
+        background: #2c2a27;
+        color: #fff;
+        border-color: #2c2a27;
+        cursor: default;
+    }
+    .page-btn.disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+    .page-arrow {
+        min-width: 80px;
+        font-weight: 800;
+    }
+    .page-dots {
+        color: #6b6b6b;
+        font-weight: 700;
+        padding: 0 4px;
         user-select: none;
     }
 
-    .product-card.is-unavailable .product-image img {
-        opacity: 0.3; /* image halki ho jaye */
-        filter: grayscale(100%);
-    }
-
-    .product-card.is-unavailable .product-info {
-        opacity: 0.4; /* text bhi halka dikhe */
+    /* Mobile pagination sizing */
+    @@media (max-width: 500px) {
+        .pagination { margin-top: 32px; gap: 6px; }
+        .page-btn {
+            min-width: 36px;
+            height: 36px;
+            padding: 0 10px;
+            font-size: 12px;
+        }
+        .page-arrow { min-width: 64px; }
     }
 </style>
+
 <script>
     (function () {
         const sel = document.getElementById('homeSort');
@@ -300,15 +414,10 @@
         const header = document.querySelector('.site-header');
         if (!filterBar) return;
 
-        // Height of the header that is CURRENTLY visible on screen.
-        // - Header fully visible (sticky)  -> its full height
-        // - Header scrolled away           -> 0, so the filter bar sits at the very top
-        // - Header partly scrolled away    -> the remaining visible part
         function update() {
             const visibleHeader = header
                 ? Math.max(0, header.getBoundingClientRect().bottom)
                 : 0;
-
             document.documentElement.style.setProperty('--header-h', visibleHeader + 'px');
 
             const rect = filterBar.getBoundingClientRect();
@@ -317,27 +426,23 @@
 
         window.addEventListener('scroll', update, { passive: true });
         window.addEventListener('resize', update);
-        window.addEventListener('load', update);   // logo/fonts can change header height
+        window.addEventListener('load', update);
         update();
     })();
 
-   document.querySelectorAll('.product-card').forEach(card => {
-    card.addEventListener('click', (e) => {
-        // Agar button pe click hua, toh skip karo
-        if (e.target.closest('.quick-add')) return;
-        // Card ke kisi bhi hisse pe click → product page
-        window.location.href = card.dataset.href;
+    document.querySelectorAll('.product-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+            if (e.target.closest('.quick-add')) return;
+            window.location.href = card.dataset.href;
+        });
     });
-});
 
-// Quick add button pe click → product page
-document.querySelectorAll('.quick-add').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        // Same product page pe redirect
-        const card = btn.closest('.product-card');
-        if (card) window.location.href = card.dataset.href;
+    document.querySelectorAll('.quick-add').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const card = btn.closest('.product-card');
+            if (card) window.location.href = card.dataset.href;
+        });
     });
-});
 </script>

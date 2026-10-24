@@ -7,6 +7,13 @@ namespace ValousWorld.Web.Services;
 
 public class InvoiceService : IInvoiceService
 {
+    private readonly IWebHostEnvironment _env;
+
+    public InvoiceService(IWebHostEnvironment env)
+    {
+        _env = env;
+    }
+
     // ---------------- Company Constants ----------------
     private const string CompanyName    = "VALOUS WORLD (OPC) PVT. LTD.";
     private const string CompanyGstin   = "22AALCV0369D1ZI";
@@ -34,6 +41,31 @@ public class InvoiceService : IInvoiceService
     public string GetInvoiceFileName(Order order)
         => $"ValousWorld-Invoice-{order.OrderNumber}.pdf";
 
+    // ---------------- Logo Loader ----------------
+    /// <summary>
+    /// Loads the brand logo for the invoice header.
+    /// Prefers PNG (most reliable in QuestPDF/SkiaSharp),
+    /// falls back to the SVG, returns null if neither exists.
+    /// </summary>
+    private byte[]? LoadLogoBytes()
+    {
+        if (string.IsNullOrEmpty(_env.WebRootPath))
+            return null;
+
+        // 1) Prefer PNG — QuestPDF renders PNG reliably across all versions
+        var pngPath = Path.Combine(_env.WebRootPath, "images", "valous-logo-invoice.png");
+        if (File.Exists(pngPath))
+            return File.ReadAllBytes(pngPath);
+
+        // 2) Fall back to SVG (works in QuestPDF 2023+ with SkiaSharp backend)
+        var svgPath = Path.Combine(_env.WebRootPath, "images", "valous-logo.svg");
+        if (File.Exists(svgPath))
+            return File.ReadAllBytes(svgPath);
+
+        // 3) Nothing found
+        return null;
+    }
+
     public byte[] GenerateInvoice(Order order)
     {
         var isCancelled = string.Equals(order.Status, "Cancelled", StringComparison.OrdinalIgnoreCase);
@@ -53,45 +85,67 @@ public class InvoiceService : IInvoiceService
         var igst       = isIntra ? 0m : gstTotal;
 
         // Delhivery Tracking Link
-        var trackingUrl = !string.IsNullOrWhiteSpace(order.TrackingNumber) 
-            ? $"https://www.delhivery.com/track/package/{order.TrackingNumber}" 
+        var trackingUrl = !string.IsNullOrWhiteSpace(order.TrackingNumber)
+            ? $"https://www.delhivery.com/track/package/{order.TrackingNumber}"
             : null;
+
+        var logoBytes = LoadLogoBytes();
 
         var document = Document.Create(container =>
         {
             container.Page(page =>
             {
                 page.Size(PageSizes.A4);
-                page.Margin(30); // Thoda kam margin vintage look ke liye
+                page.Margin(30);
                 page.DefaultTextStyle(x => x.FontSize(10).FontColor(InkHex));
-                page.PageColor(PaperHex); // Vintage paper background
+                page.PageColor(PaperHex);
 
                 // ============================================================
-                // HEADER — Vintage Border + Brand mark
+                // HEADER — Vintage Border + Brand mark (logo image)
                 // ============================================================
                 page.Header().Column(header =>
                 {
                     header.Item().Row(row =>
                     {
+                        // ---------- LEFT: LOGO IMAGE + tagline ----------
                         row.RelativeItem().Column(c =>
                         {
-                            c.Item().Text("VALOUSWORLD")
-                                .FontSize(24).Bold().FontColor(InkHex).LetterSpacing(0.15f);
+                            if (logoBytes != null)
+                            {
+                                c.Item()
+                                    .Height(46)                 // fixed render height
+                                    .Image(logoBytes)
+                                    .FitHeight();               // preserve aspect ratio
+                            }
+                            else
+                            {
+                                // Fallback if image file missing
+                                c.Item().Text("VALOUSWORLD")
+                                    .FontSize(24).Bold().FontColor(InkHex).LetterSpacing(0.15f);
+                            }
 
-                            c.Item().Text("Streetwear · Unisex · India")
+                            c.Item().PaddingTop(6)
+                                .Text("Streetwear · Unisex · India").Bold()
                                 .FontSize(9).FontColor(MutedHex).LetterSpacing(0.05f);
                         });
 
+                        // ---------- RIGHT: INVOICE META ----------
                         row.ConstantItem(210).Column(c =>
                         {
-                            c.Item().AlignRight().Text(isCancelled ? "TAX INVOICE (CANCELLED)" : "TAX INVOICE")
-                                .FontSize(14).Bold().FontColor(isCancelled ? DangerHex : InkHex).LetterSpacing(0.1f);
+                            c.Item().AlignRight()
+                                .Text(isCancelled ? "TAX INVOICE (CANCELLED)" : "TAX INVOICE")
+                                .FontSize(14).Bold()
+                                .FontColor(isCancelled ? DangerHex : InkHex)
+                                .LetterSpacing(0.1f);
 
-                            c.Item().PaddingTop(4).AlignRight().Text($"Invoice No: {invoiceNo}")
+                            c.Item().PaddingTop(4).AlignRight()
+                                .Text($"Invoice No: {invoiceNo}")
                                 .FontSize(9).FontColor(MutedHex);
-                            c.Item().AlignRight().Text($"Invoice Date: {invoiceDate}")
+                            c.Item().AlignRight()
+                                .Text($"Invoice Date: {invoiceDate}")
                                 .FontSize(9).FontColor(MutedHex);
-                            c.Item().AlignRight().Text($"Order No: {order.OrderNumber}")
+                            c.Item().AlignRight()
+                                .Text($"Order No: {order.OrderNumber}")
                                 .FontSize(9).FontColor(MutedHex);
                         });
                     });
@@ -211,7 +265,7 @@ public class InvoiceService : IInvoiceService
                         var index = 1;
                         foreach (var item in order.Items)
                         {
-                            var bg = PaperHex; // Flat vintage look
+                            var bg = PaperHex;
 
                             void Cell(IContainer c, string text, bool bold = false, bool right = false)
                             {
@@ -240,7 +294,7 @@ public class InvoiceService : IInvoiceService
                         {
                             c.Item().Text("NOTES").FontSize(8).Bold().FontColor(MutedHex).LetterSpacing(0.15f);
                             c.Item().PaddingTop(3).Text("Thank you for your order. All prices are inclusive of GST. \nRetain this invoice for warranty and returns within 7 days of delivery.")
-                            .FontSize(9).FontColor(MutedHex).LineHeight(1.4f);
+                                .FontSize(9).FontColor(MutedHex).LineHeight(1.4f);
                         });
 
                         row.ConstantItem(240).Column(c =>
@@ -328,16 +382,15 @@ public class InvoiceService : IInvoiceService
                             if (!string.IsNullOrWhiteSpace(order.TrackingNumber))
                             {
                                 c.Item().Text($"Courier: {order.CourierName ?? "Delhivery"}").FontSize(9.5f);
-                                
+
                                 if (!string.IsNullOrWhiteSpace(order.DelhiveryStatus))
                                 {
                                     c.Item().Text($"Status: {order.DelhiveryStatus}").FontSize(9.5f).Bold().FontColor(SuccessHex);
                                 }
 
-                                // Clickable Tracking URL
                                 if (trackingUrl != null)
                                 {
-                                    c.Item().PaddingTop(4).Text(text => 
+                                    c.Item().PaddingTop(4).Text(text =>
                                     {
                                         text.Span("Track: ").FontSize(9.5f);
                                         text.Hyperlink(order.TrackingNumber, trackingUrl).FontSize(9.5f).FontColor("#0D47A1").Underline();
