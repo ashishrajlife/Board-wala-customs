@@ -829,40 +829,54 @@
                             pincode);
                         return;
                     }
+                    
+                        // ---------- State 2: SERVICEABLE, NO COD ----------
+                        if (!d.cod) {
+                            showResultMulti('warn',
+                                `Delivers to ${pincode}`,
+                                [
+                                    { icon: '•', text: `Usually delivers in ${d.etaDays || '2-4'} days` },
+                                    { icon: '•', text: 'Prepaid only — COD unavailable at this pincode' }
+                                ],
+                                pincode);
+                            return;
+                        }
 
-                    // ---------- State 2: SERVICEABLE, NO COD ----------
-                    if (!d.cod) {
-                        showResultMulti('warn',
-                            `✅ Delivers to ${pincode}`,
+                        // ---------- State 1: SERVICEABLE + COD ----------
+                        showResultMulti('ok',
+                            `Delivers to ${pincode}`,
                             [
-                                { icon: '🚚', text: `Usually delivers in ${d.etaDays || '2-4'} days` },
-                                { icon: '💳', text: 'Prepaid only — COD unavailable at this pincode' }
+                                { icon: '•', text: `Usually delivers in ${d.etaDays || '2-4'} days` },
+                                { icon: '•', text: 'Cash on Delivery available' }
                             ],
                             pincode);
-                        return;
-                    }
 
-                    // ---------- State 1: SERVICEABLE + COD ----------
-                    showResultMulti('ok',
-                        `✅ Delivers to ${pincode}`,
-                        [
-                            { icon: '🚚', text: `Usually delivers in ${d.etaDays || '2-4'} days` },
-                            { icon: '💰', text: 'Cash on Delivery available' }
-                        ],
-                        pincode);
                 }
 
         // ---------- Multi-line renderer ----------
+       
         function showResultMulti(kind, title, lines, pincode) {
             result.className = 'pdp-delivery-result ' + kind;
-            var html = `<span class="pdr-title">${escapeHtml(title)}</span>`;
+
+            var html = `
+                <span class="pdr-title">
+                    <span class="pdr-icon">»</span>
+                    <span class="pdr-text">${escapeHtml(title)}</span>
+                </span>`;
+
             lines.forEach(function (line) {
-                html += `<span class="pdr-line"><span class="pdr-icon">${line.icon}</span><span class="pdr-text">${escapeHtml(line.text)}</span></span>`;
+                html += `
+                    <span class="pdr-line">
+                        <span class="pdr-icon">${escapeHtml(line.icon)}</span>
+                        <span class="pdr-text">${escapeHtml(line.text)}</span>
+                    </span>`;
             });
+
             result.innerHTML = html;
             result.hidden = false;
             result.dataset.pin = pincode;
         }
+
 
         function showResult(kind, title, sub, pincode) {
             result.className = 'pdp-delivery-result ' + kind;
@@ -1715,29 +1729,32 @@
         color: #7c5700;
     }
         /* Multi-line delivery result (structured) */
-    .pdp-delivery-result .pdr-title {
-        display: block;
-        font-weight: 700;
-        margin-bottom: 6px;
-        font-size: 13px;
-    }
-    .pdp-delivery-result .pdr-line {
-        display: flex;
-        align-items: flex-start;
-        gap: 8px;
-        padding: 3px 0;
-        font-size: 12px;
-        line-height: 1.5;
-    }
-    .pdp-delivery-result .pdr-icon {
-        flex-shrink: 0;
-        width: 18px;
-        text-align: center;
-        font-size: 13px;
-    }
-    .pdp-delivery-result .pdr-text {
-        flex: 1;
-    }
+   .pdp-delivery-result .pdr-title {
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.5;
+    margin-bottom: 6px;
+}
+   .pdp-delivery-result .pdr-line {
+    padding: 3px 0;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.pdp-delivery-result .pdr-icon {
+    display: block;
+    width: 18px;
+    text-align: center;
+    line-height: 1.5;
+    font-size: 13px;
+}
+
+.pdp-delivery-result .pdr-text {
+    display: block;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
 
     .pdp-delivery-result.warn {
         background: #999a99;
@@ -1750,11 +1767,34 @@
         border-left-color: #b71c1c;
         padding: 12px 14px;
     }
+    .pdp-delivery-result .pdr-title,
+.pdp-delivery-result .pdr-line {
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    column-gap: 8px;
+    align-items: start;
+}
+
+.pdp-delivery-result .pdr-title {
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.5;
+    margin-bottom: 6px;
+}
 
     @@media (max-width: 500px) {
-        .pdp-delivery-result .pdr-title { font-size: 12px; }
-        .pdp-delivery-result .pdr-line { font-size: 11.5px; }
-        .pdp-delivery-result .pdr-icon { font-size: 12px; width: 16px; }
+       .pdp-delivery-result .pdr-title {
+        font-size: 12px;
+    }
+
+    .pdp-delivery-result .pdr-line {
+        font-size: 11.5px;
+    }
+
+    .pdp-delivery-result .pdr-icon {
+        width: 18px;
+        font-size: 12px;
+    }
     }
     .pdp-delivery-result .pdr-sub {
         display: block;
