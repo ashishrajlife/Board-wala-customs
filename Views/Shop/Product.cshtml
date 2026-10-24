@@ -9,7 +9,10 @@
     var galleryImgs = new[] { Model.Image1, Model.Image2, Model.Image3, Model.Image4 }
         .Where(x => !string.IsNullOrWhiteSpace(x))
         .ToList();
-
+        var hasImages = galleryImgs.Any();  
+     var primaryImg = hasImages ? galleryImgs.First() : "";
+    var isLegacyImg = primaryImg.EndsWith(".jpg") || primaryImg.EndsWith(".png") || primaryImg.EndsWith(".jpeg");  
+        var mainImgUrl = primaryImg;   
     var hasVideo = !string.IsNullOrWhiteSpace(Model.VideoUrl);
     var totalSlides = galleryImgs.Count + (hasVideo ? 1 : 0);    
 
@@ -48,20 +51,22 @@
                 <div class="pdp-gallery">
             @if (galleryImgs.Any())
             {
-                <div class="pdp-main-wrap" id="pdpSlider">
+             <div class="pdp-main-wrap" id="pdpSlider">
                     <img id="pdpMainImg"
-                         src="@galleryImgs.First()"
+                         src="@mainImgUrl"
                          alt="@Model.Name"
                          class="pdp-main"
                          data-current="0"
-                         data-total="@totalSlides" />
+                         data-total="@totalSlides"
+                         loading="eager"
+                         fetchpriority="high" />
 
                     @if (hasVideo)
                     {
                         <video id="pdpMainVideo"
                                class="pdp-main pdp-main-video"
                                src="@Model.VideoUrl"
-                               poster="@galleryImgs.First()"
+                               poster="@mainImgUrl"
                                controls playsinline muted loop preload="metadata"
                                style="display:none;"></video>
                     }
@@ -108,7 +113,6 @@
                                 <img src="@img" alt="@Model.Name @(i + 1)" />
                             </button>
                         }
-
                         @if (hasVideo)
                         {
                             <button type="button"
@@ -117,7 +121,7 @@
                                     data-img="@Model.VideoUrl"
                                     data-index="@galleryImgs.Count"
                                     aria-label="Watch product video">
-                                <img src="@galleryImgs.First()" alt="Product video" />
+                                <img src="@mainImgUrl" alt="Video thumb" loading="lazy" />
                                 <span class="pdp-play">
                                     <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="7 4 20 12 7 20 7 4"/></svg>
                                 </span>

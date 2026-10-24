@@ -30,6 +30,11 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(opt =
     opt.MultipartBodyLengthLimit = 150 * 1024 * 1024;
 });
 
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+});
+
 // Auth: both Cookie (for MVC) and JWT (for API)
 builder.Services.AddAuthentication(options =>
 {
@@ -107,6 +112,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+app.UseResponseCompression();
 app.UseAuthentication();
 app.UseAuthorization();
 

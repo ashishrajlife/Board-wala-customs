@@ -27,7 +27,7 @@ public class ShopController : Controller
 
         var products = await _db.Products
             .Include(p => p.Category)
-            .Where(p => p.IsActive && p.CategoryId == category.CategoryId)
+            .Where(p => p.IsActive && p.CategoryId == category.CategoryId).AsNoTracking()
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
 
