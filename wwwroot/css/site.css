@@ -27,7 +27,7 @@
 }
 
 html { scroll-behavior: smooth; }
-html, body { height: 100%; }
+html { height: 100%; }
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -36,6 +36,19 @@ body {
     font-size: 14px;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
+}
+
+/* Sticky footer: body is a flex column, main grows, footer sticks to bottom */
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex: 1 0 auto;
+    display: block;
+    min-height: 0;
 }
 
 a { color: inherit; text-decoration: none; }
@@ -67,10 +80,9 @@ img { max-width: 100%; display: block; }
 .marquee {
     display: inline-flex;
     gap: 60px;
-    padding-left: 100%;               /* starts fully off-screen on the right */
+    padding-left: 100%;
     animation: scroll-left 30s linear infinite;
 }
-/* .marquee span { padding-right: 60px; } */
 @keyframes scroll-left {
     0%   { transform: translateX(0); }
     100% { transform: translateX(-100%); }
@@ -134,7 +146,11 @@ img { max-width: 100%; display: block; }
     text-transform: uppercase;
 }
 .brand-logo .logo-line-2 { font-weight: 900; }
-
+.brand-logo-img .brand-logo-center {
+    display: block;
+    height: 60px;
+    width: auto;
+}
 .nav-right {
     display: flex;
     align-items: center;
@@ -220,9 +236,6 @@ body.nav-open .nav-overlay { display: block; }
 .breadcrumb-bar a { text-decoration: underline; }
 .breadcrumb-bar span { color: var(--black); }
 
-/* ================= MAIN SPACING ================= */
-main { display: block; min-height: 40vh; }
-
 /* ================= HERO ================= */
 .hero-banner {
     background: #000 url('https://images.unsplash.com/photo-1523398002811-999ca8dec234?w=1600') center/cover no-repeat;
@@ -277,7 +290,6 @@ main { display: block; min-height: 40vh; }
     flex-shrink: 0;
 }
 
-/* ================= FILTER BAR ================= */
 /* ================= FILTER BAR (sticky) ================= */
 .filter-bar {
     border-bottom: 1px solid var(--gray-200);
@@ -288,8 +300,6 @@ main { display: block; min-height: 40vh; }
     z-index: 90;
     transition: box-shadow 0.2s, padding 0.2s;
 }
-
-/* Shadow only when stuck */
 .filter-bar.is-stuck {
     box-shadow: 0 4px 12px rgba(0,0,0,0.06);
     padding: 14px 0;
@@ -506,6 +516,7 @@ main { display: block; min-height: 40vh; }
     color: var(--white);
     padding: 15px;
     margin-top: var(--space-xl);
+    flex-shrink: 0;
 }
 .footer-grid {
     display: grid;
@@ -732,7 +743,7 @@ h1 {
 @media (max-width: 900px) {
     .search-box { display: none; }
     .nav-left { gap: 14px; }
-    .nav-right { gap: 12px; }
+    .nav-right { gap: 10px; }
 
     .hero-banner { min-height: 300px; }
     .hero-overlay { padding: var(--space-lg) var(--space-md); }
@@ -746,11 +757,6 @@ h1 {
     .price-row.big { font-size: 17px; }
 
     .footer-grid { grid-template-columns: repeat(2, 1fr); gap: var(--space-md); }
-    .site-footer {
-    background: var(--black);
-    color: var(--white);
-    margin-top: var(--space-xl);
-}
 }
 
 /* ---- Mobile large (≤ 768px) ---- */
@@ -796,7 +802,7 @@ h1 {
         justify-content: space-between;
     }
 
-    .nav-right { gap: 12px; }
+    .nav-right { gap: 10px; }
     .nav-right .icon-link svg { width: 20px; height: 20px; }
     .brand-logo .logo-line-1,
     .brand-logo .logo-line-2 { font-size: 17px; letter-spacing: 1px; }
@@ -809,8 +815,8 @@ h1 {
     .hero-tags { gap: 10px var(--space-md); }
 
     .filter-bar {
-    padding: 14px 0;
-    top: var(--header-h, 68px);
+        padding: 14px 0;
+        top: var(--header-h, 68px);
     }
     .filter-bar.is-stuck {
         padding: 10px 0;
@@ -861,18 +867,13 @@ h1 {
     .admin-page { padding: 20px; }
     .admin-header { margin-bottom: var(--space-sm); }
     .admin-header h1 { font-size: 22px; }
-    .site-footer {
-    background: var(--black);
-    color: var(--white);
-    margin-top: var(--space-xl);
-}
 }
 
 /* ---- Mobile (≤ 500px) ---- */
 @media (max-width: 500px) {
     .brand-logo .logo-line-1,
     .brand-logo .logo-line-2 { font-size: 15px; }
-    .nav-right { gap: 10px; }
+    .nav-right { gap: 1.5px; }
     .nav-right .icon-link svg { width: 19px; height: 19px; }
     .cart-count { font-size: 9px; min-width: 14px; height: 14px; }
 
@@ -912,7 +913,8 @@ h1 {
     .dash-stat { font-size: 24px; }
     .dashboard-welcome { font-size: 12px; }
 }
-/* ---------- Filter Products Button ---------- */
+
+/* ================= Filter Products Button ================= */
 .filter-products-btn {
     display: inline-flex;
     align-items: center;
@@ -931,17 +933,12 @@ h1 {
     transition: all 0.2s;
     line-height: 1;
 }
-
 .filter-products-btn:hover {
     background: transparent;
     color: var(--black);
 }
+.filter-products-btn svg { flex-shrink: 0; }
 
-.filter-products-btn svg {
-    flex-shrink: 0;
-}
-
-/* Update filter-inner to space them properly */
 .filter-inner {
     display: flex;
     justify-content: space-between;
@@ -958,18 +955,14 @@ h1 {
         justify-content: center;
         width: 100%;
     }
-    .product-count {
-        text-align: right;
-    }
+    .product-count { text-align: right; }
 }
-/* ===== Admin product form: image + video upload layout fix ===== */
 
-/* One column in the narrow side panel (desktop) */
+/* ================= Admin product form: image + video upload ================= */
 .admin-form .form-side .img-grid {
     grid-template-columns: minmax(0, 1fr);
     gap: 12px;
 }
-/* Side panel drops below the form on tablets: 2 columns fit again */
 @media (min-width: 640px) and (max-width: 1024px) {
     .admin-form .form-side .img-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -979,7 +972,6 @@ h1 {
 .admin-form .form-side .img-slot { min-width: 0; }
 .admin-form .form-side .img-slot label { margin-top: 0; }
 
-/* Upload boxes: never taller or wider than their content/column */
 .admin-form .form-side .upload-block {
     height: auto;
     min-width: 0;
@@ -995,7 +987,6 @@ h1 {
     text-overflow: ellipsis;
 }
 
-/* Video preview: show the whole frame, not a cropped one */
 .admin-form .form-side video.upload-preview {
     height: auto;
     max-height: 220px;
@@ -1003,7 +994,6 @@ h1 {
     background: #000;
 }
 
-/* Edit page: current video + remove checkbox */
 .admin-form .form-side .current-video {
     margin: 8px 0 10px;
     padding: 6px;
@@ -1036,7 +1026,6 @@ h1 {
     margin: 0;
 }
 
-/* Desktop: keep the sticky panel inside the screen and scroll it if tall */
 @media (min-width: 1025px) {
     .admin-form .form-side {
         max-height: calc(100vh - 120px);
@@ -1064,42 +1053,29 @@ h1 {
     max-width: 240px;
     height: auto;
     display: block;
-    
-    /* White glow effect */
     filter: brightness(0) invert(1) drop-shadow(0px 0px 1px rgba(255,255,255,0.5));
     opacity: 0.85;
     transition: opacity 0.3s ease, filter 0.3s ease;
 }
-
 .footer-brand:hover .footer-wordmark {
     opacity: 1;
     filter: brightness(0) invert(1) drop-shadow(0px 0px 4px rgba(255,255,255,0.8));
 }
-/* ===== FOOTER BRAND — PHONE VIEW: logo on the right, socials on the left ===== */
-@media (max-width: 600px) {
 
+/* ===== FOOTER BRAND — PHONE VIEW: logo right, socials left ===== */
+@media (max-width: 600px) {
     .footer-col.brand-col {
         display: flex;
-        flex-direction: row-reverse;   /* logo goes to the right, socials to the left */
+        flex-direction: row-reverse;
         align-items: center;
         justify-content: space-between;
         gap: 16px;
     }
-
     .footer-brand {
-        align-items: flex-end;         /* right-align the mark and wordmark */
+        align-items: flex-end;
         margin-bottom: 0;
         gap: 10px;
     }
-    .site-footer {
-    background: var(--black);
-    color: var(--white);
-    margin-top: var(--space-xl);
-}
-
     .footer-logo-mark { height: 48px; }
-
-    .footer-wordmark {
-        max-width: 150px;              /* smaller so it fits next to the icons */
-    }
+    .footer-wordmark { max-width: 150px; }
 }
