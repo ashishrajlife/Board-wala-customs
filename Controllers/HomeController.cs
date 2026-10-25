@@ -24,7 +24,7 @@ public class HomeController : Controller
         var totalPages = Math.Max(1, (int)Math.Ceiling(totalCount / (double)PageSize));
         if (page > totalPages) page = totalPages;
 
-        var products = await baseQuery
+        var products = await baseQuery.AsNoTracking()
             .OrderByDescending(p => p.CreatedAt)
             .Skip((page - 1) * PageSize)
             .Take(PageSize)

@@ -37,7 +37,7 @@ public class AdminProductsController : Controller
         if (page > totalPages) page = totalPages; // e.g. you deleted the last item on the last page
 
         var products = await query
-            .Include(p => p.Category)
+            .Include(p => p.Category).AsNoTracking()
             .OrderByDescending(p => p.CreatedAt)
             .ThenByDescending(p => p.ProductId)   // stable order, so products don't jump between pages
             .Skip((page - 1) * pageSize)

@@ -1,3 +1,7 @@
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Webp;
+using SixLabors.ImageSharp.Processing;
+
 namespace ValousWorld.Web.Services;
 
 public class FileService : IFileService
@@ -7,8 +11,8 @@ public class FileService : IFileService
 
     private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
     private static readonly string[] AllowedVideoExtensions = { ".mp4", ".webm" };
-    private const long MaxVideoSizeBytes = 100 * 1024 * 1024; // 50 MB
-    private const long MaxFileSizeBytes = 100 * 1024 * 1024; // 50 MB
+    private const long MaxVideoSizeBytes = 100 * 1024 * 1024; // 100 MB
+    private const long MaxFileSizeBytes = 100 * 1024 * 1024; // 100 MB
 
     public FileService(IWebHostEnvironment env, ILogger<FileService> logger)
     {
@@ -16,39 +20,55 @@ public class FileService : IFileService
         _logger = logger;
     }
 
-    public async Task<string> SaveImageAsync(IFormFile file, string folder)
+    // ============================================================
+    // IMAGES — Auto-convert to WebP & Resize for faster loading
+    // ============================================================
+        public async Task<string> SaveImageAsync(IFormFile file, string folder)
     {
         if (file == null || file.Length == 0)
             throw new ArgumentException("File is empty.");
 
-        if (file.Length > MaxFileSizeBytes)
-            throw new InvalidOperationException("File is too large. Max 50 MB allowed.");
-
         var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
         if (!AllowedExtensions.Contains(ext))
-            throw new InvalidOperationException(
-                $"Invalid file type. Allowed: {string.Join(", ", AllowedExtensions)}");
+            throw new InvalidOperationException("Invalid image type.");
 
-        // Build folder path: wwwroot/uploads/{folder}/{yyyy}/{MM}/
         var now = DateTime.UtcNow;
         var relativeFolder = Path.Combine("uploads", folder, now.ToString("yyyy"), now.ToString("MM"));
         var physicalFolder = Path.Combine(_env.WebRootPath, relativeFolder);
-
         Directory.CreateDirectory(physicalFolder);
 
-        // Unique filename: GUID + extension
-        var fileName = $"{Guid.NewGuid():N}{ext}";
+        var baseName = Guid.NewGuid().ToString("N");
+        var fileName = $"{baseName}.webp";
         var physicalPath = Path.Combine(physicalFolder, fileName);
 
-        using (var stream = new FileStream(physicalPath, FileMode.Create))
+        try
         {
+            // Reading file to MemoryStream makes it faster to process
+            using var stream = new MemoryStream();
             await file.CopyToAsync(stream);
+            stream.Position = 0;
+
+            using var image = await Image.LoadAsync(stream);
+            
+            image.Mutate(x => x.AutoOrient().Resize(new ResizeOptions
+            {
+                Mode = ResizeMode.Max,
+                Size = new Size(1200, 1200)
+            }));
+
+            await image.SaveAsWebpAsync(physicalPath, new WebpEncoder
+            {
+                Quality = 80,
+                FileFormat = WebpFileFormatType.Lossy
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Image processing failed");
+            throw new InvalidOperationException("Image could not be processed.");
         }
 
-        // Return URL path with forward slashes (works on all OS)
-        var urlPath = "/" + relativeFolder.Replace("\\", "/") + "/" + fileName;
-        _logger.LogInformation("Saved uploaded image to {Path}", urlPath);
-        return urlPath;
+        return "/" + relativeFolder.Replace("\\", "/") + "/" + fileName;
     }
 
     public void DeleteImage(string? relativeUrl)
@@ -76,6 +96,9 @@ public class FileService : IFileService
         }
     }
 
+    // ============================================================
+    // VIDEOS — Save as is (No conversion)
+    // ============================================================
     public async Task<string> SaveVideoAsync(IFormFile file, string folder)
     {
         if (file == null || file.Length == 0)
@@ -106,5 +129,4 @@ public class FileService : IFileService
         _logger.LogInformation("Saved uploaded video to {Path}", urlPath);
         return urlPath;
     }
-
 }
