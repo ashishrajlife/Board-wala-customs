@@ -25,43 +25,48 @@ public class MockOtpService : IOtpService
     public async Task<(bool success, string? error)> SendOtpAsync(string phone, string purpose = "Login")
     {
         // ============================================================
-        // Check 1: Agar Login purpose hai, toh user registered hona chahiye
+        // Purpose based checks
         // ============================================================
         if (purpose == "Login")
         {
             var userExists = await _db.Users.AnyAsync(u => u.Phone == phone);
             if (!userExists)
-            {
                 return (false, "PHONE_NOT_REGISTERED");
-            }
         }
-
-        // Agar Register purpose hai, toh user already exist nahi hona chahiye
-        if (purpose == "Register")
+        else if (purpose == "Register")
         {
             var userExists = await _db.Users.AnyAsync(u => u.Phone == phone);
             if (userExists)
-            {
                 return (false, "PHONE_ALREADY_REGISTERED");
-            }
+        }
+        else if (purpose == "ProfileUpdate")
+        {
+            var phoneTaken = await _db.Users.AnyAsync(u => u.Phone == phone);
+            if (phoneTaken)
+                return (false, "This phone number is already registered to another account.");
         }
 
-        // Baaki existing rate-limit + OTP create logic yahan
-        if (await IsRateLimitedAsync(phone))
+        // ============================================================
+        // FIX 1: Rate Limit ko bypass karo sirf ProfileUpdate ke liye
+        // (Taaki user baar baar profile change karte waqt block na ho)
+        // ============================================================
+        if (purpose != "ProfileUpdate" && await IsRateLimitedAsync(phone))
         {
             return (false, "Too many OTP requests. Please try again after 10 minutes.");
         }
 
+        // Purane unused OTPs ko expire kar do
         var oldOtps = await _db.OtpLogs
             .Where(o => o.Phone == phone && o.Purpose == purpose && !o.IsUsed)
             .ToListAsync();
 
         foreach (var o in oldOtps) o.IsUsed = true;
 
+        // Naya OTP create karo
         var otp = new OtpLog
         {
             Phone = phone,
-            OtpCode = _settings.FixedOtp,
+            OtpCode = _settings.FixedOtp, // Demo ke liye 1234
             Purpose = purpose,
             ExpiresAt = DateTime.UtcNow.AddMinutes(_settings.ExpiryMinutes),
             CreatedAt = DateTime.UtcNow
@@ -74,7 +79,6 @@ public class MockOtpService : IOtpService
         _logger.LogInformation("[MOCK OTP] Phone: {Phone}", phone);
         _logger.LogInformation("[MOCK OTP] Purpose: {Purpose}", purpose);
         _logger.LogInformation("[MOCK OTP] OTP Code: {Otp}", _settings.FixedOtp);
-        _logger.LogInformation("[MOCK OTP] Expires in: {Min} minutes", _settings.ExpiryMinutes);
         _logger.LogInformation("==================================================");
 
         return (true, null);
@@ -82,6 +86,19 @@ public class MockOtpService : IOtpService
 
     public async Task<(bool success, string? error)> VerifyOtpAsync(string phone, string code, string purpose = "Login")
     {
+        // ============================================================
+        // FIX 2: Agar purpose ProfileUpdate hai, toh sidha 1234 check karo
+        // Database me dhundhne ki zaroorat nahi. Login/Register waisa hi chalega.
+        // ============================================================
+        if (purpose == "ProfileUpdate")
+        {
+            if (code == "1234" || code == _settings.FixedOtp)
+                return (true, null);
+                
+            return (false, "Invalid OTP. Please enter 1234 for demo.");
+        }
+
+        // --- Login / Register ke liye purana Database wala logic ---
         var otp = await _db.OtpLogs
             .Where(o => o.Phone == phone
                      && o.Purpose == purpose
@@ -105,7 +122,7 @@ public class MockOtpService : IOtpService
         if (otp.OtpCode != code)
         {
             await _db.SaveChangesAsync();
-            return (false, "Invalid OTP.");
+            return (false, "Invalid OTP. Please try again.");
         }
 
         otp.IsUsed = true;
