@@ -10,7 +10,7 @@
 
     <div class="container dashboard-page">
      <div class="dashboard-top">
-        <h1>Hi,</h1>
+        <h1>Hi, @(ViewBag.UserName ?? "User")</h1>
         <div style="display: flex; gap: 10px;">
             <a href="/User/EditProfile" class="btn-primary" style="font-size: 11px; padding: 6px 12px;">EDIT PROFILE</a>
             <a href="/" class="btn-outline dashboard-back">← BACK</a>

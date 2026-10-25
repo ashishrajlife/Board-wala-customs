@@ -3,42 +3,103 @@
     ViewData["Title"] = "Edit Profile";
 }
 
-<div class="container dashboard-page" style="max-width: 600px;">
-    <div class="dashboard-top">
-        <h1>EDIT PROFILE</h1>
-        <a href="/User/Dashboard" class="btn-outline dashboard-back">← BACK</a>
+<div class="container dashboard-page" style="max-width: 1000px; margin: 0 auto; padding-top: 40px;">
+    
+    <!-- Header -->
+    <div class="dashboard-top" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
+        <h1 style="font-size: 28px; font-weight: 800; letter-spacing: 1px; margin: 0; text-transform: uppercase;">EDIT PROFILE</h1>
+        <a href="/User/Dashboard" class="btn-outline" style="white-space: nowrap;">← BACK TO DASHBOARD</a>
     </div>
 
     @if (TempData["Success"] != null)
     {
-        <div class="alert-success">@TempData["Success"]</div>
+        <div class="alert-success" style="margin-bottom: 20px;">@TempData["Success"]</div>
     }
 
-    <div class="user-stat-card" style="display: block; padding: 30px;">
+    @if (!ViewData.ModelState.IsValid && ViewData.ModelState[string.Empty]?.Errors.Count > 0)
+    {
+        <div class="alert-error" style="margin-bottom: 20px;">@ViewData.ModelState[string.Empty]?.Errors.First().ErrorMessage</div>
+    }
+
+    <!-- Main Form Card -->
+    <div style="background: #fff; border: 1px solid #eaeaea; border-radius: 8px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.02);">
         <form method="post" asp-action="EditProfile">
             @Html.AntiForgeryToken()
+            <input type="hidden" name="actionType" id="actionType" value="Save" />
 
-            <div style="margin-bottom: 20px;">
-                <label style="font-weight: 700; font-size: 12px; text-transform: uppercase;">Full Name</label>
-                <input asp-for="FullName" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ccc; margin-top: 5px;" />
-                <span asp-validation-for="FullName" class="text-danger"></span>
+            <!-- Section 1: Basic Info (2 Columns) -->
+            <h3 style="font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px;">1. Basic Information</h3>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                <div>
+                    <label style="font-weight: 700; font-size: 12px; text-transform: uppercase; color: #666;">Full Name</label>
+                    <input asp-for="FullName" class="form-control" style="width: 100%; padding: 12px; border: 1px solid #ccc; margin-top: 8px; border-radius: 4px;" />
+                    <span asp-validation-for="FullName" class="text-danger"></span>
+                </div>
+
+                <div>
+                    <label style="font-weight: 700; font-size: 12px; text-transform: uppercase; color: #666;">Email Address</label>
+                    <input asp-for="Email" type="email" class="form-control" style="width: 100%; padding: 12px; border: 1px solid #ccc; margin-top: 8px; border-radius: 4px;" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div>
+                    <label style="font-weight: 700; font-size: 12px; text-transform: uppercase; color: #666;">Phone Number</label>
+                    <input asp-for="Phone" type="text" class="form-control" style="width: 100%; padding: 12px; border: 1px solid #ccc; margin-top: 8px; border-radius: 4px;" />
+                    <span asp-validation-for="Phone" class="text-danger"></span>
+                </div>
             </div>
 
-            <div style="margin-bottom: 20px;">
-                <label style="font-weight: 700; font-size: 12px; text-transform: uppercase;">Email Address</label>
-                <input asp-for="Email" type="email" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ccc; margin-top: 5px;" />
-                <span asp-validation-for="Email" class="text-danger"></span>
+            <!-- Section 2: Security (Password & OTP) -->
+            <h3 style="font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px;">2. Security & Verification</h3>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                <div>
+                    <label style="font-weight: 700; font-size: 12px; text-transform: uppercase; color: #666;">New Password (Optional)</label>
+                    <input asp-for="NewPassword" type="text" placeholder="Leave blank to keep current" class="form-control" style="width: 100%; padding: 12px; border: 1px solid #ccc; margin-top: 8px; border-radius: 4px;" />
+                </div>
+
+                <div>
+                    <label style="font-weight: 700; font-size: 12px; text-transform: uppercase; color: #666;">Confirm New Password</label>
+                    <input asp-for="ConfirmPassword" type="text" placeholder="Confirm new password" class="form-control" style="width: 100%; padding: 12px; border: 1px solid #ccc; margin-top: 8px; border-radius: 4px;" />
+                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                </div>
             </div>
 
-            <div style="margin-bottom: 30px;">
-                <label style="font-weight: 700; font-size: 12px; text-transform: uppercase;">Phone Number</label>
-                <input asp-for="Phone" type="text" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ccc; margin-top: 5px;" />
-                <span asp-validation-for="Phone" class="text-danger"></span>
-            </div>
+            <!-- OTP Section (Agar zaroorat ho) -->
+            @if (Model.IsOtpSent)
+            {
+                <div style="margin-top: 20px; margin-bottom: 30px; padding: 20px; background: #fff8e1; border: 1px solid #ffecb3; border-radius: 6px;">
+                    <label style="font-weight: 700; font-size: 12px; color: #7c5700; text-transform: uppercase; letter-spacing: 0.5px;">Phone Verification Required</label>
+                    <p style="font-size: 13px; color: #7c5700; margin: 8px 0 12px;">We sent an OTP to your new phone number. Please enter it below to verify. <strong>(Demo OTP: 1234)</strong></p>
+                    <input asp-for="OtpCode" class="form-control" placeholder="Enter 4-digit OTP (1234)" style="width: 100%; max-width: 300px; padding: 12px; border: 1px solid #ccc; border-radius: 4px;" />
+                    <span asp-validation-for="OtpCode" class="text-danger"></span>
+                </div>
+            }
 
-            <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 14px;">
-                SAVE CHANGES
-            </button>
+            <!-- Action Buttons -->
+            <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eaeaea;">
+                @if (!Model.IsOtpSent)
+                {
+                    <button type="submit" class="btn-outline" style="flex: 1; min-width: 200px; justify-content: center; padding: 16px; font-size: 13px; font-weight: 700;" onclick="document.getElementById('actionType').value='SendOtp'">
+                        SEND OTP TO UPDATE
+                    </button>
+                }
+                
+                <button type="submit" class="btn-primary" style="flex: 1; min-width: 200px; justify-content: center; padding: 16px; font-size: 13px; font-weight: 700;" onclick="document.getElementById('actionType').value='Save'">
+                    @(Model.IsOtpSent ? "VERIFY & SAVE" : "SAVE CHANGES")
+                </button>
+            </div>
         </form>
     </div>
 </div>
+
+<style>
+    /* Mobile Responsive: Agar screen chhoti ho toh ek column me aa jaye */
+    @@media (max-width: 768px) {
+        .container.dashboard-page { padding: 20px 15px; }
+        .dashboard-top h1 { font-size: 22px; }
+        .dashboard-top a { width: 100%; text-align: center; }
+        div[style*="padding: 40px"] { padding: 20px !important; }
+    }
+</style>
