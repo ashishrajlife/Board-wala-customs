@@ -55,7 +55,15 @@ public class AuthController : Controller
             : RedirectToAction("Index", "Home");
     }
 
+    // ============================================================
     // REGISTER — Direct (no OTP)
+    // ============================================================
+    [HttpGet]
+    public IActionResult Register()
+    {
+        return View(new RegisterViewModel());
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Register(RegisterViewModel model)
@@ -89,7 +97,7 @@ public class AuthController : Controller
             FullName = model.FullName!,
             Email = model.Email,
             Phone = model.Phone,
-            Password = model.Password,   // plain text as per your existing choice
+            Password = model.Password,
             RoleId = userRole.RoleId,
             IsActive = true
         };
