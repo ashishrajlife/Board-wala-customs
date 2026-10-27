@@ -18,8 +18,8 @@ namespace ValousWorld.Web.Models.ViewModels
         public string? NewPassword { get; set; }
         
         public string? ConfirmPassword { get; set; }
-        public string? OtpCode { get; set; }
+     //   public string? OtpCode { get; set; }
         
-        public bool IsOtpSent { get; set; } = false; 
+     //   public bool IsOtpSent { get; set; } = false; 
     }
 }

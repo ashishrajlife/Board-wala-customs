@@ -4,8 +4,9 @@ namespace ValousWorld.Web.Models.ViewModels;
 
 public class LoginViewModel
 {
-    [Required, EmailAddress]
-    public string Email { get; set; } = string.Empty;
+    [Required(ErrorMessage = "Email or phone is required.")]
+    [Display(Name = "Email or Phone")]
+    public string EmailOrPhone { get; set; } = "";
 
     [Required, DataType(DataType.Password)]
     public string Password { get; set; } = string.Empty;

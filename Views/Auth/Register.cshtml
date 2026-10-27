@@ -4,7 +4,7 @@
 <div class="auth-card">
     <h2>Create Account</h2>
 
-    <form asp-action="SendRegisterOtp" method="post">
+    <form asp-action="Register" method="post">
         @Html.AntiForgeryToken()
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
@@ -29,7 +29,7 @@
         <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
 
         <button type="submit" class="btn-primary" style="width:100%; margin-top:20px; padding:14px;">
-            SEND OTP & VERIFY PHONE
+            CREATE ACCOUNT
         </button>
     </form>
 

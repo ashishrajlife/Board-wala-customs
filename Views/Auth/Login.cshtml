@@ -20,14 +20,13 @@
         <div class="alert-success">@TempData["Success"]</div>
     }
 
-    <form asp-action="Login" method="post">
+      <form asp-action="Login" method="post">
         @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-        <label>Email</label>
-        <input asp-for="Email"
-               type="email"
-               class="@(ViewData.ModelState.IsValid ? "" : "login-error")" />
-        <span asp-validation-for="Email" class="text-danger"></span>
+        <label>Email or Phone *</label>
+        <input asp-for="EmailOrPhone" type="text" placeholder="you@example.com or 9876543210" required />
+        <span asp-validation-for="EmailOrPhone" class="text-danger"></span>
 
         <label>Password</label>
 
@@ -53,7 +52,7 @@
 
         <button type="submit" class="btn btn-primary">Login</button>
     </form>
-
+   @* ===== COMMENTED OUT FOR NOW (OTP LOGIN) =====
     <div style="text-align:center; margin: 20px 0;">
     <span style="color:#999; font-size:12px;">OR</span>
 </div>
@@ -65,6 +64,8 @@
     </svg>
     LOGIN WITH MOBILE OTP
 </a>
+
+===========================*@
 
     <p class="muted">
         Don't have an account?

@@ -35,12 +35,16 @@ public class AuthController : Controller
     {
         if (!ModelState.IsValid) return View(model);
 
+        var identifier = model.EmailOrPhone?.Trim() ?? "";
+
+        // Look up by email OR phone (case-insensitive email)
         var user = await _db.Users.Include(u => u.Role)
-            .FirstOrDefaultAsync(u => u.Email == model.Email);
+            .FirstOrDefaultAsync(u =>
+                u.Email == identifier || u.Phone == identifier);
 
         if (user == null || !user.IsActive || user.Password != model.Password)
         {
-            ModelState.AddModelError("", "Invalid email or password.");
+            ModelState.AddModelError("", "Invalid email/phone or password.");
             return View(model);
         }
 
@@ -51,15 +55,55 @@ public class AuthController : Controller
             : RedirectToAction("Index", "Home");
     }
 
-    // ============================================================
-    // REGISTER — Step 1: Form (with Send OTP button)
-    // ============================================================
-    [HttpGet]
-    public IActionResult Register(string? phone = null, string? returnUrl = null)
+    // REGISTER — Direct (no OTP)
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Register(RegisterViewModel model)
     {
-        ViewBag.PrefilledPhone = phone;
-        ViewBag.ReturnUrl = returnUrl;
-        return View(new RegisterViewModel { Phone = phone ?? "" });
+        if (!ModelState.IsValid)
+            return View(model);
+
+        if (model.Password != model.ConfirmPassword)
+        {
+            ModelState.AddModelError("", "Passwords do not match.");
+            return View(model);
+        }
+
+        if (await _db.Users.AnyAsync(u => u.Email == model.Email))
+        {
+            ModelState.AddModelError("", "Email already registered.");
+            return View(model);
+        }
+
+        if (!string.IsNullOrWhiteSpace(model.Phone) &&
+            await _db.Users.AnyAsync(u => u.Phone == model.Phone))
+        {
+            ModelState.AddModelError("", "Phone number already registered.");
+            return View(model);
+        }
+
+        var userRole = await _db.Roles.FirstAsync(r => r.RoleName == "User");
+
+        var user = new User
+        {
+            FullName = model.FullName!,
+            Email = model.Email,
+            Phone = model.Phone,
+            Password = model.Password,   // plain text as per your existing choice
+            RoleId = userRole.RoleId,
+            IsActive = true
+        };
+
+        _db.Users.Add(user);
+        await _db.SaveChangesAsync();
+
+        user = await _db.Users.Include(u => u.Role)
+            .FirstAsync(u => u.UserId == user.UserId);
+
+        await SignInUserAsync(user);
+
+        TempData["Success"] = "Account created successfully!";
+        return RedirectToAction("Index", "Home");
     }
 
     // Called by register form — sends OTP for phone verification
